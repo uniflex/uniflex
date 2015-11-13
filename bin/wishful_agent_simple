@@ -30,10 +30,9 @@ __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
 def signal_handler(signal, frame):
     print('Killing the process')
-    os.killpg(os.getpgid(), 15)
     sys.exit(0)
 
-signal.signal(signal.SIGTERM, signal_handler)
+signal.signal(signal.SIGINT, signal_handler)
 
 def main(args):
     log = logging.getLogger('wishful_agent.main')
