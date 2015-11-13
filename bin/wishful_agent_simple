@@ -46,10 +46,10 @@ def main(args):
     agent.send_msg_to_driver("ath9k_driver", "msg for ath9k_driver")
     agent.send_msg_to_driver("iperf_driver", "msg for iperf_driver")
 
-    agent.send_msg_to_group("radio", "msg for radio drivers")
-    agent.send_msg_to_group("performance_test", "msg for performance_test drivers")
-    agent.send_msg_to_group("wifi", "msg for wifi drivers")
-    agent.send_msg_to_group("all", "msg for all drivers")
+    agent.send_msg_to_driver_group("radio", "msg for radio drivers")
+    agent.send_msg_to_driver_group("performance_test", "msg for performance_test drivers")
+    agent.send_msg_to_driver_group("wifi", "msg for wifi drivers")
+    agent.send_msg_to_driver_group("all", "msg for all drivers")
 
     agent.run()
 

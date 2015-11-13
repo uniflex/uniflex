@@ -13,7 +13,7 @@ class Agent(object):
         pass
 
     drivers = {}
-    message_types = {}
+    driver_groups = {}
 
     def read_config_file(self, path=None):
         self.log.debug("Path to driver: {0}".format(path))
@@ -48,18 +48,18 @@ class Agent(object):
         self.drivers[driver.name] = driver
 
         for message_type in message_types:
-            if message_type in self.message_types.keys():
-                self.message_types[message_type].append(driver.name)
+            if message_type in self.driver_groups.keys():
+                self.driver_groups[message_type].append(driver.name)
             else:
-                self.message_types[message_type] = [driver.name]
+                self.driver_groups[message_type] = [driver.name]
         pass
 
     def send_msg_to_driver(self, driver_name, msg):
         self.drivers[driver_name].send_msg(msg)
         pass
 
-    def send_msg_to_group(self, message_type_name, msg):
-        driver_name_list = self.message_types[message_type_name]
+    def send_msg_to_driver_group(self, message_type_name, msg):
+        driver_name_list = self.driver_groups[message_type_name]
         for driver_name in driver_name_list:
             self.send_msg_to_driver(driver_name, msg)
         pass
