@@ -1,10 +1,80 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
+"""
+wishful_agent_simple.py: First implementation of WiSHFUL agent
 
+Usage:
+   wishful_agent_simple.py [options] [-q | -v]
+
+Options:
+   -f                  foo
+   --config configFile config file path
+
+Other options:
+   -h, --help          show this help message and exit
+   -q, --quiet         print less text
+   -v, --verbose       print more text
+   --version           show version and exit
+"""
+
+import logging
+import signal
+import sys, os
 import wishful_agent
 
-agent = wishful_agent.Agent(controller="tcp://127.0.0.1:9173")
+__author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
+__copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
+__version__ = "0.1.0"
+__email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
-agent.add_driver(wishful_agent.exec_driver(app="ath9k"))
+def signal_handler(signal, frame):
+    print('Killing the process')
+    os.killpg(os.getpgid(), 15)
+    sys.exit(0)
 
-agent.run()
+signal.signal(signal.SIGTERM, signal_handler)
+
+def main(args):
+    log = logging.getLogger('wishful_agent.main')
+    log.debug(args)
+
+    config_file_path = args['--config']
+    agent = wishful_agent.Agent(controller="tcp://127.0.0.1:9173")
+    agent.load_drivers(agent.read_config_file(path=config_file_path))
+
+    agent.send_msg_to_driver("ath9k_driver", "msg for ath9k_driver")
+    agent.send_msg_to_driver("iperf_driver", "msg for iperf_driver")
+
+    agent.send_msg_to_group("radio", "msg for radio drivers")
+    agent.send_msg_to_group("performance_test", "msg for performance_test drivers")
+    agent.send_msg_to_group("wifi", "msg for wifi drivers")
+    agent.send_msg_to_group("all", "msg for all drivers")
+
+    agent.run()
+
+
+if __name__ == "__main__":
+    try:
+        from docopt import docopt
+    except:
+        print("""
+        Please install docopt using:
+            pip install docopt==0.6.1
+        For more refer to:
+        https://github.com/docopt/docopt
+        """)
+        raise
+
+    args = docopt(__doc__, version=__version__)
+
+    log_level = logging.INFO  # default
+    if args['--verbose']:
+        log_level = logging.DEBUG
+    elif args['--quiet']:
+        log_level = logging.ERROR
+
+    logging.basicConfig(level=log_level,
+        format='%(asctime)s - %(name)s.%(funcName)s() - %(levelname)s - %(message)s')
+
+    main(args)

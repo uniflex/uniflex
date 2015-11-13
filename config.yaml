@@ -1,0 +1,13 @@
+## WiSHFUL Agent config file
+
+ath9k_driver:
+    type : python
+    path : /home/pgawlowicz/workspace/new_wishful/wishful_driver_ath9k/bin/ath9k_driver.py
+    args : '-i wlan0,wlan1'
+    message_type : [wifi,radio, all]
+
+iperf_driver:
+    type : python
+    path : /home/pgawlowicz/workspace/new_wishful/wishful_driver_iperf/bin/iperf_driver.py
+    args : ''
+    message_type : [performance_test, all]
