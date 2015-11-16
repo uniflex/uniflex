@@ -22,8 +22,7 @@ class Driver(object):
         self.log.debug("Server for {0} started ".format(self.name))
 
     def start_driver_process(self):
-        cmd = ['/home/pgawlowicz/workspace/new_wishful/wishful_agent/development/bin/python',
-               self.path,
+        cmd = [self.path,
                '--port', str(self.port)
                ]
         cmd.extend(filter(None, [self.args]))
