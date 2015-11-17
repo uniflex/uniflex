@@ -1,8 +1,7 @@
 import logging
 import subprocess
 import zmq.green as zmq
-import gevent
-from gevent.queue import Queue
+
 
 class Driver(object):
     def __init__(self, name, path, args, port):
@@ -31,6 +30,11 @@ class Driver(object):
         cmd.extend(filter(None, [self.args]))
         self.pid = subprocess.Popen(cmd)
         self.log.debug("Driver: {0}, with args: {1}, PID: {2} started".format(self.name, self.args, self.pid.pid))
+
+    def kill_driver_subprocess(self):
+        self.pid.kill()
+        pass
+
 
     def send_msg_to_driver(self, msgType, msg):
         self.log.debug("Driver: {0} sends msg: {1}::{2}".format(self.name, msgType, msg))

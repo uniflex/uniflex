@@ -1,0 +1,148 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+wishful_controller_simple.py: First implementation of WiSHFUL controller
+
+Usage:
+   wishful_controller_simple.py [options] [-q | -v]
+
+Options:
+   -f                  foo
+   --config configFile config file path
+
+Other options:
+   -h, --help          show this help message and exit
+   -q, --quiet         print less text
+   -v, --verbose       print more text
+   --version           show version and exit
+"""
+
+import logging
+import signal
+import sys
+import zmq
+import time
+
+__author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
+__copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
+__version__ = "0.1.0"
+__email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
+
+def signal_handler(signal, frame):
+    print('Killing the process')
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, signal_handler)
+
+i = 0
+msgSeqNum = 0
+nodeList = []
+
+def add_new_node(nodeId, socket):
+    log = logging.getLogger('wishful_controller.main')
+    global i
+    global msgSeqNum
+
+    log.debug("SIMPLE_CONTROLLER adds new node with ID: {0}".format(nodeId))
+    msgType = "NEW_NODE_ACK"
+    msg = "tcp://127.0.0.1:8990"
+    msgSeqNum += 1
+    delay = 0
+    socket.send_multipart([msgType, msg, str(msgSeqNum), str(delay)])
+
+def start_controll_loop(pub_socket, pair_socket):
+    log = logging.getLogger('wishful_controller.main')
+    global nodeList
+    global i
+    global msgSeqNum
+
+    while True:
+        log.debug("Waiting for nodes")
+        msgContainer = pair_socket.recv_multipart()
+
+        assert len(msgContainer)
+        msgType = msgContainer[0]
+        msg = msgContainer[1]
+
+        log.debug("SIMPLE_CONTROLLER recived msg: {0}::{1}".format(msgType, msg))
+
+        if msgType == "NEW_NODE_MSG":
+            add_new_node(msg, pair_socket)
+            break
+
+    poller = zmq.Poller()
+    poller.register(pair_socket, zmq.POLLIN)
+
+    while True:
+        log.debug("NEW ITERATION")
+        socks = dict(poller.poll(100))
+        if pair_socket in socks and socks[pair_socket] == zmq.POLLIN:
+            msgContainer = pair_socket.recv_multipart()
+
+            assert len(msgContainer)
+            msgType = msgContainer[0]
+            msg = msgContainer[1]
+
+            log.debug("Controller recived msg: {0}::{1}".format(msgType, msg))
+
+
+        log.debug("Sends new command")
+        msgSeqNum += 1
+        if i % 2 == 0:
+            msgType = "RADIO"
+            msg = "SET_CHANNEL"
+            delay = 0
+        else:
+            msgType = "PERFORMANCE_TEST"
+            msg = "START_SERVER"
+            delay = 2 #seconds
+
+        i += 1
+
+        log.debug("Controller sends message: {0}::{1}".format(msgType, msg))
+        pub_socket.send_multipart([msgType, msg, str(msgSeqNum), str(delay)])
+        time.sleep(5)
+
+
+def main(args):
+    log = logging.getLogger('wishful_controller.main')
+    log.debug(args)
+
+    context = zmq.Context()
+    pair_socket = context.socket(zmq.PAIR) #one pair socket for each agent
+    pair_socket.bind("tcp://127.0.0.1:8989")
+
+    dl_socket = context.socket(zmq.PUB) #one PUB socket for downlink communication over topics
+    dl_socket.bind("tcp://127.0.0.1:8990")
+
+    try:
+        start_controll_loop(dl_socket, pair_socket)
+    except KeyboardInterrupt:
+        log.debug("ATH9k_driver exits")
+
+
+if __name__ == "__main__":
+    try:
+        from docopt import docopt
+    except:
+        print("""
+        Please install docopt using:
+            pip install docopt==0.6.1
+        For more refer to:
+        https://github.com/docopt/docopt
+        """)
+        raise
+
+    args = docopt(__doc__, version=__version__)
+
+    log_level = logging.INFO  # default
+    if args['--verbose']:
+        log_level = logging.DEBUG
+    elif args['--quiet']:
+        log_level = logging.ERROR
+
+    logging.basicConfig(level=log_level,
+        format='%(asctime)s - %(name)s.%(funcName)s() - %(levelname)s - %(message)s')
+
+    main(args)
