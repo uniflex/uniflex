@@ -36,6 +36,8 @@ class Driver(object):
         pass
 
 
-    def send_msg_to_driver(self, msgType, msg):
+    def send_msg_to_driver(self, msgContainer):
+        msgType = msgContainer[0]
+        msg = msgContainer[1]
         self.log.debug("Driver: {0} sends msg: {1}::{2}".format(self.name, msgType, msg))
-        self.socket.send_multipart([msgType, msg])
+        self.socket.send_multipart(msgContainer)

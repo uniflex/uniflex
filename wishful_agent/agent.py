@@ -76,21 +76,24 @@ class Agent(object):
         self.poller.register(driver.socket, zmq.POLLIN)
         pass
 
-    def send_msg_to_driver(self, driver_name, msgType, msg):
-        self.drivers[driver_name].send_msg_to_driver(msgType, msg)
+    def send_msg_to_driver(self, driver_name, msgContainer):
+        self.drivers[driver_name].send_msg_to_driver(msgContainer)
         pass
 
-    def send_msg_to_driver_group(self, msgType, msgContainer):
+    def send_msg_to_driver_group(self, msgContainer):
+        msgType = msgContainer[0]
         msg = msgContainer[1]
         driver_name_list = self.driver_groups[msgType]
         for driver_name in driver_name_list:
-            self.send_msg_to_driver(driver_name, msgType, msg)
+            self.send_msg_to_driver(driver_name, msgContainer)
         pass
 
     def send_driver_response_to_controller(self, msgContainer):
         self.socket_pub.send_multipart(msgContainer)
 
-    def setup_connection_to_controller(self, msg):
+    def setup_connection_to_controller(self, msgContainer):
+        msgType = msgContainer[0]
+        msg = msgContainer[1]
         controllerIp = msg #TODO: define profobuf msg
         self.socket_pub.connect(controllerIp)
         self.socket_sub.connect("tcp://127.0.0.1:8990") # TODO: downlink and uplink in config file
@@ -133,13 +136,13 @@ class Agent(object):
         msgType = msgContainer[0]
         msg = msgContainer[1]
         self.log.debug("Agent sends message: {0}::{1} to driver".format(msgType, msg))
-        self.send_msg_to_driver_group(msgType, msgContainer)
+        self.send_msg_to_driver_group(msgContainer)
 
     def send_scheduled_msg(self, msgContainer):
         msgType = msgContainer[0]
         msg = msgContainer[1]
         self.log.debug("Agent sends scheduled message: {0}::{1} to driver".format(msgType, msg))
-        self.send_msg_to_driver_group(msgType, msgContainer)
+        self.send_msg_to_driver_group(msgContainer)
 
     def schedule_msg(self, delay, msgContainer):
         msgType = msgContainer[0]
@@ -165,7 +168,7 @@ class Agent(object):
                     self.log.debug("Agent received message: {0}::{1} from driver: {2}".format(msgType, msg, name))
                     if msgType == "CONTROLLER_DISCOVERED":
                         self.log.debug("Agent {0} discovered controller: {1} and connects to it".format(name, msg))
-                        self.setup_connection_to_controller(msg)
+                        self.setup_connection_to_controller(msgContainer)
                     else:
                         self.log.debug("Agent sends message to Controller: {0}::{1}".format(msgType, msg))
                         self.send_driver_response_to_controller(msgContainer)
