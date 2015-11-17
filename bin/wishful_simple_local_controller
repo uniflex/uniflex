@@ -39,7 +39,7 @@ i = 0
 msgSeqNum = 0
 nodeList = []
 
-def add_new_node(nodeId, socket):
+def add_new_node(nodeId, dl_socket, up_socket):
     log = logging.getLogger('wishful_controller.main')
     global i
     global msgSeqNum
@@ -49,9 +49,12 @@ def add_new_node(nodeId, socket):
     msg = "tcp://127.0.0.1:8990"
     msgSeqNum += 1
     delay = 0
-    socket.send_multipart([msgType, msg, str(msgSeqNum), str(delay)])
 
-def start_controll_loop(pub_socket, pair_socket):
+    up_socket.setsockopt(zmq.SUBSCRIBE,  nodeId)
+    time.sleep(1)
+    dl_socket.send_multipart([msgType, msg, str(msgSeqNum), str(delay)])
+
+def start_controll_loop(dl_socket, ul_socket):
     log = logging.getLogger('wishful_controller.main')
     global nodeList
     global i
@@ -59,7 +62,7 @@ def start_controll_loop(pub_socket, pair_socket):
 
     while True:
         log.debug("Waiting for nodes")
-        msgContainer = pair_socket.recv_multipart()
+        msgContainer = ul_socket.recv_multipart()
 
         assert len(msgContainer)
         msgType = msgContainer[0]
@@ -68,17 +71,17 @@ def start_controll_loop(pub_socket, pair_socket):
         log.debug("SIMPLE_CONTROLLER recived msg: {0}::{1}".format(msgType, msg))
 
         if msgType == "NEW_NODE_MSG":
-            add_new_node(msg, pair_socket)
+            add_new_node(msg, dl_socket, ul_socket)
             break
 
     poller = zmq.Poller()
-    poller.register(pair_socket, zmq.POLLIN)
+    poller.register(ul_socket, zmq.POLLIN)
 
     while True:
         log.debug("NEW ITERATION")
         socks = dict(poller.poll(100))
-        if pair_socket in socks and socks[pair_socket] == zmq.POLLIN:
-            msgContainer = pair_socket.recv_multipart()
+        if ul_socket in socks and socks[ul_socket] == zmq.POLLIN:
+            msgContainer = ul_socket.recv_multipart()
 
             assert len(msgContainer)
             msgType = msgContainer[0]
@@ -101,7 +104,7 @@ def start_controll_loop(pub_socket, pair_socket):
         i += 1
 
         log.debug("Controller sends message: {0}::{1}".format(msgType, msg))
-        pub_socket.send_multipart([msgType, msg, str(msgSeqNum), str(delay)])
+        dl_socket.send_multipart([msgType, msg, str(msgSeqNum), str(delay)])
         time.sleep(5)
 
 
@@ -110,14 +113,17 @@ def main(args):
     log.debug(args)
 
     context = zmq.Context()
-    pair_socket = context.socket(zmq.PAIR) #one pair socket for each agent
-    pair_socket.bind("tcp://127.0.0.1:8989")
+    ul_socket = context.socket(zmq.SUB) #one SUB socket for uplink communication over topics
+    ul_socket.setsockopt(zmq.SUBSCRIBE,  "NEW_NODE_MSG")
+    ul_socket.setsockopt(zmq.SUBSCRIBE,  "RESPONSE")
+
+    ul_socket.bind("tcp://127.0.0.1:8989")
 
     dl_socket = context.socket(zmq.PUB) #one PUB socket for downlink communication over topics
     dl_socket.bind("tcp://127.0.0.1:8990")
 
     try:
-        start_controll_loop(dl_socket, pair_socket)
+        start_controll_loop(dl_socket, ul_socket)
     except KeyboardInterrupt:
         log.debug("ATH9k_driver exits")
 
