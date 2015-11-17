@@ -4,6 +4,8 @@ import yaml
 from driver import *
 import gevent
 import zmq.green as zmq
+from apscheduler.schedulers.background import BackgroundScheduler
+import datetime
 
 class Agent(object):
     def __init__(self, controller):
@@ -12,6 +14,9 @@ class Agent(object):
         self.log.debug("Controller: {0}".format(controller))
         self.config = None
         self.driver_port = 5000
+
+        self.jobScheduler = BackgroundScheduler()
+        self.jobScheduler.start()
 
         self.poller = zmq.Poller()
 
@@ -78,16 +83,37 @@ class Agent(object):
         self.drivers[driver_name].send_msg_to_driver(msgType, msg)
         pass
 
-    def send_msg_to_driver_group(self, message_type_name, msgType, msg):
-        driver_name_list = self.driver_groups[message_type_name]
+    def send_msg_to_driver_group(self, msgType, msgContainer):
+        msg = msgContainer[1]
+        driver_name_list = self.driver_groups[msgType]
         for driver_name in driver_name_list:
             self.send_msg_to_driver(driver_name, msgType, msg)
         pass
 
     def connect_to_controller(self, msg):
-        controllerIp = msg
+        controllerIp = msg #TODO: define profobuf msg
         self.socket_pair.connect(controllerIp)
         pass
+
+    def send_msg_now(self, msgContainer):
+        msgType = msgContainer[0]
+        msg = msgContainer[1]
+        self.log.debug("Agent sends message: {0}::{1} to driver".format(msgType, msg))
+        self.send_msg_to_driver_group(msgType, msgContainer)
+
+    def send_scheduled_msg(self, msgContainer):
+        msgType = msgContainer[0]
+        msg = msgContainer[1]
+        self.log.debug("Agent sends scheduled message: {0}::{1} to driver".format(msgType, msg))
+        self.send_msg_to_driver_group(msgType, msgContainer)
+
+    def schedule_msg(self, delay, msgContainer):
+        msgType = msgContainer[0]
+        msg = msgContainer[1]
+        self.log.debug("Agent schedule task for message: {0}::{1} in {2}s".format(msgType, msg, delay))
+
+        execTime = (datetime.datetime.now() + datetime.timedelta(seconds=delay))
+        self.jobScheduler.add_job(self.send_scheduled_msg, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer})
 
     def process_msgs(self):
         # Work on requests from both controller and drivers
@@ -98,13 +124,11 @@ class Agent(object):
             for name, driver in self.drivers.iteritems():
                 if driver.socket in socks and socks[driver.socket] == zmq.POLLIN:
                     originator = name
-                    msg = driver.socket.recv_multipart()
-                    msgType = ""
-                    if len(msg) > 1:
-                        msgType = msg[0]
-                        msg = msg[1]
-                    else:
-                        msg = msg[0]
+                    msgContainer = driver.socket.recv_multipart()
+
+                    assert len(msgContainer)
+                    msgType = msgContainer[0]
+                    msg = msgContainer[1]
 
                     if msgType == "CONTROLLER_DISCOVERED":
                         self.log.debug("Agent {0} discovered controller: {1} and connects to it".format(name, msg))
@@ -115,57 +139,52 @@ class Agent(object):
                         self.log.debug("Agent sends message to Controller: {0}::{1}".format(msgType, msg))
 
             if self.socket_pair in socks and socks[self.socket_pair] == zmq.POLLIN:
-                originator = "contoller"
-                msg = self.socket_pair.recv_multipart()
-                msgType = ""
-                if len(msg) > 1:
-                    msgType = msg[0]
-                    msg = msg[1]
-                else:
-                    msg = msg[0]
+                originator = "controller"
+                msgContainer = self.socket_pair.recv_multipart()
+
+                assert len(msgContainer)
+                msgType = msgContainer[0]
+                msg = msgContainer[1]
+                delay = int(msgContainer[3])
                 self.log.debug("Agent received message: {0}::{1} from controller using PAIR".format(msgType, msg))
 
             if self.socket_sub in socks and socks[self.socket_sub] == zmq.POLLIN:
-                originator = "contoller"
-                msg = self.socket_sub.recv_multipart()
-                msgType = ""
-                if len(msg) > 1:
-                    msgType = msg[0]
-                    msg = msg[1]
-                else:
-                    msg = msg[0]
+                originator = "controller"
+                msgContainer = self.socket_sub.recv_multipart()
+
+                assert len(msgContainer)
+                msgType = msgContainer[0]
+                msg = msgContainer[1]
+                delay = int(msgContainer[3])
                 self.log.debug("Agent received message: {0}::{1} from controller using SUB".format(msgType, msg))
 
-            if originator == "contoller":
-                self.log.debug("Agent sends message: {0}::{1} to driver".format(msgType, msg))
-                if msgType == "RADIO":
-                    #self.send_msg_to_driver("ath9k_driver", msgType, msg)
-                    #self.send_msg_to_driver_group("radio", msgType, msg)
-                    self.send_msg_to_driver_group("wifi", msgType, msg)
-                elif msgType == "PERFORMANCE_TEST":
-                    #self.send_msg_to_driver("iperf_driver", msgType, msg)
-                    self.send_msg_to_driver_group("performance_test", msgType, msg)
+            if originator == "controller":
+                if delay == 0:
+                    self.send_msg_now(msgContainer)
                 else:
-                    self.log.debug("Message Type {0}:{1} not supported".format(msgType, msg))
-                    #self.send_msg_to_driver_group("all", msgType, msg)
+                    self.schedule_msg(delay, msgContainer)
             else:
                 pass
 
 
     def simulate_contoller(self):
         i = 0
+        msgSeqNum = 0
         while True:
             self.log.debug("NEW ITERATION")
+            msgSeqNum += 1
             if i % 2 == 0:
                 msgType = "RADIO"
                 msg = "SET_CHANNEL"
+                delay = 0
             else:
                 msgType = "PERFORMANCE_TEST"
                 msg = "START_SERVER"
+                delay = 5
 
             i += 1
 
-            self.sock_server.send_multipart([msgType, msg])
+            self.sock_server.send_multipart([msgType, msg, str(msgSeqNum), str(delay)])
             gevent.sleep(3)
 
 
@@ -185,5 +204,6 @@ class Agent(object):
 
         except KeyboardInterrupt:
             self.log.debug("Agent exits")
+            self.jobScheduler.shutdown()
 
         pass
