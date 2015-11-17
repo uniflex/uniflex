@@ -6,6 +6,7 @@ from driver import *
 import zmq
 from apscheduler.schedulers.background import BackgroundScheduler
 import datetime
+import uuid
 
 class Agent(object):
     def __init__(self, controller):
@@ -14,7 +15,8 @@ class Agent(object):
         self.log.debug("Controller: {0}".format(controller))
         self.config = None
         self.driver_port = 5000
-        self.myId = "my_id_12345" #TODO: what should be an node ID?
+        self.myUuid = uuid.uuid4()
+        self.myId = str(self.myUuid)
 
         self.jobScheduler = BackgroundScheduler()
         self.jobScheduler.start()

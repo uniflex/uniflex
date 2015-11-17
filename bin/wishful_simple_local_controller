@@ -44,7 +44,7 @@ def add_new_node(nodeId, socket):
     global i
     global msgSeqNum
 
-    log.debug("SIMPLE_CONTROLLER adds new node with ID: {0}".format(nodeId))
+    log.debug("SIMPLE_CONTROLLER adds new node with UUID: {0}".format(nodeId))
     msgType = "NEW_NODE_ACK"
     msg = "tcp://127.0.0.1:8990"
     msgSeqNum += 1
