@@ -28,11 +28,6 @@ __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
 __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
-def signal_handler(signal, frame):
-    print('Killing the process')
-    sys.exit(0)
-
-signal.signal(signal.SIGINT, signal_handler)
 
 def main(args):
     log = logging.getLogger('wishful_agent.main')

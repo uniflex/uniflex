@@ -199,15 +199,8 @@ class Agent(object):
 
         except KeyboardInterrupt:
             self.log.debug("Agent exits")
-            self.log.debug("Kills all drivers' subprocesses")
-            for name, driver in self.drivers.iteritems():
-                driver.kill_driver_subprocess()
-            self.jobScheduler.shutdown()
-            self.socket_sub.close()
-            self.socket_pub.close()
-            self.context.term()
 
-        except:
+        finally:
             self.log.debug("Unexpected error:".format(sys.exc_info()[0]))
             self.log.debug("Kills all drivers' subprocesses")
             for name, driver in self.drivers.iteritems():
