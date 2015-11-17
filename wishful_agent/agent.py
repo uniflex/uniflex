@@ -22,7 +22,6 @@ class Agent(object):
         #TO BE REMOVED USED ONLY FOR SIMULATION --- START
         self.sock_server = self.context.socket(zmq.PAIR)
         self.sock_server.bind("tcp://127.0.0.1:8989")
-        self.socket_pair.connect("tcp://127.0.0.1:8989")
         #TO BE REMOVED USED ONLY FOR SIMULATION --- END
 
         #register driver socket in poller
@@ -85,6 +84,11 @@ class Agent(object):
             self.send_msg_to_driver(driver_name, msg)
         pass
 
+    def connect_to_controller(self, msg):
+        controllerIp = msg
+        self.socket_pair.connect(controllerIp)
+        pass
+
     def process_msgs(self):
         # Work on requests from both controller and drivers
         while True:
@@ -94,10 +98,21 @@ class Agent(object):
             for name, driver in self.drivers.iteritems():
                 if driver.socket in socks and socks[driver.socket] == zmq.POLLIN:
                     originator = name
-                    msg = driver.socket.recv()
-                    self.log.debug("Agent received message: {0} from driver: {1}".format(msg, name))
-                    #TODO: send response to controller
-                    self.log.debug("Agent sends message to Controller: {0}".format(msg))
+                    msg = driver.socket.recv_multipart()
+                    msgType = ""
+                    if len(msg) > 1:
+                        msgType = msg[0]
+                        msg = msg[1]
+                    else:
+                        msg = msg[0]
+
+                    if msgType == "CONTROLLER_DISCOVERED":
+                        self.log.debug("Agent {0} discovered controller: {1} and connects to it".format(name, msg))
+                        self.connect_to_controller(msg)
+                    else:
+                        self.log.debug("Agent received message: {0} from driver: {1}".format(msg, name))
+                        #TODO: send response to controller
+                        self.log.debug("Agent sends message to Controller: {0}".format(msg))
 
             if self.socket_pair in socks and socks[self.socket_pair] == zmq.POLLIN:
                 originator = "contoller"

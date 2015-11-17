@@ -1,5 +1,11 @@
 ## WiSHFUL Agent config file
 
+discovery_driver:
+    type : python
+    path : /home/pgawlowicz/workspace/new_wishful/wishful_driver_discovery/bin/simple_discovery
+    args : '-c tcp://127.0.0.1:8989'
+    message_type : [discovery]
+
 ath9k_driver:
     type : python
     path : /home/pgawlowicz/workspace/new_wishful/wishful_driver_ath9k/bin/ath9k_driver
