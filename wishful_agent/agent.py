@@ -175,6 +175,10 @@ class Agent(object):
                     msgType = msgContainer[1]
                     msg = msgContainer[2]
 
+                    if not group:
+                        self.log.debug("Field group not set -> set UUID".format())
+                        msgContainer[0] = self.myId
+
                     self.log.debug("Agent received message: {0}::{1} from driver: {2}".format(msgType, msg, name))
                     if msgType == "CONTROLLER_DISCOVERED":
                         self.log.debug("Agent {0} discovered controller: {1} and connects to it".format(name, msg))
