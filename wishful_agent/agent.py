@@ -74,14 +74,14 @@ class Agent(object):
         self.poller.register(driver.socket, zmq.POLLIN)
         pass
 
-    def send_msg_to_driver(self, driver_name, msg):
-        self.drivers[driver_name].send_msg_to_driver(msg)
+    def send_msg_to_driver(self, driver_name, msgType, msg):
+        self.drivers[driver_name].send_msg_to_driver(msgType, msg)
         pass
 
-    def send_msg_to_driver_group(self, message_type_name, msg):
+    def send_msg_to_driver_group(self, message_type_name, msgType, msg):
         driver_name_list = self.driver_groups[message_type_name]
         for driver_name in driver_name_list:
-            self.send_msg_to_driver(driver_name, msg)
+            self.send_msg_to_driver(driver_name, msgType, msg)
         pass
 
     def connect_to_controller(self, msg):
@@ -110,43 +110,62 @@ class Agent(object):
                         self.log.debug("Agent {0} discovered controller: {1} and connects to it".format(name, msg))
                         self.connect_to_controller(msg)
                     else:
-                        self.log.debug("Agent received message: {0} from driver: {1}".format(msg, name))
+                        self.log.debug("Agent received message: {0}::{1} from driver: {2}".format(msgType, msg, name))
                         #TODO: send response to controller
-                        self.log.debug("Agent sends message to Controller: {0}".format(msg))
+                        self.log.debug("Agent sends message to Controller: {0}::{1}".format(msgType, msg))
 
             if self.socket_pair in socks and socks[self.socket_pair] == zmq.POLLIN:
                 originator = "contoller"
-                msg = self.socket_pair.recv()
-                self.log.debug("Agent received message: {0} from controller using PAIR".format(msg))
+                msg = self.socket_pair.recv_multipart()
+                msgType = ""
+                if len(msg) > 1:
+                    msgType = msg[0]
+                    msg = msg[1]
+                else:
+                    msg = msg[0]
+                self.log.debug("Agent received message: {0}::{1} from controller using PAIR".format(msgType, msg))
 
             if self.socket_sub in socks and socks[self.socket_sub] == zmq.POLLIN:
                 originator = "contoller"
-                msg = self.socket_sub.recv()
-                self.log.debug("Agent received message: {0} from controller using SUB".format(msg))
-
-            #TODO: get msg type
-            msgType = msg;
-            if originator == "contoller":
-                self.log.debug("Agent sends message: {0} to driver".format(msg))
-                if msgType == "SET_CHANNEL":
-                    #self.send_msg_to_driver("ath9k_driver", "msg for ath9k_driver : SET CHANNEL")
-                    #self.send_msg_to_driver_group("radio", "msg for radio drivers : SET CHANNEL")
-                    self.send_msg_to_driver_group("wifi", msg)
-                elif msgType == "START_SERVER":
-                    #self.send_msg_to_driver("iperf_driver", "msg for iperf_driver : START IPERF")
-                    self.send_msg_to_driver_group("performance_test", msg)
+                msg = self.socket_sub.recv_multipart()
+                msgType = ""
+                if len(msg) > 1:
+                    msgType = msg[0]
+                    msg = msg[1]
                 else:
-                    self.log.debug("Message Type {0} not supported".format(msgType))
-                    #self.send_msg_to_driver_group("all", "msg for all drivers")
+                    msg = msg[0]
+                self.log.debug("Agent received message: {0}::{1} from controller using SUB".format(msgType, msg))
+
+            if originator == "contoller":
+                self.log.debug("Agent sends message: {0}::{1} to driver".format(msgType, msg))
+                if msgType == "RADIO":
+                    #self.send_msg_to_driver("ath9k_driver", msgType, msg)
+                    #self.send_msg_to_driver_group("radio", msgType, msg)
+                    self.send_msg_to_driver_group("wifi", msgType, msg)
+                elif msgType == "PERFORMANCE_TEST":
+                    #self.send_msg_to_driver("iperf_driver", msgType, msg)
+                    self.send_msg_to_driver_group("performance_test", msgType, msg)
+                else:
+                    self.log.debug("Message Type {0}:{1} not supported".format(msgType, msg))
+                    #self.send_msg_to_driver_group("all", msgType, msg)
             else:
                 pass
 
 
     def simulate_contoller(self):
+        i = 0
         while True:
             self.log.debug("NEW ITERATION")
-            msg = "SET_CHANNEL"
-            self.sock_server.send(msg)
+            if i % 2 == 0:
+                msgType = "RADIO"
+                msg = "SET_CHANNEL"
+            else:
+                msgType = "PERFORMANCE_TEST"
+                msg = "START_SERVER"
+
+            i += 1
+
+            self.sock_server.send_multipart([msgType, msg])
             gevent.sleep(3)
 
 

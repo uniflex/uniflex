@@ -32,6 +32,6 @@ class Driver(object):
         self.pid = subprocess.Popen(cmd)
         self.log.debug("Driver: {0}, with args: {1}, PID: {2} started".format(self.name, self.args, self.pid.pid))
 
-    def send_msg_to_driver(self,msg):
-        self.log.debug("Driver: {0} sends msg: {1}".format(self.name, msg))
-        self.socket.send(msg)
+    def send_msg_to_driver(self, msgType, msg):
+        self.log.debug("Driver: {0} sends msg: {1}::{2}".format(self.name, msgType, msg))
+        self.socket.send_multipart([msgType, msg])
