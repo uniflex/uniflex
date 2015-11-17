@@ -37,7 +37,10 @@ class Driver(object):
 
 
     def send_msg_to_driver(self, msgContainer):
-        msgType = msgContainer[0]
-        msg = msgContainer[1]
+        group = msgContainer[0]
+        msgType = msgContainer[1]
+        msg = msgContainer[2]
         self.log.debug("Driver: {0} sends msg: {1}::{2}".format(self.name, msgType, msg))
+        msgContainer = []
+        msgContainer = [group, msgType, msg] # driver does not need to know exec time
         self.socket.send_multipart(msgContainer)

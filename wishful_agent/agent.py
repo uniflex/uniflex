@@ -24,6 +24,7 @@ class Agent(object):
         self.poller = zmq.Poller()
         self.context = zmq.Context()
         self.socket_sub = self.context.socket(zmq.SUB) # for downlink communication with controller
+        self.socket_sub.setsockopt(zmq.SUBSCRIBE,  self.myId)
         self.socket_sub.setsockopt(zmq.SUBSCRIBE,  "NEW_NODE_ACK") # need to start communication with controller
         self.socket_pub = self.context.socket(zmq.PUB) # for uplink communication with controller
 
@@ -81,8 +82,9 @@ class Agent(object):
         pass
 
     def send_msg_to_driver_group(self, msgContainer):
-        msgType = msgContainer[0]
-        msg = msgContainer[1]
+        group = msgContainer[0]
+        msgType = msgContainer[1]
+        msg = msgContainer[2]
         driver_name_list = self.driver_groups[msgType]
         for driver_name in driver_name_list:
             self.send_msg_to_driver(driver_name, msgContainer)
@@ -92,24 +94,27 @@ class Agent(object):
         self.socket_pub.send_multipart(msgContainer)
 
     def setup_connection_to_controller(self, msgContainer):
-        msgType = msgContainer[0]
-        msg = msgContainer[1]
+        group = msgContainer[0]
+        msgType = msgContainer[1]
+        msg = msgContainer[2]
         controllerIp = msg #TODO: define profobuf msg
         self.socket_pub.connect(controllerIp)
         self.socket_sub.connect("tcp://127.0.0.1:8990") # TODO: downlink and uplink in config file
 
+        group = "NEW_NODE_MSG"
         msgType = "NEW_NODE_MSG"
         msg = self.myId
-        newNodeMsg = [msgType, msg]
+        msgContainer = [group, msgType, msg]
 
         self.log.debug("Agent sends context-setup request to controller")
         time.sleep(1) # TODO: are we waiting for connection?
-        self.socket_pub.send_multipart(newNodeMsg)
+        self.socket_pub.send_multipart(msgContainer)
 
     def setup_connection_to_controller_complete(self, msgContainer):
         assert len(msgContainer)
-        msgType = msgContainer[0]
-        msg = msgContainer[1]
+        group = msgContainer[0]
+        msgType = msgContainer[1]
+        msg = msgContainer[2]
 
         self.log.debug("Controller confirms creation of context for Agent with msg: {0}::{1}".format(msgType,msg))
 
@@ -124,8 +129,9 @@ class Agent(object):
 
     def processAgentManagementMsg(self, msgContainer):
         assert len(msgContainer)
-        msgType = msgContainer[0]
-        msg = msgContainer[1]
+        group = msgContainer[0]
+        msgType = msgContainer[1]
+        msg = msgContainer[2]
 
         if msgType == "NEW_NODE_ACK":
             self.setup_connection_to_controller_complete(msgContainer)
@@ -133,20 +139,23 @@ class Agent(object):
             pass
 
     def send_msg_now(self, msgContainer):
-        msgType = msgContainer[0]
-        msg = msgContainer[1]
+        group = msgContainer[0]
+        msgType = msgContainer[1]
+        msg = msgContainer[2]
         self.log.debug("Agent sends message: {0}::{1} to driver".format(msgType, msg))
         self.send_msg_to_driver_group(msgContainer)
 
     def send_scheduled_msg(self, msgContainer):
-        msgType = msgContainer[0]
-        msg = msgContainer[1]
+        group = msgContainer[0]
+        msgType = msgContainer[1]
+        msg = msgContainer[2]
         self.log.debug("Agent sends scheduled message: {0}::{1} to driver".format(msgType, msg))
         self.send_msg_to_driver_group(msgContainer)
 
     def schedule_msg(self, delay, msgContainer):
-        msgType = msgContainer[0]
-        msg = msgContainer[1]
+        group = msgContainer[0]
+        msgType = msgContainer[1]
+        msg = msgContainer[2]
         self.log.debug("Agent schedule task for message: {0}::{1} in {2}s".format(msgType, msg, delay))
 
         execTime = (datetime.datetime.now() + datetime.timedelta(seconds=delay))
@@ -161,9 +170,10 @@ class Agent(object):
                 if driver.socket in socks and socks[driver.socket] == zmq.POLLIN:
                     msgContainer = driver.socket.recv_multipart()
 
-                    assert len(msgContainer)
-                    msgType = msgContainer[0]
-                    msg = msgContainer[1]
+                    assert len(msgContainer) == 3
+                    group = msgContainer[0]
+                    msgType = msgContainer[1]
+                    msg = msgContainer[2]
 
                     self.log.debug("Agent received message: {0}::{1} from driver: {2}".format(msgType, msg, name))
                     if msgType == "CONTROLLER_DISCOVERED":
@@ -176,10 +186,13 @@ class Agent(object):
             if self.socket_sub in socks and socks[self.socket_sub] == zmq.POLLIN:
                 msgContainer = self.socket_sub.recv_multipart()
                 self.log.debug("Agent received message: from controller using SUB")
+                
                 assert len(msgContainer)
-                msgType = msgContainer[0]
-                msg = msgContainer[1]
+                group = msgContainer[0]
+                msgType = msgContainer[1]
+                msg = msgContainer[2]
                 delay = int(msgContainer[3])
+                
                 self.log.debug("Agent received message: {0}::{1} from controller using SUB".format(msgType, msg))
 
                 if msgType == "NEW_NODE_ACK":

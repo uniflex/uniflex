@@ -39,20 +39,31 @@ i = 0
 msgSeqNum = 0
 nodeList = []
 
-def add_new_node(nodeId, dl_socket, up_socket):
+def add_new_node(msgContainer, dl_socket, up_socket):
     log = logging.getLogger('wishful_controller.main')
     global i
     global msgSeqNum
+    global nodeList
 
+    assert len(msgContainer) == 3
+    group = msgContainer[0]
+    msgType = msgContainer[1]
+    msg = msgContainer[2]
+
+    nodeId = msg
     log.debug("SIMPLE_CONTROLLER adds new node with UUID: {0}".format(nodeId))
+    nodeList.append(nodeId)
+
+    group = nodeId
     msgType = "NEW_NODE_ACK"
     msg = "tcp://127.0.0.1:8990"
     msgSeqNum += 1
     delay = 0
+    msgContainer = [group, msgType, msg, str(delay)]
 
     up_socket.setsockopt(zmq.SUBSCRIBE,  nodeId)
     time.sleep(1)
-    dl_socket.send_multipart([msgType, msg, str(msgSeqNum), str(delay)])
+    dl_socket.send_multipart(msgContainer)
 
 def start_controll_loop(dl_socket, ul_socket):
     log = logging.getLogger('wishful_controller.main')
@@ -64,14 +75,15 @@ def start_controll_loop(dl_socket, ul_socket):
         log.debug("Waiting for nodes")
         msgContainer = ul_socket.recv_multipart()
 
-        assert len(msgContainer)
-        msgType = msgContainer[0]
-        msg = msgContainer[1]
+        assert len(msgContainer) == 3
+        group = msgContainer[0]
+        msgType = msgContainer[1]
+        msg = msgContainer[2]
 
         log.debug("SIMPLE_CONTROLLER recived msg: {0}::{1}".format(msgType, msg))
 
         if msgType == "NEW_NODE_MSG":
-            add_new_node(msg, dl_socket, ul_socket)
+            add_new_node(msgContainer, dl_socket, ul_socket)
             break
 
     poller = zmq.Poller()
@@ -83,9 +95,10 @@ def start_controll_loop(dl_socket, ul_socket):
         if ul_socket in socks and socks[ul_socket] == zmq.POLLIN:
             msgContainer = ul_socket.recv_multipart()
 
-            assert len(msgContainer)
-            msgType = msgContainer[0]
-            msg = msgContainer[1]
+            assert len(msgContainer) == 3
+            group = msgContainer[0]
+            msgType = msgContainer[1]
+            msg = msgContainer[2]
 
             log.debug("Controller recived msg: {0}::{1}".format(msgType, msg))
 
@@ -93,10 +106,12 @@ def start_controll_loop(dl_socket, ul_socket):
         log.debug("Sends new command")
         msgSeqNum += 1
         if i % 2 == 0:
+            group = nodeList[0]
             msgType = "RADIO"
             msg = "SET_CHANNEL"
             delay = 0
         else:
+            group = nodeList[0]
             msgType = "PERFORMANCE_TEST"
             msg = "START_SERVER"
             delay = 2 #seconds
@@ -104,7 +119,8 @@ def start_controll_loop(dl_socket, ul_socket):
         i += 1
 
         log.debug("Controller sends message: {0}::{1}".format(msgType, msg))
-        dl_socket.send_multipart([msgType, msg, str(msgSeqNum), str(delay)])
+        msgContainer = [group, msgType, msg, str(delay)]
+        dl_socket.send_multipart(msgContainer)
         time.sleep(5)
 
 
