@@ -2,7 +2,7 @@
 
 discovery_module:
     type : python
-    path : ../../wishful_driver_discovery/bin/simple_discovery
+    path : ../../wishful_module_discovery/bin/simple_discovery
     args : ['-d tcp://127.0.0.1:8989', '-u tcp://127.0.0.1:8990']
     message_type : [DISCOVERY]
 
@@ -14,12 +14,12 @@ synchronization_module:
 
 ath9k_module:
     type : python
-    path : ../../wishful_driver_ath9k/bin/ath9k_driver
+    path : ../../wishful_module_ath9k/bin/ath9k_driver
     args : ['-i wlan0,wlan1']
     message_type : [WIFI, RADIO, ALL]
 
 iperf_module:
     type : python
-    path : ../../wishful_driver_iperf/bin/iperf_driver
+    path : ../../wishful_module_iperf/bin/iperf_driver
     args : ['']
     message_type : [PERFORMANCE_TEST, ALL]
