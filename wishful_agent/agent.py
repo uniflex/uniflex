@@ -25,7 +25,6 @@ class Agent(object):
         self.context = zmq.Context()
         self.socket_sub = self.context.socket(zmq.SUB) # for downlink communication with controller
         self.socket_sub.setsockopt(zmq.SUBSCRIBE,  self.myId)
-        self.socket_sub.setsockopt(zmq.SUBSCRIBE,  "NEW_NODE_ACK") # need to start communication with controller
         self.socket_pub = self.context.socket(zmq.PUB) # for uplink communication with controller
 
         #register driver socket in poller
