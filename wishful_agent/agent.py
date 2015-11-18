@@ -128,10 +128,6 @@ class Agent(object):
         #TODO: subscribe to reveiced topics
         self.log.debug("Agent connect its SUB to Controller's PUT socket and subscribe for topics")
         self.socket_sub.setsockopt(zmq.SUBSCRIBE,  self.myId)
-        topicfilter = "RADIO"
-        self.socket_sub.setsockopt(zmq.SUBSCRIBE, topicfilter)
-        topicfilter = "PERFORMANCE_TEST"
-        self.socket_sub.setsockopt(zmq.SUBSCRIBE, topicfilter)
 
 
     def process_msgs(self):
@@ -180,12 +176,12 @@ class Agent(object):
                     self.setup_connection_to_controller_complete(msgContainer)
                 else:
                     self.log.debug("Agent serves command: {0}::{1} from controller".format(msgType.msg_type, msg))
-                    if msgType.exec_time == 0:
+                    if not msgType.exec_time or msgType.exec_time == 0:
                         self.log.debug("Agent sends message: {0}::{1} to module".format(msgType.msg_type, msg))
                         self.send_msg_to_module_group(msgContainer)
                     else:
-                        self.log.debug("Agent schedule task for message: {0}::{1} in {2}s".format(msgType.msg_type, msg, msgType.exec_time))
-                        execTime = (datetime.datetime.now() + datetime.timedelta(seconds=msgType.exec_time))
+                        execTime = datetime.datetime.strptime(msgType.exec_time, "%Y-%m-%d %H:%M:%S.%f")
+                        self.log.debug("Agent schedule task for message: {0}::{1} at {2}".format(msgType.msg_type, msg, execTime))
                         self.jobScheduler.add_job(self.send_msg_to_module_group, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer})
 
 
