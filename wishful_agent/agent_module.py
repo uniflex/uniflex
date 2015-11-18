@@ -3,6 +3,11 @@ import subprocess
 import zmq.green as zmq
 import random
 
+__author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
+__copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
+__version__ = "0.1.0"
+__email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
+
 class AgentModule(object):
     def __init__(self, name, path, args):
         self.log = logging.getLogger("{module}.{name}".format(

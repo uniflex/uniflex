@@ -7,11 +7,14 @@ import zmq
 from apscheduler.schedulers.background import BackgroundScheduler
 import datetime
 import uuid
+from wishful_upis.msgs.management_pb2 import Description as msgDesc
+
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
 __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
+
 
 class Agent(object):
     def __init__(self, controller):
@@ -84,37 +87,43 @@ class Agent(object):
 
     def send_msg_to_module_group(self, msgContainer):
         group = msgContainer[0]
-        msgType = msgContainer[1]
+        msgType = msgDesc()
+        msgType.ParseFromString(msgContainer[1])
+        #TO BE REMOVED: translation for string for modules
+        msgContainer[1] = str(msgType.msg_type)
+        ##############
         msg = msgContainer[2]
-        module_name_list = self.module_groups[msgType]
+        module_name_list = self.module_groups[msgType.msg_type]
         for module_name in module_name_list:
             self.send_msg_to_module(module_name, msgContainer)
         pass
 
     def setup_connection_to_controller(self, msgContainer):
         group = msgContainer[0]
-        msgType = msgContainer[1]
+        msgType = msgDesc()
+        msgType.ParseFromString(msgContainer[1])
         msg = msgContainer[2]
         controllerIp = msg #TODO: define profobuf msg
         self.socket_pub.connect(controllerIp)
         self.socket_sub.connect("tcp://127.0.0.1:8990") # TODO: downlink and uplink in config file
 
         group = "NEW_NODE_MSG"
-        msgType = "NEW_NODE_MSG"
+        msgType.Clear()
+        msgType.msg_type = "NEW_NODE_MSG"
         msg = self.myId
-        msgContainer = [group, msgType, msg]
+        msgContainer = [group, msgType.SerializeToString(), msg]
 
         self.log.debug("Agent sends context-setup request to controller")
         time.sleep(1) # TODO: are we waiting for connection?
         self.socket_pub.send_multipart(msgContainer)
 
     def setup_connection_to_controller_complete(self, msgContainer):
-        assert len(msgContainer)
         group = msgContainer[0]
-        msgType = msgContainer[1]
+        msgType = msgDesc()
+        msgType.ParseFromString(msgContainer[1])
         msg = msgContainer[2]
 
-        self.log.debug("Controller confirms creation of context for Agent with msg: {0}::{1}".format(msgType,msg))
+        self.log.debug("Controller confirms creation of context for Agent with msg: {0}::{1}".format(msgType.msg_type,msg))
 
         #TODO: subscribe to reveiced topics
         self.log.debug("Agent connect its SUB to Controller's PUT socket and subscribe for topics")
@@ -136,45 +145,48 @@ class Agent(object):
 
                     assert len(msgContainer) == 3
                     group = msgContainer[0]
-                    msgType = msgContainer[1]
+                    #TO BE REMOVED: translation from string from modules
+                    msgType = msgDesc()
+                    msgType.msg_type = msgContainer[1]
+                    msgContainer[1] = msgType.SerializeToString()
+                    ##############                    
                     msg = msgContainer[2]
 
                     if not group:
                         self.log.debug("Field group not set -> set UUID".format())
                         msgContainer[0] = self.myId
 
-                    self.log.debug("Agent received message: {0}::{1} from module: {2}".format(msgType, msg, name))
-                    if msgType == "CONTROLLER_DISCOVERED":
+                    self.log.debug("Agent received message: {0}::{1} from module: {2}".format(msgType.msg_type, msg, name))
+                    if msgType.msg_type == "CONTROLLER_DISCOVERED":
                         self.log.debug("Agent {0} discovered controller: {1} and connects to it".format(name, msg))
                         self.setup_connection_to_controller(msgContainer)
                     else:
-                        self.log.debug("Agent sends message to Controller: {0}::{1}".format(msgType, msg))
+                        self.log.debug("Agent sends message to Controller: {0}::{1}".format(msgType.msg_type, msg))
                         self.socket_pub.send_multipart(msgContainer)
 
             if self.socket_sub in socks and socks[self.socket_sub] == zmq.POLLIN:
                 msgContainer = self.socket_sub.recv_multipart()
                 self.log.debug("Agent received message: from controller using SUB")
                 
-                assert len(msgContainer)
+                assert len(msgContainer) == 3
                 group = msgContainer[0]
-                msgType = msgContainer[1]
+                msgType = msgDesc()
+                msgType.ParseFromString(msgContainer[1])
                 msg = msgContainer[2]
-                delay = int(msgContainer[3])
                 
-                self.log.debug("Agent received message: {0}::{1} from controller using SUB".format(msgType, msg))
+                self.log.debug("Agent received message: {0}::{1} from controller using SUB".format(msgType.msg_type, msg))
 
-                if msgType == "NEW_NODE_ACK":
+                if msgType.msg_type == "NEW_NODE_ACK":
                     self.setup_connection_to_controller_complete(msgContainer)
                 else:
-                    self.log.debug("Agent serves command: {0}::{1} from controller".format(msgType, msg))
-                    if delay == 0:
-                        self.log.debug("Agent sends message: {0}::{1} to module".format(msgType, msg))
+                    self.log.debug("Agent serves command: {0}::{1} from controller".format(msgType.msg_type, msg))
+                    if msgType.exec_time == 0:
+                        self.log.debug("Agent sends message: {0}::{1} to module".format(msgType.msg_type, msg))
                         self.send_msg_to_module_group(msgContainer)
                     else:
-                        self.log.debug("Agent schedule task for message: {0}::{1} in {2}s".format(msgType, msg, delay))
-                        execTime = (datetime.datetime.now() + datetime.timedelta(seconds=delay))
+                        self.log.debug("Agent schedule task for message: {0}::{1} in {2}s".format(msgType.msg_type, msg, msgType.exec_time))
+                        execTime = (datetime.datetime.now() + datetime.timedelta(seconds=msgType.exec_time))
                         self.jobScheduler.add_job(self.send_msg_to_module_group, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer})
-
 
 
     def run(self):
