@@ -2,18 +2,18 @@
 
 discovery_driver:
     type : python
-    path : /home/pgawlowicz/workspace/new_wishful/wishful_driver_discovery/bin/simple_discovery
+    path : ../../wishful_driver_discovery/bin/simple_discovery
     args : '-c tcp://127.0.0.1:8989'
     message_type : [DISCOVERY]
 
 ath9k_driver:
     type : python
-    path : /home/pgawlowicz/workspace/new_wishful/wishful_driver_ath9k/bin/ath9k_driver
+    path : ../../wishful_driver_ath9k/bin/ath9k_driver
     args : '-i wlan0,wlan1'
     message_type : [WIFI, RADIO, ALL]
 
 iperf_driver:
     type : python
-    path : /home/pgawlowicz/workspace/new_wishful/wishful_driver_iperf/bin/iperf_driver
+    path : ../../wishful_driver_iperf/bin/iperf_driver
     args : ''
     message_type : [PERFORMANCE_TEST, ALL]
