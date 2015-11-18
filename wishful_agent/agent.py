@@ -14,7 +14,6 @@ class Agent(object):
             module=self.__class__.__module__, name=self.__class__.__name__))
         self.log.debug("Controller: {0}".format(controller))
         self.config = None
-        self.driver_port = 5000
         self.myUuid = uuid.uuid4()
         self.myId = str(self.myUuid)
 
@@ -45,21 +44,19 @@ class Agent(object):
         self.log.debug("Config: {0}".format(config))
 
         for driver_name, driver_parameters in config.iteritems():
-            self.driver_port += 1
             self.add_driver(
                 driver_parameters['message_type'],
                 self.exec_driver(
                         name=driver_name,
                         path=driver_parameters['path'],
-                        args=driver_parameters['args'],
-                        port=self.driver_port
+                        args=driver_parameters['args']
                 )
             )
         pass
 
 
-    def exec_driver(self, name, path, args, port):
-        new_driver = Driver(name, path, args, port)
+    def exec_driver(self, name, path, args):
+        new_driver = Driver(name, path, args)
         return new_driver
 
     def add_driver(self, message_types, driver):

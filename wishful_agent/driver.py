@@ -1,16 +1,16 @@
 import logging
 import subprocess
 import zmq.green as zmq
-
+import random
 
 class Driver(object):
-    def __init__(self, name, path, args, port):
+    def __init__(self, name, path, args):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
         self.name = name
         self.path = path
         self.args = args
-        self.port = port
+        self.port = None
 
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PAIR)
@@ -20,8 +20,16 @@ class Driver(object):
         pass
 
     def start_server_for_driver(self):
-        self.socket.bind("tcp://*:%s" % self.port)
-        self.log.debug("Server for {0} started ".format(self.name))
+
+        self.port = random.randint(5000, 10000)
+        while True:
+            try:
+                self.socket.bind("tcp://*:%s" % self.port)
+                break
+            except:
+                self.port = random.randint(5000, 10000)
+
+        self.log.debug("Server for {0} started on port: {1} ".format(self.name, self.port))
 
     def start_driver_process(self):
         cmd = [self.path,
