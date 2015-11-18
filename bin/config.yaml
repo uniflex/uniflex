@@ -1,19 +1,25 @@
 ## WiSHFUL Agent config file
 
-discovery_driver:
+discovery_module:
     type : python
     path : ../../wishful_driver_discovery/bin/simple_discovery
-    args : '-c tcp://127.0.0.1:8989'
+    args : ['-d tcp://127.0.0.1:8989', '-u tcp://127.0.0.1:8990']
     message_type : [DISCOVERY]
 
-ath9k_driver:
+synchronization_module:
+    type : python
+    path : ../../wishful_module_ptp/bin/ptp_client.py
+    args : ['-i eth0']
+    message_type : []
+
+ath9k_module:
     type : python
     path : ../../wishful_driver_ath9k/bin/ath9k_driver
-    args : '-i wlan0,wlan1'
+    args : ['-i wlan0,wlan1']
     message_type : [WIFI, RADIO, ALL]
 
-iperf_driver:
+iperf_module:
     type : python
     path : ../../wishful_driver_iperf/bin/iperf_driver
-    args : ''
+    args : ['']
     message_type : [PERFORMANCE_TEST, ALL]

@@ -35,7 +35,8 @@ class Driver(object):
         cmd = [self.path,
                '--port', str(self.port)
                ]
-        cmd.extend(filter(None, [self.args]))
+        cmd.extend(filter(None, self.args))
+        print cmd
         self.pid = subprocess.Popen(cmd)
         self.log.debug("Driver: {0}, with args: {1}, PID: {2} started".format(self.name, self.args, self.pid.pid))
 
