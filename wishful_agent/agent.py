@@ -90,9 +90,6 @@ class Agent(object):
             self.send_msg_to_driver(driver_name, msgContainer)
         pass
 
-    def send_driver_response_to_controller(self, msgContainer):
-        self.socket_pub.send_multipart(msgContainer)
-
     def setup_connection_to_controller(self, msgContainer):
         group = msgContainer[0]
         msgType = msgContainer[1]
@@ -127,40 +124,6 @@ class Agent(object):
         self.socket_sub.setsockopt(zmq.SUBSCRIBE, topicfilter)
 
 
-    def processAgentManagementMsg(self, msgContainer):
-        assert len(msgContainer)
-        group = msgContainer[0]
-        msgType = msgContainer[1]
-        msg = msgContainer[2]
-
-        if msgType == "NEW_NODE_ACK":
-            self.setup_connection_to_controller_complete(msgContainer)
-        else:
-            pass
-
-    def send_msg_now(self, msgContainer):
-        group = msgContainer[0]
-        msgType = msgContainer[1]
-        msg = msgContainer[2]
-        self.log.debug("Agent sends message: {0}::{1} to driver".format(msgType, msg))
-        self.send_msg_to_driver_group(msgContainer)
-
-    def send_scheduled_msg(self, msgContainer):
-        group = msgContainer[0]
-        msgType = msgContainer[1]
-        msg = msgContainer[2]
-        self.log.debug("Agent sends scheduled message: {0}::{1} to driver".format(msgType, msg))
-        self.send_msg_to_driver_group(msgContainer)
-
-    def schedule_msg(self, delay, msgContainer):
-        group = msgContainer[0]
-        msgType = msgContainer[1]
-        msg = msgContainer[2]
-        self.log.debug("Agent schedule task for message: {0}::{1} in {2}s".format(msgType, msg, delay))
-
-        execTime = (datetime.datetime.now() + datetime.timedelta(seconds=delay))
-        self.jobScheduler.add_job(self.send_scheduled_msg, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer})
-
     def process_msgs(self):
         # Work on requests from both controller and drivers
         while True:
@@ -185,7 +148,7 @@ class Agent(object):
                         self.setup_connection_to_controller(msgContainer)
                     else:
                         self.log.debug("Agent sends message to Controller: {0}::{1}".format(msgType, msg))
-                        self.send_driver_response_to_controller(msgContainer)
+                        self.socket_pub.send_multipart(msgContainer)
 
             if self.socket_sub in socks and socks[self.socket_sub] == zmq.POLLIN:
                 msgContainer = self.socket_sub.recv_multipart()
@@ -204,9 +167,13 @@ class Agent(object):
                 else:
                     self.log.debug("Agent serves command: {0}::{1} from controller".format(msgType, msg))
                     if delay == 0:
-                        self.send_msg_now(msgContainer)
+                        self.log.debug("Agent sends message: {0}::{1} to driver".format(msgType, msg))
+                        self.send_msg_to_driver_group(msgContainer)
                     else:
-                        self.schedule_msg(delay, msgContainer)
+                        self.log.debug("Agent schedule task for message: {0}::{1} in {2}s".format(msgType, msg, delay))
+                        execTime = (datetime.datetime.now() + datetime.timedelta(seconds=delay))
+                        self.jobScheduler.add_job(self.send_msg_to_driver_group, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer})
+
 
 
     def run(self):
