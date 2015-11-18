@@ -3,7 +3,7 @@ import subprocess
 import zmq.green as zmq
 import random
 
-class Driver(object):
+class AgentModule(object):
     def __init__(self, name, path, args):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
@@ -15,11 +15,11 @@ class Driver(object):
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PAIR)
 
-        self.start_server_for_driver()
-        self.start_driver_process()
+        self.start_server_for_module()
+        self.start_module_process()
         pass
 
-    def start_server_for_driver(self):
+    def start_server_for_module(self):
 
         self.port = random.randint(5000, 10000)
         while True:
@@ -31,25 +31,24 @@ class Driver(object):
 
         self.log.debug("Server for {0} started on port: {1} ".format(self.name, self.port))
 
-    def start_driver_process(self):
+    def start_module_process(self):
         cmd = [self.path,
                '--port', str(self.port)
                ]
         cmd.extend(filter(None, self.args))
-        print cmd
         self.pid = subprocess.Popen(cmd)
-        self.log.debug("Driver: {0}, with args: {1}, PID: {2} started".format(self.name, self.args, self.pid.pid))
+        self.log.debug("Module: {0}, with args: {1}, PID: {2} started".format(self.name, self.args, self.pid.pid))
 
-    def kill_driver_subprocess(self):
+    def kill_module_subprocess(self):
         self.pid.kill()
         pass
 
 
-    def send_msg_to_driver(self, msgContainer):
+    def send_msg_to_module(self, msgContainer):
         group = msgContainer[0]
         msgType = msgContainer[1]
         msg = msgContainer[2]
-        self.log.debug("Driver: {0} sends msg: {1}::{2}".format(self.name, msgType, msg))
+        self.log.debug("Module: {0} sends msg: {1}::{2}".format(self.name, msgType, msg))
         msgContainer = []
-        msgContainer = [group, msgType, msg] # driver does not need to know exec time
+        msgContainer = [group, msgType, msg] # module does not need to know exec time
         self.socket.send_multipart(msgContainer)

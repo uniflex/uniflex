@@ -2,7 +2,7 @@ import logging
 import time
 import sys
 import yaml
-from driver import *
+from agent_module import *
 import zmq
 from apscheduler.schedulers.background import BackgroundScheduler
 import datetime
@@ -31,64 +31,64 @@ class Agent(object):
         self.socket_sub.setsockopt(zmq.SUBSCRIBE,  self.myId)
         self.socket_pub = self.context.socket(zmq.PUB) # for uplink communication with controller
 
-        #register driver socket in poller
+        #register module socket in poller
         self.poller.register(self.socket_sub, zmq.POLLIN)
 
-    drivers = {}
-    driver_groups = {}
+    modules = {}
+    module_groups = {}
 
     def read_config_file(self, path=None):
-        self.log.debug("Path to driver: {0}".format(path))
+        self.log.debug("Path to module: {0}".format(path))
 
         with open(path, 'r') as f:
            config = yaml.load(f)
 
         return config
 
-    def load_drivers(self, config):
+    def load_modules(self, config):
         self.log.debug("Config: {0}".format(config))
 
-        for driver_name, driver_parameters in config.iteritems():
-            self.add_driver(
-                driver_parameters['message_type'],
-                self.exec_driver(
-                        name=driver_name,
-                        path=driver_parameters['path'],
-                        args=driver_parameters['args']
+        for module_name, module_parameters in config.iteritems():
+            self.add_module(
+                module_parameters['message_type'],
+                self.exec_module(
+                        name=module_name,
+                        path=module_parameters['path'],
+                        args=module_parameters['args']
                 )
             )
         pass
 
 
-    def exec_driver(self, name, path, args):
-        new_driver = Driver(name, path, args)
-        return new_driver
+    def exec_module(self, name, path, args):
+        new_module = AgentModule(name, path, args)
+        return new_module
 
-    def add_driver(self, message_types, driver):
-        self.log.debug("Adding new driver: {0}".format(driver))
-        self.drivers[driver.name] = driver
+    def add_module(self, message_types, module):
+        self.log.debug("Adding new module: {0}".format(module))
+        self.modules[module.name] = module
 
         for message_type in message_types:
-            if message_type in self.driver_groups.keys():
-                self.driver_groups[message_type].append(driver.name)
+            if message_type in self.module_groups.keys():
+                self.module_groups[message_type].append(module.name)
             else:
-                self.driver_groups[message_type] = [driver.name]
+                self.module_groups[message_type] = [module.name]
 
-        #register driver socket in poller
-        self.poller.register(driver.socket, zmq.POLLIN)
+        #register module socket in poller
+        self.poller.register(module.socket, zmq.POLLIN)
         pass
 
-    def send_msg_to_driver(self, driver_name, msgContainer):
-        self.drivers[driver_name].send_msg_to_driver(msgContainer)
+    def send_msg_to_module(self, module_name, msgContainer):
+        self.modules[module_name].send_msg_to_module(msgContainer)
         pass
 
-    def send_msg_to_driver_group(self, msgContainer):
+    def send_msg_to_module_group(self, msgContainer):
         group = msgContainer[0]
         msgType = msgContainer[1]
         msg = msgContainer[2]
-        driver_name_list = self.driver_groups[msgType]
-        for driver_name in driver_name_list:
-            self.send_msg_to_driver(driver_name, msgContainer)
+        module_name_list = self.module_groups[msgType]
+        for module_name in module_name_list:
+            self.send_msg_to_module(module_name, msgContainer)
         pass
 
     def setup_connection_to_controller(self, msgContainer):
@@ -126,13 +126,13 @@ class Agent(object):
 
 
     def process_msgs(self):
-        # Work on requests from both controller and drivers
+        # Work on requests from both controller and modules
         while True:
             socks = dict(self.poller.poll())
 
-            for name, driver in self.drivers.iteritems():
-                if driver.socket in socks and socks[driver.socket] == zmq.POLLIN:
-                    msgContainer = driver.socket.recv_multipart()
+            for name, module in self.modules.iteritems():
+                if module.socket in socks and socks[module.socket] == zmq.POLLIN:
+                    msgContainer = module.socket.recv_multipart()
 
                     assert len(msgContainer) == 3
                     group = msgContainer[0]
@@ -143,7 +143,7 @@ class Agent(object):
                         self.log.debug("Field group not set -> set UUID".format())
                         msgContainer[0] = self.myId
 
-                    self.log.debug("Agent received message: {0}::{1} from driver: {2}".format(msgType, msg, name))
+                    self.log.debug("Agent received message: {0}::{1} from module: {2}".format(msgType, msg, name))
                     if msgType == "CONTROLLER_DISCOVERED":
                         self.log.debug("Agent {0} discovered controller: {1} and connects to it".format(name, msg))
                         self.setup_connection_to_controller(msgContainer)
@@ -168,12 +168,12 @@ class Agent(object):
                 else:
                     self.log.debug("Agent serves command: {0}::{1} from controller".format(msgType, msg))
                     if delay == 0:
-                        self.log.debug("Agent sends message: {0}::{1} to driver".format(msgType, msg))
-                        self.send_msg_to_driver_group(msgContainer)
+                        self.log.debug("Agent sends message: {0}::{1} to module".format(msgType, msg))
+                        self.send_msg_to_module_group(msgContainer)
                     else:
                         self.log.debug("Agent schedule task for message: {0}::{1} in {2}s".format(msgType, msg, delay))
                         execTime = (datetime.datetime.now() + datetime.timedelta(seconds=delay))
-                        self.jobScheduler.add_job(self.send_msg_to_driver_group, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer})
+                        self.jobScheduler.add_job(self.send_msg_to_module_group, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer})
 
 
 
@@ -187,9 +187,9 @@ class Agent(object):
 
         finally:
             self.log.debug("Unexpected error:".format(sys.exc_info()[0]))
-            self.log.debug("Kills all drivers' subprocesses")
-            for name, driver in self.drivers.iteritems():
-                driver.kill_driver_subprocess()
+            self.log.debug("Kills all modules' subprocesses")
+            for name, module in self.modules.iteritems():
+                module.kill_module_subprocess()
             self.jobScheduler.shutdown()
             self.socket_sub.close()
             self.socket_pub.close()
