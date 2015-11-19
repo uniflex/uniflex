@@ -54,6 +54,19 @@ class Agent(object):
 
         self.agent_info = config['agent_info']
 
+        inproc_modules = config['inproc_modules']
+        for module_name, module_parameters in inproc_modules.iteritems():
+            self.add_inproc_module(
+                module_parameters['message_type'],
+                self.exec_inproc_module(
+                        name=module_name,
+                        py_module=module_parameters['import'],
+                        class_name=module_parameters['class_name'],
+                        args=module_parameters['args'],
+                        msg_proc_func_name=module_parameters['function'],
+                )
+            )
+
         modules = config['modules']
         for module_name, module_parameters in modules.iteritems():
             self.add_module(
@@ -66,10 +79,23 @@ class Agent(object):
             )
         pass
 
+    def exec_inproc_module(self, name, py_module, class_name, args, msg_proc_func_name):
+        new_module = AgentInProcModule(name, py_module, class_name, args, msg_proc_func_name)
+        return new_module
 
     def exec_module(self, name, path, args):
         new_module = AgentModule(name, path, args)
         return new_module
+
+    def add_inproc_module(self, message_types, module):
+        self.log.debug("Adding new inproc module: {0}".format(module))
+        self.modules[module.name] = module
+
+        for message_type in message_types:
+            if message_type in self.module_groups.keys():
+                self.module_groups[message_type].append(module.name)
+            else:
+                self.module_groups[message_type] = [module.name]
 
     def add_module(self, message_types, module):
         self.log.debug("Adding new module: {0}".format(module))
@@ -86,17 +112,19 @@ class Agent(object):
         pass
 
     def send_msg_to_module(self, module_name, msgContainer):
-        self.modules[module_name].send_msg_to_module(msgContainer)
-        pass
+        return self.modules[module_name].send_msg_to_module(msgContainer)
 
     def send_msg_to_module_group(self, msgContainer):
         msgDesc = msgMgmt.MsgDesc()
         msgDesc.ParseFromString(msgContainer[1])
 
+        response = []
         module_name_list = self.module_groups[msgDesc.msg_type]
         for module_name in module_name_list:
-            self.send_msg_to_module(module_name, msgContainer)
-        pass
+            tmp = self.send_msg_to_module(module_name, msgContainer)
+            if tmp:
+                response.append(tmp)
+        return response
 
     def setup_connection_to_controller(self, msgContainer):
         msgDesc= msgMgmt.MsgDesc()
@@ -167,15 +195,14 @@ class Agent(object):
 
             if self.socket_sub in socks and socks[self.socket_sub] == zmq.POLLIN:
                 msgContainer = self.socket_sub.recv_multipart()
-                self.log.debug("Agent received message: from controller using SUB")
-                
+
                 assert len(msgContainer) == 3
                 group = msgContainer[0]
                 msgDesc = msgMgmt.MsgDesc()
                 msgDesc.ParseFromString(msgContainer[1])
                 msg = msgContainer[2]
                 
-                self.log.debug("Agent received message: {0}::{1} from controller using SUB".format(msgDesc.msg_type, msg))
+                self.log.debug("Agent received message: {0} from controller".format(msgDesc.msg_type))
 
                 if msgDesc.msg_type == get_msg_type(msgMgmt.NewNodeAck):
                     self.setup_connection_to_controller_complete(msgContainer)
@@ -183,7 +210,12 @@ class Agent(object):
                     self.log.debug("Agent serves command: {0}::{1} from controller".format(msgDesc.msg_type, msg))
                     if not msgDesc.exec_time or msgDesc.exec_time == 0:
                         self.log.debug("Agent sends message: {0}::{1} to module".format(msgDesc.msg_type, msg))
-                        self.send_msg_to_module_group(msgContainer)
+                        responses = self.send_msg_to_module_group(msgContainer)
+                        if responses:
+                            self.log.debug("InProcModule sends message to controller".format())
+                            for msgContainer in responses:
+                                self.socket_pub.send_multipart(msgContainer)
+
                     else:
                         execTime = datetime.datetime.strptime(msgDesc.exec_time, "%Y-%m-%d %H:%M:%S.%f")
                         self.log.debug("Agent schedule task for message: {0}::{1} at {2}".format(msgDesc.msg_type, msg, execTime))

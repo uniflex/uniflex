@@ -8,6 +8,39 @@ __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
 __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
+
+
+class AgentInProcModule(object):
+    def __init__(self, name, py_module, class_name, args, msg_proc_func_name):
+        self.log = logging.getLogger("{module}.{name}".format(
+            module=self.__class__.__module__, name=self.__class__.__name__))
+        self.name = name
+        self.py_module = py_module
+        self.class_name = class_name
+        self.args = args
+        self.msg_proc_func_name = msg_proc_func_name
+        self.socket = None #mockup
+
+        self.my_import(py_module)
+        self.driver = None
+        my_code = 'self.driver = {0}.{1}()'.format(py_module,class_name)
+        exec my_code
+        pass
+
+    def my_import(self, module_name):
+        globals()[module_name] = __import__(module_name)
+
+    def send_msg_to_module(self, msgContainer):
+        self.log.debug("InProcModule: {0} sends msg".format(self.name))
+        result = getattr(self.driver, self.msg_proc_func_name)(msgContainer)
+        self.log.debug("InProcModule: {0} return msgContainter : {1}".format(self.name, result))
+        return result
+
+    def kill_module_subprocess(self):
+        #mockup function
+        pass
+
+
 class AgentModule(object):
     def __init__(self, name, path, args):
         self.log = logging.getLogger("{module}.{name}".format(
@@ -52,3 +85,4 @@ class AgentModule(object):
     def send_msg_to_module(self, msgContainer):
         self.log.debug("Module: {0} sends msg".format(self.name))
         self.socket.send_multipart(msgContainer)
+        return None
