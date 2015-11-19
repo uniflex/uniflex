@@ -33,7 +33,7 @@ class AgentInProcModule(object):
     def send_msg_to_module(self, msgContainer):
         self.log.debug("InProcModule: {0} sends msg".format(self.name))
         result = getattr(self.driver, self.msg_proc_func_name)(msgContainer)
-        self.log.debug("InProcModule: {0} return msgContainter : {1}".format(self.name, result))
+        self.log.debug("InProcModule: {0} return msgContainter".format(self.name))
         return result
 
     def kill_module_subprocess(self):
@@ -83,6 +83,6 @@ class AgentModule(object):
 
 
     def send_msg_to_module(self, msgContainer):
-        self.log.debug("Module: {0} sends msg".format(self.name))
+        self.log.debug("OutProcModule: {0} sends msg".format(self.name))
         self.socket.send_multipart(msgContainer)
         return None

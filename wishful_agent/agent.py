@@ -123,6 +123,9 @@ class Agent(object):
         for module_name in module_name_list:
             tmp = self.send_msg_to_module(module_name, msgContainer)
             if tmp:
+                msgDesc= msgMgmt.MsgDesc()
+                msgDesc.ParseFromString(tmp[1])
+                self.log.debug("Agent received message of type: {0} from module: {1}".format(msgDesc.msg_type, module_name))
                 response.append(tmp)
         return response
 
@@ -212,7 +215,6 @@ class Agent(object):
                         self.log.debug("Agent sends message: {0}::{1} to module".format(msgDesc.msg_type, msg))
                         responses = self.send_msg_to_module_group(msgContainer)
                         if responses:
-                            self.log.debug("InProcModule sends message to controller".format())
                             for msgContainer in responses:
                                 self.socket_pub.send_multipart(msgContainer)
 

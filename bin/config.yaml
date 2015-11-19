@@ -6,7 +6,7 @@ agent_info:
 
 
 inproc_modules:
-  ath9k_module:
+  ath9k_module_inproc:
       type : python
       import : wishful_ath9k_driver
       class_name : Ath9kDriver
@@ -16,6 +16,12 @@ inproc_modules:
 
 
 modules:
+  ath9k_module_outproc:
+      type : python
+      path : ../../wishful_module_ath9k/bin/ath9k_driver
+      args : ['-i wlan0,wlan1']
+      message_type : [WIFI, RADIO, ALL]
+
   discovery_module:
       type : python
       path : ../../wishful_module_discovery/bin/simple_discovery
