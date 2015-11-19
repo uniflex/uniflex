@@ -24,6 +24,7 @@ class Agent(object):
         self.config = None
         self.myUuid = uuid.uuid4()
         self.myId = str(self.myUuid)
+        self.agent_info = {}
 
         self.jobScheduler = BackgroundScheduler()
         self.jobScheduler.start()
@@ -51,7 +52,10 @@ class Agent(object):
     def load_modules(self, config):
         self.log.debug("Config: {0}".format(config))
 
-        for module_name, module_parameters in config.iteritems():
+        self.agent_info = config['agent_info']
+
+        modules = config['modules']
+        for module_name, module_parameters in modules.iteritems():
             self.add_module(
                 module_parameters['message_type'],
                 self.exec_module(
@@ -109,8 +113,8 @@ class Agent(object):
         msgDesc.msg_type = get_msg_type(msgMgmt.NewNodeMsg)
         msg = msgMgmt.NewNodeMsg()
         msg.agent_uuid =  self.myId
-        msg.name = "Agent_123"
-        msg.info = "Agent_Info"
+        msg.name = self.agent_info['name']
+        msg.info = self.agent_info['info']
 
         msgContainer = [group, msgDesc.SerializeToString(), msg.SerializeToString()]
 
