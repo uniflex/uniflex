@@ -50,10 +50,5 @@ class AgentModule(object):
 
 
     def send_msg_to_module(self, msgContainer):
-        group = msgContainer[0]
-        msgType = msgContainer[1]
-        msg = msgContainer[2]
-        self.log.debug("Module: {0} sends msg: {1}::{2}".format(self.name, msgType, msg))
-        msgContainer = []
-        msgContainer = [group, msgType, msg] # module does not need to know exec time
+        self.log.debug("Module: {0} sends msg".format(self.name))
         self.socket.send_multipart(msgContainer)
