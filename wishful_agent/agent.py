@@ -252,8 +252,10 @@ class Agent(object):
         except KeyboardInterrupt:
             self.log.debug("Agent exits")
 
-        finally:
+        except:
             self.log.debug("Unexpected error:".format(sys.exc_info()[0]))
+
+        finally:
             self.terminate_connection_to_controller()
             self.log.debug("Exit all modules' subprocesses")
             for name, module in self.modules.iteritems():
