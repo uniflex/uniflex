@@ -255,9 +255,9 @@ class Agent(object):
         finally:
             self.log.debug("Unexpected error:".format(sys.exc_info()[0]))
             self.terminate_connection_to_controller()
-            self.log.debug("Kills all modules' subprocesses")
+            self.log.debug("Exit all modules' subprocesses")
             for name, module in self.modules.iteritems():
-                module.kill_module_subprocess()
+                module.exit()
             self.jobScheduler.shutdown()
             self.socket_sub.close()
             self.socket_pub.close()

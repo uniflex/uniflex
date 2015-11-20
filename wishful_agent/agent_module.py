@@ -36,7 +36,7 @@ class AgentInProcModule(object):
         self.log.debug("InProcModule: {0} return msgContainter".format(self.name))
         return result
 
-    def kill_module_subprocess(self):
+    def exit(self):
         #mockup function
         pass
 
@@ -77,7 +77,7 @@ class AgentModule(object):
         self.pid = subprocess.Popen(cmd)
         self.log.debug("Module: {0}, with args: {1}, PID: {2} started".format(self.name, self.args, self.pid.pid))
 
-    def kill_module_subprocess(self):
+    def exit(self):
         self.pid.kill()
         pass
 
