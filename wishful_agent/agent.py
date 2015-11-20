@@ -26,6 +26,8 @@ class Agent(object):
         self.agent_info = {}
 
         self.connectedToController = False
+        self.controllerDL = None
+        self.controllerUL = None
 
         self.jobScheduler = BackgroundScheduler()
         self.jobScheduler.start()
@@ -141,9 +143,18 @@ class Agent(object):
             return
 
         self.log.debug("Agent connects controller: DL:{0}, UL:{1}".format(msg.down_link, msg.up_link))
+
+        if self.controllerDL and self.controllerUL:
+            try:
+                self.socket_pub.disconnect(self.controllerDL)
+                self.socket_sub.disconnect(self.controllerUL)
+            except:
+                pass
+
+        self.controllerDL = msg.down_link
+        self.controllerUL = msg.up_link
         self.socket_pub.connect(msg.down_link)
         self.socket_sub.connect(msg.up_link)
-        self.connectedToController = True
 
         group = "NEW_NODE"
         msgDesc.Clear()
@@ -172,6 +183,19 @@ class Agent(object):
         for topic in msg.topics:
             self.log.debug("Agent subscribes to topic: {0}".format(topic))
             self.socket_sub.setsockopt(zmq.SUBSCRIBE, str(topic))
+
+        self.connectedToController = True
+
+        #stop discovery module:
+        self.log.debug("Agent stops discovery module")
+        group = "LOCAL"
+        msgDesc = msgMgmt.MsgDesc()
+        msgDesc.msg_type = get_msg_type(msgMgmt.DiscoverySuccessMsg)
+        msg = msgMgmt.DiscoverySuccessMsg()
+        msg.status = True
+        msgContainer = [group, msgDesc.SerializeToString(), msg.SerializeToString()]
+        self.send_msg_to_module_group(msgContainer)
+
 
     def terminate_connection_to_controller(self):
         self.log.debug("Agend sends NodeExitMsg to Controller".format())
@@ -252,8 +276,8 @@ class Agent(object):
         except KeyboardInterrupt:
             self.log.debug("Agent exits")
 
-        except:
-            self.log.debug("Unexpected error:".format(sys.exc_info()[0]))
+        #except:
+        #    self.log.debug("Unexpected error:".format(sys.exc_info()[0]))
 
         finally:
             self.terminate_connection_to_controller()
