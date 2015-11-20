@@ -15,7 +15,6 @@ __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
 __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
-
 class Agent(object):
     def __init__(self, controller):
         self.log = logging.getLogger("{module}.{name}".format(
@@ -25,6 +24,8 @@ class Agent(object):
         self.myUuid = uuid.uuid4()
         self.myId = str(self.myUuid)
         self.agent_info = {}
+
+        self.connectedToController = False
 
         self.jobScheduler = BackgroundScheduler()
         self.jobScheduler.start()
@@ -135,9 +136,14 @@ class Agent(object):
         msg = msgMgmt.ControllerDiscoveredMsg()
         msg.ParseFromString(msgContainer[2])
 
+        if self.connectedToController:
+            self.log.debug("Agent already connected to controller, message {0} discarded".format(msgDesc.msg_type))
+            return
+
         self.log.debug("Agent connects controller: DL:{0}, UL:{1}".format(msg.down_link, msg.up_link))
         self.socket_pub.connect(msg.down_link)
         self.socket_sub.connect(msg.up_link)
+        self.connectedToController = True
 
         group = "NEW_NODE"
         msgDesc.Clear()
@@ -167,6 +173,18 @@ class Agent(object):
             self.log.debug("Agent subscribes to topic: {0}".format(topic))
             self.socket_sub.setsockopt(zmq.SUBSCRIBE, str(topic))
 
+    def terminate_connection_to_controller(self):
+        self.log.debug("Agend sends NodeExitMsg to Controller".format())
+
+        group = "NODE_EXIT"
+        msgDesc= msgMgmt.MsgDesc()
+        msgDesc.msg_type = get_msg_type(msgMgmt.NodeExitMsg)
+        msg = msgMgmt.NodeExitMsg()
+        msg.agent_uuid =  self.myId
+        msg.reason = "Process terminated"
+
+        msgContainer = [group, msgDesc.SerializeToString(), msg.SerializeToString()]
+        self.socket_pub.send_multipart(msgContainer)
 
     def process_msgs(self):
         # Work on requests from both controller and modules
@@ -192,9 +210,11 @@ class Agent(object):
                     if msgDesc.msg_type == get_msg_type(msgMgmt.ControllerDiscoveredMsg):
                         self.log.debug("Agent {0} discovered controller".format(name))
                         self.setup_connection_to_controller(msgContainer)
-                    else:
+                    elif self.connectedToController:
                         self.log.debug("Agent sends message to Controller: {0}".format(msgDesc.msg_type))
                         self.socket_pub.send_multipart(msgContainer)
+                    else:
+                        self.log.debug("Agent drops message: {0} from one of modules".format(msgDesc.msg_type))
 
             if self.socket_sub in socks and socks[self.socket_sub] == zmq.POLLIN:
                 msgContainer = self.socket_sub.recv_multipart()
@@ -234,6 +254,7 @@ class Agent(object):
 
         finally:
             self.log.debug("Unexpected error:".format(sys.exc_info()[0]))
+            self.terminate_connection_to_controller()
             self.log.debug("Kills all modules' subprocesses")
             for name, module in self.modules.iteritems():
                 module.kill_module_subprocess()

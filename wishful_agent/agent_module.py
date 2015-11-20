@@ -8,7 +8,7 @@ __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
 __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
-
+#TODO: create base class
 
 class AgentInProcModule(object):
     def __init__(self, name, py_module, class_name, args, msg_proc_func_name):
