@@ -29,6 +29,11 @@ class Agent(object):
         self.controllerDL = None
         self.controllerUL = None
 
+        self.echoMsgInterval = 3
+        self.echoTimeOut = 10
+        self.echoSendJob = None
+        self.connectionLostJob = None
+
         self.jobScheduler = BackgroundScheduler()
         self.jobScheduler.start()
 
@@ -196,10 +201,63 @@ class Agent(object):
         msgContainer = [group, msgDesc.SerializeToString(), msg.SerializeToString()]
         self.send_msg_to_module_group(msgContainer)
 
+        #start sending hello msgs
+        execTime =  str(datetime.datetime.now() + datetime.timedelta(seconds=self.echoMsgInterval))
+        self.log.debug("Agent schedule sending of Hello message".format())
+        self.echoSendJob = self.jobScheduler.add_job(self.send_hello_msg_to_controller, 'date', run_date=execTime)
+
+        execTime = datetime.datetime.now() + datetime.timedelta(seconds=self.echoTimeOut)
+        self.connectionLostJob = self.jobScheduler.add_job(self.connection_to_controller_lost, 'date', run_date=execTime)
+
+    def send_hello_msg_to_controller(self):
+        self.log.debug("Agent sends HelloMsg to controller")
+        group = self.myId
+        msgDesc = msgMgmt.MsgDesc()
+        msgDesc.msg_type = get_msg_type(msgMgmt.HelloMsg)
+        msg = msgMgmt.HelloMsg()
+        msg.uuid = str(self.myId)
+        msg.timeout = 3 * self.echoMsgInterval
+        msgContainer = [group, msgDesc.SerializeToString(), msg.SerializeToString()]
+        self.socket_pub.send_multipart(msgContainer)
+
+        #reschedule hello msg
+        self.log.debug("Agent schedule sending of Hello message".format())
+        execTime =  datetime.datetime.now() + datetime.timedelta(seconds=self.echoMsgInterval)
+        self.echoSendJob = self.jobScheduler.add_job(self.send_hello_msg_to_controller, 'date', run_date=execTime)
+
+
+    def connection_to_controller_lost(self):
+        self.log.debug("Agent lost connection with controller, stop sending EchoMsg".format())
+        self.echoSendJob.remove()
+
+        #disconnect
+        if self.controllerDL and self.controllerUL:
+            try:
+                self.socket_pub.disconnect(self.controllerDL)
+                self.socket_sub.disconnect(self.controllerUL)
+            except:
+                pass
+
+        self.connectedToController = False
+
+        self.log.debug("Agent restarts discovery procedure".format())
+        group = "LOCAL"
+        msgDesc = msgMgmt.MsgDesc()
+        msgDesc.msg_type = get_msg_type(msgMgmt.DiscoveryRestartMsg)
+        msg = msgMgmt.DiscoveryRestartMsg()
+        msg.reason = "CONTROLLER_LOST"
+        msgContainer = [group, msgDesc.SerializeToString(), msg.SerializeToString()]
+        self.send_msg_to_module_group(msgContainer)
+
+    def serve_hello_msg(self, msgContainer):
+        self.log.debug("Agent received HELLO MESSAGE from controller".format())
+        self.connectionLostJob.remove()
+        execTime = datetime.datetime.now() + datetime.timedelta(seconds=self.echoTimeOut)
+        self.connectionLostJob = self.jobScheduler.add_job(self.connection_to_controller_lost, 'date', run_date=execTime)
+
 
     def terminate_connection_to_controller(self):
         self.log.debug("Agend sends NodeExitMsg to Controller".format())
-
         group = "NODE_EXIT"
         msgDesc= msgMgmt.MsgDesc()
         msgDesc.msg_type = get_msg_type(msgMgmt.NodeExitMsg)
@@ -253,6 +311,8 @@ class Agent(object):
 
                 if msgDesc.msg_type == get_msg_type(msgMgmt.NewNodeAck):
                     self.setup_connection_to_controller_complete(msgContainer)
+                elif msgDesc.msg_type == get_msg_type(msgMgmt.HelloMsg):
+                    self.serve_hello_msg(msgContainer)
                 else:
                     self.log.debug("Agent serves command: {0}::{1} from controller".format(msgDesc.msg_type, msg))
                     if not msgDesc.exec_time or msgDesc.exec_time == 0:
@@ -276,8 +336,8 @@ class Agent(object):
         except KeyboardInterrupt:
             self.log.debug("Agent exits")
 
-        #except:
-        #    self.log.debug("Unexpected error:".format(sys.exc_info()[0]))
+        except:
+            self.log.debug("Unexpected error:".format(sys.exc_info()[0]))
 
         finally:
             self.terminate_connection_to_controller()

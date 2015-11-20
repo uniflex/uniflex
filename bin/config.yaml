@@ -26,7 +26,7 @@ modules:
       type : python
       path : ../../wishful_module_discovery/bin/simple_discovery
       args : ['-d tcp://127.0.0.1:8989', '-u tcp://127.0.0.1:8990']
-      message_type : [DiscoverySuccessMsg]
+      message_type : [DiscoverySuccessMsg, DiscoveryRestartMsg]
 
   synchronization_module:
       type : python
