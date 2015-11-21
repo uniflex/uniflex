@@ -119,6 +119,14 @@ class Agent(object):
         self.poller.register(module.socket, zmq.POLLIN)
         pass
 
+    def send_msg_to_controller(self, msgContainer):
+        ## stamp with my uuid
+        msgDesc = msgMgmt.MsgDesc()
+        msgDesc.ParseFromString(msgContainer[1])
+        msgDesc.uuid = self.myId
+        msgContainer[1] = msgDesc.SerializeToString()
+        self.socket_pub.send_multipart(msgContainer)
+
     def send_msg_to_module(self, module_name, msgContainer):
         return self.modules[module_name].send_msg_to_module(msgContainer)
 
@@ -126,7 +134,6 @@ class Agent(object):
         msgDesc = msgMgmt.MsgDesc()
         msgDesc.ParseFromString(msgContainer[1])
 
-        response = []
         module_name_list = self.module_groups[msgDesc.msg_type]
         for module_name in module_name_list:
             tmp = self.send_msg_to_module(module_name, msgContainer)
@@ -134,8 +141,7 @@ class Agent(object):
                 msgDesc= msgMgmt.MsgDesc()
                 msgDesc.ParseFromString(tmp[1])
                 self.log.debug("Agent received message of type: {0} from module: {1}".format(msgDesc.msg_type, module_name))
-                response.append(tmp)
-        return response
+                self.send_msg_to_controller(tmp)
 
     def setup_connection_to_controller(self, msgContainer):
         msgDesc= msgMgmt.MsgDesc()
@@ -173,7 +179,7 @@ class Agent(object):
 
         self.log.debug("Agent sends context-setup request to controller")
         time.sleep(1) # TODO: are we waiting for connection?
-        self.socket_pub.send_multipart(msgContainer)
+        self.send_msg_to_controller(msgContainer)
 
     def setup_connection_to_controller_complete(self, msgContainer):
         msgDesc = msgMgmt.MsgDesc()
@@ -218,7 +224,7 @@ class Agent(object):
         msg.uuid = str(self.myId)
         msg.timeout = 3 * self.echoMsgInterval
         msgContainer = [group, msgDesc.SerializeToString(), msg.SerializeToString()]
-        self.socket_pub.send_multipart(msgContainer)
+        self.send_msg_to_controller(msgContainer)
 
         #reschedule hello msg
         self.log.debug("Agent schedule sending of Hello message".format())
@@ -266,7 +272,7 @@ class Agent(object):
         msg.reason = "Process terminated"
 
         msgContainer = [group, msgDesc.SerializeToString(), msg.SerializeToString()]
-        self.socket_pub.send_multipart(msgContainer)
+        self.send_msg_to_controller(msgContainer)
 
     def process_msgs(self):
         # Work on requests from both controller and modules
@@ -294,7 +300,7 @@ class Agent(object):
                         self.setup_connection_to_controller(msgContainer)
                     elif self.connectedToController:
                         self.log.debug("Agent sends message to Controller: {0}".format(msgDesc.msg_type))
-                        self.socket_pub.send_multipart(msgContainer)
+                        self.send_msg_to_controller(msgContainer)
                     else:
                         self.log.debug("Agent drops message: {0} from one of modules".format(msgDesc.msg_type))
 
@@ -317,11 +323,7 @@ class Agent(object):
                     self.log.debug("Agent serves command: {0}::{1} from controller".format(msgDesc.msg_type, msg))
                     if not msgDesc.exec_time or msgDesc.exec_time == 0:
                         self.log.debug("Agent sends message: {0}::{1} to module".format(msgDesc.msg_type, msg))
-                        responses = self.send_msg_to_module_group(msgContainer)
-                        if responses:
-                            for msgContainer in responses:
-                                self.socket_pub.send_multipart(msgContainer)
-
+                        self.send_msg_to_module_group(msgContainer)
                     else:
                         execTime = datetime.datetime.strptime(msgDesc.exec_time, "%Y-%m-%d %H:%M:%S.%f")
                         self.log.debug("Agent schedule task for message: {0}::{1} at {2}".format(msgDesc.msg_type, msg, execTime))
@@ -345,6 +347,8 @@ class Agent(object):
             for name, module in self.modules.iteritems():
                 module.exit()
             self.jobScheduler.shutdown()
+            self.socket_sub.setsockopt(zmq.LINGER, 0)
+            self.socket_sub.setsockopt(zmq.LINGER, 0)
             self.socket_sub.close()
             self.socket_pub.close()
             self.context.term()

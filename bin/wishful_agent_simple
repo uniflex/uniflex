@@ -11,6 +11,9 @@ Options:
    -f                  foo
    --config configFile config file path
 
+Example:
+   ./wishful_agent_simple -v --config ./config.yaml
+
 Other options:
    -h, --help          show this help message and exit
    -q, --quiet         print less text
