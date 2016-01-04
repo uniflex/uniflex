@@ -34,6 +34,8 @@ class Agent(object):
         self.echoSendJob = None
         self.connectionLostJob = None
 
+        apscheduler_logger = logging.getLogger('apscheduler')
+        apscheduler_logger.setLevel(logging.CRITICAL)
         self.jobScheduler = BackgroundScheduler()
         self.jobScheduler.start()
 
@@ -41,6 +43,7 @@ class Agent(object):
         self.context = zmq.Context()
         self.socket_sub = self.context.socket(zmq.SUB) # for downlink communication with controller
         self.socket_sub.setsockopt(zmq.SUBSCRIBE,  self.myId)
+        self.socket_sub.setsockopt(zmq.LINGER, 100)
         self.socket_pub = self.context.socket(zmq.PUB) # for uplink communication with controller
 
         #register module socket in poller
