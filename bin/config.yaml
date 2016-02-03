@@ -38,4 +38,4 @@ modules:
       type : python
       path : ../../wishful_module_iperf/bin/iperf_driver
       args : ['']
-      message_type : [PERFORMANCE_TEST, ALL]
+      message_type : [PERFORMANCE_TEST, RADIO, ALL]
