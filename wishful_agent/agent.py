@@ -7,8 +7,8 @@ import zmq
 from apscheduler.schedulers.background import BackgroundScheduler
 import datetime
 import uuid
-import wishful_upis.msgs.management_pb2 as msgMgmt
-from wishful_upis.msgs.msg_helper import get_msg_type
+import msgs.management_pb2 as msgMgmt
+from msgs.msg_helper import get_msg_type
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"

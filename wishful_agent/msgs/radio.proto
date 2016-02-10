@@ -1,0 +1,9 @@
+// syntax = "proto3";
+package wishful_controller.radio;
+
+message IEEE80211 {
+    optional int32 channel = 1;
+    optional uint32 tx_power = 2;
+    optional string ssid = 3;
+    optional string mode = 4;
+}

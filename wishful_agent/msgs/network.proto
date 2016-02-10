@@ -1,0 +1,8 @@
+// syntax = "proto3";
+package wishful_controller.network;
+
+message iperf {
+    optional string proto = 1;
+    optional uint32 port = 2;
+    required bool server = 3;
+}

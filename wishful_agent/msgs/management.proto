@@ -1,0 +1,68 @@
+package wishful_controller.mgmt;
+
+message MsgDesc {
+	required string msg_type = 1;
+	optional string exec_time = 2;
+	optional string transaction_id = 3;
+	optional string uuid = 4;
+	optional bool msg_set = 5; // Setter/Getter
+}
+
+
+message NewNodeMsg {
+	required string agent_uuid = 1;
+	optional string name = 2;
+	optional string info = 3;
+    repeated string modules = 4;
+
+	message Attribute {
+        required string name = 1;
+        required string value = 2;
+    }
+
+    repeated Attribute attributes = 5;
+}
+
+
+message NewNodeAck {
+	required bool status = 1;
+	optional string controller_uuid = 2;
+	optional string agent_uuid = 3;
+	repeated string topics = 4;
+}
+
+
+message NodeExitMsg {
+	required string agent_uuid = 1;
+	optional string reason = 2;
+}
+
+
+message ControllerDiscoveredMsg {
+	optional string down_link = 1;
+	optional string up_link = 2;
+	optional string pair = 3;
+}
+
+message DiscoverySuccessMsg {
+	required bool status = 1;
+}
+
+message DiscoveryRestartMsg {
+	optional string reason = 1;
+}
+
+message HelloMsg {
+	required string uuid = 1;
+	required uint32 timeout = 2;
+}
+
+
+message ExampleModuleReq {
+	optional string hello = 1;
+}
+
+
+message ExampleModuleAck {
+	required string hello = 1;
+}
