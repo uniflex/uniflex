@@ -136,8 +136,9 @@ class Agent(object):
     def send_msg_to_module_group(self, msgContainer):
         msgDesc = msgMgmt.MsgDesc()
         msgDesc.ParseFromString(msgContainer[1])
+        func_name = msgContainer[2]
 
-        module_name_list = self.module_groups[msgDesc.msg_type]
+        module_name_list = self.module_groups[str(func_name)]
         for module_name in module_name_list:
             tmp = self.send_msg_to_module(module_name, msgContainer)
             if tmp:
@@ -335,23 +336,25 @@ class Agent(object):
 
     def run(self):
         self.log.debug("Agent starting".format())
-        try:
-            self.process_msgs()
+        self.process_msgs()
+        if 0:
+            try:
+                self.process_msgs()
 
-        except KeyboardInterrupt:
-            self.log.debug("Agent exits")
+            except KeyboardInterrupt:
+                self.log.debug("Agent exits")
 
-        except:
-            self.log.debug("Unexpected error:".format(sys.exc_info()[0]))
+            except:
+                self.log.debug("Unexpected error:".format(sys.exc_info()[0]))
 
-        finally:
-            self.terminate_connection_to_controller()
-            self.log.debug("Exit all modules' subprocesses")
-            for name, module in self.modules.iteritems():
-                module.exit()
-            self.jobScheduler.shutdown()
-            self.socket_sub.setsockopt(zmq.LINGER, 0)
-            self.socket_sub.setsockopt(zmq.LINGER, 0)
-            self.socket_sub.close()
-            self.socket_pub.close()
-            self.context.term()
+            finally:
+                self.terminate_connection_to_controller()
+                self.log.debug("Exit all modules' subprocesses")
+                for name, module in self.modules.iteritems():
+                    module.exit()
+                self.jobScheduler.shutdown()
+                self.socket_sub.setsockopt(zmq.LINGER, 0)
+                self.socket_sub.setsockopt(zmq.LINGER, 0)
+                self.socket_sub.close()
+                self.socket_pub.close()
+                self.context.term()

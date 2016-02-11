@@ -1,4 +1,12 @@
-package wishful_controller.mgmt;
+package wishful_controller.framework;
+
+message CmdDesc {
+	required string upi_type = 1;
+	required string func_name = 2;
+	optional string exec_time = 3;
+	optional string call_id = 4;
+	optional string transaction_id = 5;
+}
 
 message MsgDesc {
 	required string msg_type = 1;
@@ -7,7 +15,6 @@ message MsgDesc {
 	optional string uuid = 4;
 	optional bool msg_set = 5; // Setter/Getter
 }
-
 
 message NewNodeMsg {
 	required string agent_uuid = 1;
