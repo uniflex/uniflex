@@ -12,7 +12,7 @@ inproc_modules:
       class_name : Ath9kDriver
       args : ['-i wlan0,wlan1']
       function: process_msgs
-      message_type : [WIFI, RADIO, ALL]
+      message_type : [wifi, radio, all]
 
 
 modules:

@@ -31,9 +31,9 @@ class AgentInProcModule(object):
         globals()[module_name] = __import__(module_name)
 
     def send_msg_to_module(self, msgContainer):
-        self.log.debug("InProcModule: {0} sends msg".format(self.name))
+        self.log.debug("InProcModule: {} sends msg".format(self.name))
         result = getattr(self.driver, self.msg_proc_func_name)(msgContainer)
-        self.log.debug("InProcModule: {0} return msgContainter".format(self.name))
+        self.log.debug("InProcModule: {} return msgContainter".format(self.name))
         return result
 
     def exit(self):
@@ -67,7 +67,7 @@ class AgentModule(object):
             except:
                 self.port = random.randint(5000, 10000)
 
-        self.log.debug("Server for {0} started on port: {1} ".format(self.name, self.port))
+        self.log.debug("Server for {} started on port: {} ".format(self.name, self.port))
 
     def start_module_process(self):
         cmd = [self.path,
@@ -75,7 +75,7 @@ class AgentModule(object):
                ]
         cmd.extend(filter(None, self.args))
         self.pid = subprocess.Popen(cmd)
-        self.log.debug("Module: {0}, with args: {1}, PID: {2} started".format(self.name, self.args, self.pid.pid))
+        self.log.debug("Module: {}, with args: {}, PID: {} started".format(self.name, self.args, self.pid.pid))
 
     def exit(self):
         self.pid.kill()
@@ -83,6 +83,6 @@ class AgentModule(object):
 
 
     def send_msg_to_module(self, msgContainer):
-        self.log.debug("OutProcModule: {0} sends msg".format(self.name))
+        self.log.debug("OutProcModule: {} sends msg".format(self.name))
         self.socket.send_multipart(msgContainer)
         return None
