@@ -7,6 +7,7 @@ import zmq
 from apscheduler.schedulers.background import BackgroundScheduler
 import datetime
 import uuid
+
 import wishful_framework as msgs
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
@@ -341,8 +342,8 @@ class Agent(object):
 
     def run(self):
         self.log.debug("Agent starting".format())
-        
-        if 0:
+
+        if logging.getLogger().isEnabledFor(logging.DEBUG):
             self.process_msgs()
         else:
             try:
