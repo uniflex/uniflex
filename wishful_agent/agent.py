@@ -341,8 +341,10 @@ class Agent(object):
 
     def run(self):
         self.log.debug("Agent starting".format())
-        self.process_msgs()
+        
         if 0:
+            self.process_msgs()
+        else:
             try:
                 self.process_msgs()
 
