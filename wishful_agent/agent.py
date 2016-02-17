@@ -357,7 +357,19 @@ class Agent(object):
         self.log.debug("Agent starting".format())
 
         if logging.getLogger().isEnabledFor(logging.DEBUG):
-            self.process_msgs()
+            try:
+                self.process_msgs()
+            finally:
+                self.terminate_connection_to_controller()
+                self.log.debug("Exit all modules' subprocesses")
+                for name, module in self.modules.iteritems():
+                    module.exit()
+                self.jobScheduler.shutdown()
+                self.socket_sub.setsockopt(zmq.LINGER, 0)
+                self.socket_sub.setsockopt(zmq.LINGER, 0)
+                self.socket_sub.close()
+                self.socket_pub.close()
+                self.context.term()
         else:
             try:
                 self.process_msgs()
