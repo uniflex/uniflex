@@ -15,6 +15,17 @@ __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
 __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
+class RuleManager(object):
+    def __init__(self):
+        self.rules = []
+
+    def add_rule(self, rule):
+        self.rules.append(rule)
+
+    def remove_rule(self, rule):
+        pass
+
+
 class Agent(object):
     def __init__(self, controller):
         self.log = logging.getLogger("{module}.{name}".format(
@@ -147,6 +158,13 @@ class Agent(object):
                 #cmdDesc.ParseFromString(tmp[1])
                 #self.log.debug("Agent received message of type: {0} from module: {1}".format(cmdDesc.type, module_name))
                 self.send_msg_to_controller(tmp)
+
+
+    def serve_rule(self, msgContainer):
+        ruleDesc = msgs.RuleDesc()
+        ruleDesc.ParseFromString(msgContainer[2])
+        print ruleDesc
+
 
     def setup_connection_to_controller(self, msgContainer):
         cmdDesc= msgs.CmdDesc()
@@ -329,6 +347,8 @@ class Agent(object):
                     self.setup_connection_to_controller_complete(msgContainer)
                 elif cmdDesc.type == msgs.get_msg_type(msgs.HelloMsg):
                     self.serve_hello_msg(msgContainer)
+                elif cmdDesc.type == msgs.get_msg_type(msgs.RuleDesc):
+                    self.serve_rule(msgContainer)
                 else:
                     self.log.debug("Agent serves command: {}:{} from controller".format(cmdDesc.type, cmdDesc.func_name))
                     if not cmdDesc.exec_time or cmdDesc.exec_time == 0:
