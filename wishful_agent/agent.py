@@ -3,6 +3,7 @@ import time
 import sys
 import yaml
 from agent_module import *
+from rule_manager import *
 import zmq
 from apscheduler.schedulers.background import BackgroundScheduler
 import datetime
@@ -14,16 +15,6 @@ __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
 __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
-
-class RuleManager(object):
-    def __init__(self):
-        self.rules = []
-
-    def add_rule(self, rule):
-        self.rules.append(rule)
-
-    def remove_rule(self, rule):
-        pass
 
 
 class Agent(object):
@@ -49,6 +40,8 @@ class Agent(object):
         apscheduler_logger.setLevel(logging.CRITICAL)
         self.jobScheduler = BackgroundScheduler()
         self.jobScheduler.start()
+
+        self.ruleManager = RuleManager(self)
 
         self.poller = zmq.Poller()
         self.context = zmq.Context()
@@ -145,25 +138,25 @@ class Agent(object):
     def send_msg_to_module(self, module_name, msgContainer):
         return self.modules[module_name].send_msg_to_module(msgContainer)
 
+    def get_module_name_by_type(self, msg_type):
+        return self.module_groups[str(msg_type)]
+ 
     def send_msg_to_module_group(self, msgContainer):
         cmdDesc = msgs.CmdDesc()
         cmdDesc.ParseFromString(msgContainer[1])
 
         module_name_list = self.module_groups[str(cmdDesc.type)]
         for module_name in module_name_list:
-            tmp = self.send_msg_to_module(module_name, msgContainer)
-            if tmp:
-                #TODO: only for debug -- remove
-                #cmdDesc= msgs.CmdDesc()
-                #cmdDesc.ParseFromString(tmp[1])
-                #self.log.debug("Agent received message of type: {0} from module: {1}".format(cmdDesc.type, module_name))
-                self.send_msg_to_controller(tmp)
+            retVal = self.send_msg_to_module(module_name, msgContainer)
+            if retVal:
+                self.send_msg_to_controller(retVal)
 
 
     def serve_rule(self, msgContainer):
         ruleDesc = msgs.RuleDesc()
         ruleDesc.ParseFromString(msgContainer[2])
-        print ruleDesc
+        ruleId = self.ruleManager.add_rule(ruleDesc)
+        #TODO: return some rule ID to controller, so it is able to remove it
 
 
     def setup_connection_to_controller(self, msgContainer):
