@@ -15,16 +15,6 @@ __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
 
-class bind_function(object):
-    def __init__(self, upiFunc):
-        fname = upiFunc.__name__
-        self.upi_fname = set([fname])
-
-    def __call__(self, f):
-        f._upi_fname = self.upi_fname
-        return f
-
-
 class on_start(object):
     def __init__(self):
         self.onStart = True
@@ -70,22 +60,42 @@ class on_disconnect(object):
         return f
 
 
+class bind_function(object):
+    def __init__(self, upiFunc):
+        fname = upiFunc.__name__
+        self.upi_fname = set([fname])
+
+    def __call__(self, f):
+        f._upi_fname = self.upi_fname
+        return f
+
+#TODO: to be removed? if we support different UPI discovery
 def build_module(module_class):
     original_methods = module_class.__dict__.copy()
     for name, method in original_methods.iteritems():
         if hasattr(method, '_upi_fname'):
-            #if alias is the same as UPI function name do nothing
-            #create alias
-            for falias in method._upi_fname - set(original_methods):
-                setattr(module_class, falias, method)
+            #if alias is the same as UPI function name, add with the same name
+            if not method._upi_fname - set(original_methods):
+                module_class.callbacks[method.__name__] = method.__name__
+            else:
+                #create alias
+                for falias in method._upi_fname - set(original_methods):
+                    module_class.callbacks[falias] = method.__name__
+                    setattr(module_class, falias, method)
     return module_class
 
 
 class AgentUpiModule(object):
+    callbacks = {}
     def __init__(self, port=None):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
-
+        
+        #discover UPI function implementation and create upi_capabilities list
+        func_name = [method for method in dir(self) if callable(getattr(self, method)) and hasattr(getattr(self, method), '_upi_fname')]
+        self.upi_callbacks = {list(getattr(self, method)._upi_fname)[0] : method for method in func_name}
+        self.upis_capabilities = self.upi_callbacks.keys()
+        
         #interface to be used in UPI functions, it is set before function call
         self.interface = None
 
@@ -100,8 +110,7 @@ class AgentUpiModule(object):
             self.socket.connect("tcp://localhost:%s" % port)
 
     def get_capabilities(self):
-        capabilities = "OK"
-        return capabilities
+        return self.upis_capabilities
 
     def process_cmds(self, msgContainer):
         assert len(msgContainer) == 3

@@ -100,6 +100,8 @@ class Agent(object):
         self.log.debug("Adding new inproc module: {0}".format(module))
         self.modules[module.name] = module
 
+        print "Module capabilities: ", module.module.get_capabilities()
+        print ""
         for message_type in message_types:
             if message_type in self.module_groups.keys():
                 self.module_groups[message_type].append(module.name)
