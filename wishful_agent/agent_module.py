@@ -11,28 +11,23 @@ __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 #TODO: create base class
 
 class AgentInProcModule(object):
-    def __init__(self, name, py_module, class_name, args, msg_proc_func_name):
+    def __init__(self, name, py_module_name, class_name):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
         self.name = name
-        self.py_module = py_module
         self.class_name = class_name
-        self.args = args
-        self.msg_proc_func_name = msg_proc_func_name
+        py_module = self.my_import(py_module_name)
+        self.module = getattr(py_module, class_name)()
         self.socket = None #mockup
 
-        self.my_import(py_module)
-        self.driver = None
-        my_code = 'self.driver = {0}.{1}()'.format(py_module,class_name)
-        exec my_code
-        pass
-
     def my_import(self, module_name):
-        globals()[module_name] = __import__(module_name)
+        pyModule = __import__(module_name)
+        globals()[module_name] = pyModule
+        return pyModule
 
     def send_msg_to_module(self, msgContainer):
         self.log.debug("InProcModule: {} sends msg".format(self.name))
-        result = getattr(self.driver, self.msg_proc_func_name)(msgContainer)
+        result = self.module.process_cmds(msgContainer)
         self.log.debug("InProcModule: {} return msgContainter".format(self.name))
         return result
 

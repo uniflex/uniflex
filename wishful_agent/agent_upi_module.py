@@ -86,6 +86,9 @@ class AgentUpiModule(object):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
 
+        #interface to be used in UPI functions, it is set before function call
+        self.interface = None
+
         if port:
             self.port = port
             self.log.debug("Connect to Agent on port: {0}".format(port))
@@ -96,7 +99,11 @@ class AgentUpiModule(object):
             self.socket.setsockopt(zmq.LINGER, 100)
             self.socket.connect("tcp://localhost:%s" % port)
 
-    def process_msgs(self, msgContainer):
+    def get_capabilities(self):
+        capabilities = "OK"
+        return capabilities
+
+    def process_cmds(self, msgContainer):
         assert len(msgContainer) == 3
         group = msgContainer[0]
         cmdDesc = msgs.CmdDesc()
@@ -140,7 +147,7 @@ class AgentUpiModule(object):
 
         return response
 
-    def start_receive_msgs(self, socket):
+    def start_receive_cmds(self, socket):
         while True:
             msgContainer = socket.recv_multipart()
 
@@ -152,7 +159,7 @@ class AgentUpiModule(object):
 
             self.log.debug("Recived msg: {}:{}:{}".format(group, cmdDesc.type, cmdDesc.func_name))
 
-            response = self.process_msgs(msgContainer)
+            response = self.process_cmds(msgContainer)
 
             if response:
                 self.log.debug("Sending response: {0}".format(response))

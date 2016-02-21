@@ -75,10 +75,8 @@ class Agent(object):
                 module_parameters['message_type'],
                 self.exec_inproc_module(
                         name=module_name,
-                        py_module=module_parameters['import'],
+                        py_module=module_parameters['module'],
                         class_name=module_parameters['class_name'],
-                        args=module_parameters['args'],
-                        msg_proc_func_name=module_parameters['function'],
                 )
             )
 
@@ -94,8 +92,8 @@ class Agent(object):
             )
         pass
 
-    def exec_inproc_module(self, name, py_module, class_name, args, msg_proc_func_name):
-        new_module = AgentInProcModule(name, py_module, class_name, args, msg_proc_func_name)
+    def exec_inproc_module(self, name, py_module, class_name):
+        new_module = AgentInProcModule(name, py_module, class_name)
         return new_module
 
     def exec_module(self, name, path, args):
