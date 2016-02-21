@@ -69,24 +69,17 @@ class bind_function(object):
         f._upi_fname = self.upi_fname
         return f
 
-#TODO: to be removed? if we support different UPI discovery
 def build_module(module_class):
     original_methods = module_class.__dict__.copy()
     for name, method in original_methods.iteritems():
         if hasattr(method, '_upi_fname'):
-            #if alias is the same as UPI function name, add with the same name
-            if not method._upi_fname - set(original_methods):
-                module_class.callbacks[method.__name__] = method.__name__
-            else:
-                #create alias
-                for falias in method._upi_fname - set(original_methods):
-                    module_class.callbacks[falias] = method.__name__
-                    setattr(module_class, falias, method)
+            #add UPI alias for the function
+            for falias in method._upi_fname - set(original_methods):
+                setattr(module_class, falias, method)
     return module_class
 
 
 class AgentUpiModule(object):
-    callbacks = {}
     def __init__(self, port=None):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
