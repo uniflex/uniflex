@@ -66,39 +66,35 @@ class Agent(object):
 
     def load_modules(self, config):
         self.log.debug("Config: {0}".format(config))
-
         self.agent_info = config['agent_info']
 
+        #in process modules
         inproc_modules = config['inproc_modules']
         for module_name, module_parameters in inproc_modules.iteritems():
+            
+            supported_interfaces = "ALL"
+            if 'interfaces' in module_parameters:
+                supported_interfaces=module_parameters['interfaces'] 
+            
             self.add_inproc_module(
                 module_parameters['message_type'],
-                self.exec_inproc_module(
-                        name=module_name,
-                        py_module=module_parameters['module'],
-                        class_name=module_parameters['class_name'],
-                )
-            )
+                AgentInProcModule(module_name, module_parameters['module'],
+                                  module_parameters['class_name'],
+                                  supported_interfaces))
 
+        #self process modules
         modules = config['modules']
         for module_name, module_parameters in modules.iteritems():
+            
+            supported_interfaces = "ALL"
+            if 'interfaces' in module_parameters:
+                supported_interfaces=module_parameters['interfaces'] 
+            
             self.add_module(
                 module_parameters['message_type'],
-                self.exec_module(
-                        name=module_name,
-                        path=module_parameters['path'],
-                        args=module_parameters['args']
-                )
-            )
-        pass
+                AgentModule(module_name, module_parameters['path'], 
+                            module_parameters['args'], supported_interfaces))
 
-    def exec_inproc_module(self, name, py_module, class_name):
-        new_module = AgentInProcModule(name, py_module, class_name)
-        return new_module
-
-    def exec_module(self, name, path, args):
-        new_module = AgentModule(name, path, args)
-        return new_module
 
     def add_inproc_module(self, message_types, module):
         self.log.debug("Adding new inproc module: {0}".format(module))
@@ -354,38 +350,20 @@ class Agent(object):
     def run(self):
         self.log.debug("Agent starting".format())
 
-        if logging.getLogger().isEnabledFor(logging.DEBUG):
-            try:
-                self.process_msgs()
-            finally:
-                self.terminate_connection_to_controller()
-                self.log.debug("Exit all modules' subprocesses")
-                for name, module in self.modules.iteritems():
-                    module.exit()
-                self.jobScheduler.shutdown()
-                self.socket_sub.setsockopt(zmq.LINGER, 0)
-                self.socket_sub.setsockopt(zmq.LINGER, 0)
-                self.socket_sub.close()
-                self.socket_pub.close()
-                self.context.term()
-        else:
-            try:
-                self.process_msgs()
+        try:
+            self.process_msgs()
 
-            except KeyboardInterrupt:
-                self.log.debug("Agent exits")
+        except KeyboardInterrupt:
+            self.log.debug("Agent exits")
 
-            except:
-                self.log.debug("Unexpected error:".format(sys.exc_info()[0]))
-
-            finally:
-                self.terminate_connection_to_controller()
-                self.log.debug("Exit all modules' subprocesses")
-                for name, module in self.modules.iteritems():
-                    module.exit()
-                self.jobScheduler.shutdown()
-                self.socket_sub.setsockopt(zmq.LINGER, 0)
-                self.socket_sub.setsockopt(zmq.LINGER, 0)
-                self.socket_sub.close()
-                self.socket_pub.close()
-                self.context.term()
+        finally:
+            self.terminate_connection_to_controller()
+            self.log.debug("Exit all modules' subprocesses")
+            for name, module in self.modules.iteritems():
+                module.exit()
+            self.jobScheduler.shutdown()
+            self.socket_sub.setsockopt(zmq.LINGER, 0)
+            self.socket_sub.setsockopt(zmq.LINGER, 0)
+            self.socket_sub.close()
+            self.socket_pub.close()
+            self.context.term()

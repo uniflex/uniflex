@@ -11,7 +11,7 @@ __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 #TODO: create base class
 
 class AgentInProcModule(object):
-    def __init__(self, name, py_module_name, class_name):
+    def __init__(self, name, py_module_name, class_name, interfaces):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
         self.name = name
@@ -19,6 +19,7 @@ class AgentInProcModule(object):
         py_module = self.my_import(py_module_name)
         self.module = getattr(py_module, class_name)()
         self.socket = None #mockup
+        self.interfaces = interfaces
 
     def my_import(self, module_name):
         pyModule = __import__(module_name)
@@ -37,13 +38,14 @@ class AgentInProcModule(object):
 
 
 class AgentModule(object):
-    def __init__(self, name, path, args):
+    def __init__(self, name, path, args, interfaces):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
         self.name = name
         self.path = path
         self.args = args
         self.port = None
+        self.interfaces = interfaces
 
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PAIR)
