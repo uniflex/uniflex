@@ -55,6 +55,8 @@ class Agent(object):
 
     modules = {}
     module_groups = {}
+    system_modules = {}
+    iface_to_module_mapping = {}
 
     def read_config_file(self, path=None):
         self.log.debug("Path to module: {0}".format(path))
@@ -68,56 +70,58 @@ class Agent(object):
         self.log.debug("Config: {0}".format(config))
         self.agent_info = config['agent_info']
 
-        #in process modules
-        inproc_modules = config['inproc_modules']
+        #load system modules
+        modules = config['system_modules']
+        for module_name, module_parameters in modules.iteritems():
+
+            supported_interfaces = ["ALL"]
+            if 'interfaces' in module_parameters:
+                supported_interfaces=module_parameters['interfaces'] 
+
+            self.add_system_module(
+                module_name,
+                AgentModule(module_name, module_parameters['path'], 
+                            module_parameters['args'], supported_interfaces))
+
+        #load upi modules
+        inproc_modules = config['upi_modules']
         for module_name, module_parameters in inproc_modules.iteritems():
             
-            supported_interfaces = "ALL"
+            supported_interfaces = ["ALL"]
             if 'interfaces' in module_parameters:
                 supported_interfaces=module_parameters['interfaces'] 
             
-            self.add_inproc_module(
-                module_parameters['message_type'],
+            self.add_upi_module(
+                supported_interfaces,
                 AgentInProcModule(module_name, module_parameters['module'],
                                   module_parameters['class_name'],
                                   supported_interfaces))
 
-        #self process modules
-        modules = config['modules']
-        for module_name, module_parameters in modules.iteritems():
-            
-            supported_interfaces = "ALL"
-            if 'interfaces' in module_parameters:
-                supported_interfaces=module_parameters['interfaces'] 
-            
-            self.add_module(
-                module_parameters['message_type'],
-                AgentModule(module_name, module_parameters['path'], 
-                            module_parameters['args'], supported_interfaces))
 
-
-    def add_inproc_module(self, message_types, module):
+    def add_upi_module(self, interfaces, module):
         self.log.debug("Adding new inproc module: {0}".format(module))
         self.modules[module.name] = module
 
-        print "Module capabilities: ", module.module.get_capabilities()
-        print ""
-        for message_type in message_types:
-            if message_type in self.module_groups.keys():
-                self.module_groups[message_type].append(module.name)
-            else:
-                self.module_groups[message_type] = [module.name]
+        capabilities = module.module.get_capabilities()
+        module.capabilities = capabilities
 
-    def add_module(self, message_types, module):
+        for iface in interfaces:
+            if not iface in self.iface_to_module_mapping:
+                self.iface_to_module_mapping[iface] = [module]
+            else:
+                self.iface_to_module_mapping[iface].append(module)
+
+
+    def add_system_module(self, name, module):
         self.log.debug("Adding new module: {0}".format(module))
         self.modules[module.name] = module
+        self.system_modules[name] = module
 
-        #TODO: discover UPI functions suported by module, get it from module
-        for message_type in message_types:
-            if message_type in self.module_groups.keys():
-                self.module_groups[message_type].append(module.name)
-            else:
-                self.module_groups[message_type] = [module.name]
+        iface = "ALL"
+        if not iface in self.iface_to_module_mapping:
+            self.iface_to_module_mapping[iface] = [module]
+        else:
+            self.iface_to_module_mapping[iface].append(module)
 
         #register module socket in poller
         self.poller.register(module.socket, zmq.POLLIN)
@@ -131,21 +135,31 @@ class Agent(object):
         msgContainer[1] = cmdDesc.SerializeToString()
         self.socket_pub.send_multipart(msgContainer)
 
-    def send_msg_to_module(self, module_name, msgContainer):
-        return self.modules[module_name].send_msg_to_module(msgContainer)
+    def send_cmd_to_system_module(self, name, msgContainer):
+        self.system_modules[name].send_msg_to_module(msgContainer)
 
-    def get_module_name_by_type(self, msg_type):
-        return self.module_groups[str(msg_type)]
- 
-    def send_msg_to_module_group(self, msgContainer):
+    def send_cmd_to_upi_module(self, msgContainer):
         cmdDesc = msgs.CmdDesc()
         cmdDesc.ParseFromString(msgContainer[1])
 
-        module_name_list = self.module_groups[str(cmdDesc.type)]
-        for module_name in module_name_list:
-            retVal = self.send_msg_to_module(module_name, msgContainer)
-            if retVal:
-                self.send_msg_to_controller(retVal)
+        iface = "ALL"
+        if cmdDesc.HasField('interface'):
+            iface = cmdDesc.interface
+        
+        #find UPI module
+        modules = self.iface_to_module_mapping[iface]
+
+        functionFound = False
+        for module in modules:
+            if cmdDesc.func_name in module.capabilities:
+                functionFound = True
+                retVal = module.send_msg_to_module(msgContainer)
+                if retVal:
+                    self.send_msg_to_controller(retVal)
+                break
+        
+        if not functionFound:
+            print "function not supported EXCEPTION", cmdDesc.func_name, cmdDesc.interface
 
 
     def serve_rule(self, msgContainer):
@@ -219,7 +233,7 @@ class Agent(object):
         msg = msgs.DiscoverySuccessMsg()
         msg.status = True
         msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
-        self.send_msg_to_module_group(msgContainer)
+        self.send_cmd_to_system_module("discovery", msgContainer)
 
         #start sending hello msgs
         execTime =  str(datetime.datetime.now() + datetime.timedelta(seconds=self.echoMsgInterval))
@@ -269,7 +283,7 @@ class Agent(object):
         msg = msgs.DiscoveryRestartMsg()
         msg.reason = "CONTROLLER_LOST"
         msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
-        self.send_msg_to_module_group(msgContainer)
+        self.send_cmd_to_system_module("discovery", msgContainer)
 
     def serve_hello_msg(self, msgContainer):
         self.log.debug("Agent received HELLO MESSAGE from controller".format())
@@ -342,11 +356,11 @@ class Agent(object):
                     self.log.debug("Agent serves command: {}:{} from controller".format(cmdDesc.type, cmdDesc.func_name))
                     if not cmdDesc.exec_time or cmdDesc.exec_time == 0:
                         self.log.debug("Agent sends message: {}:{} to module".format(cmdDesc.type, cmdDesc.func_name))
-                        self.send_msg_to_module_group(msgContainer)
+                        self.send_cmd_to_upi_module(msgContainer)
                     else:
                         execTime = datetime.datetime.strptime(cmdDesc.exec_time, "%Y-%m-%d %H:%M:%S.%f")
                         self.log.debug("Agent schedule task for message: {}:{} at {}".format(cmdDesc.type, cmdDesc.func_name, execTime))
-                        self.jobScheduler.add_job(self.send_msg_to_module_group, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer})
+                        self.jobScheduler.add_job(self.send_cmd_to_upi_module, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer})
 
 
     def run(self):

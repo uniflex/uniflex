@@ -20,6 +20,7 @@ class AgentInProcModule(object):
         self.module = getattr(py_module, class_name)()
         self.socket = None #mockup
         self.interfaces = interfaces
+        self.capabilities = []
 
     def my_import(self, module_name):
         pyModule = __import__(module_name)
@@ -46,6 +47,7 @@ class AgentModule(object):
         self.args = args
         self.port = None
         self.interfaces = interfaces
+        self.capabilities = []
 
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.PAIR)
