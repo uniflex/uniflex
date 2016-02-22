@@ -105,6 +105,7 @@ class AgentUpiModule(object):
     def get_capabilities(self):
         return self.upis_capabilities
 
+
     def process_cmds(self, msgContainer):
         assert len(msgContainer) == 3
         group = msgContainer[0]
@@ -117,6 +118,11 @@ class AgentUpiModule(object):
 
         self.log.debug("Process msg: {}:{}".format(cmdDesc.type, cmdDesc.func_name))
         command = cmdDesc.func_name
+
+        #set interface before UPI function call, so we can use self.interface in function
+        self.interface = None
+        if cmdDesc.HasField('interface'):
+            self.interface = cmdDesc.interface
 
         response = None
         #TODO: check if function is available
