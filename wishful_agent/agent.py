@@ -201,6 +201,42 @@ class Agent(object):
         msg.agent_uuid =  self.myId
         msg.name = self.agent_info['name']
         msg.info = self.agent_info['info']
+        
+        iface = msg.interfaces.add()
+        iface.id = 0
+        iface.name = "wlan0"
+        imodule = iface.modules.add()
+        imodule.id = 0
+        imodule.name = "wifi_module"
+        imodule = iface.modules.add()
+        imodule.id = 1
+        imodule.name = "ath9k_module"
+
+        iface = msg.interfaces.add()
+        iface.id = 1
+        iface.name = "wlan1"
+        imodule = iface.modules.add()
+        imodule.id = 0
+        imodule.name = "wifi_module"
+        imodule = iface.modules.add()
+        imodule.id = 1
+        imodule.name = "ath9k_module"
+
+        module = msg.modules.add()
+        module.id = 0
+        module.name = "wifi_module"
+        function = module.functions.add()
+        function.name = "set_channel"
+        function = module.functions.add()
+        function.name = "get_channel"
+
+        module = msg.modules.add()
+        module.id = 1
+        module.name = "ath9k_module"
+        function = module.functions.add()
+        function.name = "set_power"
+        function = module.functions.add()
+        function.name = "get_power"
 
         msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
 
