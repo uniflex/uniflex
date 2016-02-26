@@ -8,6 +8,9 @@ import zmq
 from apscheduler.schedulers.background import BackgroundScheduler
 import datetime
 import uuid
+import socket
+import fcntl
+import struct
 
 import wishful_framework as msgs
 
@@ -15,6 +18,15 @@ __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
 __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
+
+
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15])
+    )[20:24])
 
 
 class Agent(object):
@@ -26,6 +38,7 @@ class Agent(object):
         self.myUuid = uuid.uuid4()
         self.myId = str(self.myUuid)
         self.agent_info = {}
+        self.ip = None
 
         self.connectedToController = False
         self.controllerDL = None
@@ -92,6 +105,11 @@ class Agent(object):
     def load_modules(self, config):
         self.log.debug("Config: {0}".format(config))
         self.agent_info = config['agent_info']
+        if 'ip' in self.agent_info:
+            self.ip = self.agent_info['ip']
+        else:
+            self.ip = get_ip_address(self.agent_info['iface'])
+
 
         #load system modules
         modules = config['system_modules']
@@ -227,6 +245,7 @@ class Agent(object):
         cmdDesc.func_name = msgs.get_msg_type(msgs.NewNodeMsg)
         msg = msgs.NewNodeMsg()
         msg.agent_uuid =  self.myId
+        msg.ip = self.ip
         msg.name = self.agent_info['name']
         msg.info = self.agent_info['info']
         
