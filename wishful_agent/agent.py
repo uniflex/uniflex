@@ -67,7 +67,6 @@ class Agent(object):
         self.poller.register(self.socket_sub, zmq.POLLIN)
 
     modules = {}
-    module_groups = {}
     system_modules = {}
 
     moduleIdGen = 0
@@ -110,20 +109,6 @@ class Agent(object):
         else:
             self.ip = get_ip_address(self.agent_info['iface'])
 
-
-        #load system modules
-        modules = config['system_modules']
-        for module_name, module_parameters in modules.iteritems():
-
-            supported_interfaces = ["ALL"]
-            if 'interfaces' in module_parameters:
-                supported_interfaces=module_parameters['interfaces'] 
-
-            self.add_system_module(
-                module_name,
-                AgentModule(self.generate_new_module_id(), module_name, module_parameters['path'], 
-                            module_parameters['args'], supported_interfaces))
-
         #load upi modules
         inproc_modules = config['upi_modules']
         for module_name, module_parameters in inproc_modules.iteritems():
@@ -138,6 +123,20 @@ class Agent(object):
                                   module_parameters['class_name'],
                                   supported_interfaces))
 
+        #load system modules
+        modules = config['system_modules']
+        for module_name, module_parameters in modules.iteritems():
+
+            supported_interfaces = ["ALL"]
+            if 'interfaces' in module_parameters:
+                supported_interfaces=module_parameters['interfaces'] 
+
+            self.add_system_module(
+                module_name,
+                AgentModule(self.generate_new_module_id(), module_name, module_parameters['path'], 
+                            module_parameters['args'], supported_interfaces))
+
+
 
     def add_upi_module(self, interfaces, module):
         self.log.debug("Adding new inproc module: {0}".format(module))
@@ -145,6 +144,7 @@ class Agent(object):
         capabilities = module.module.get_capabilities()
         module.capabilities = capabilities
         self.modules[module.name] = module
+        self.moduleIds[module.id] = module
 
         for iface in interfaces:
             if iface not in self.interfaces.values():
@@ -161,12 +161,6 @@ class Agent(object):
         self.log.debug("Adding new module: {0}".format(module))
         self.modules[module.name] = module
         self.system_modules[name] = module
-
-        #iface = "ALL"
-        #if not iface in self.iface_to_module_mapping:
-        #    self.iface_to_module_mapping[iface] = [module]
-        #else:
-        #    self.iface_to_module_mapping[iface].append(module)
 
         #register module socket in poller
         self.poller.register(module.socket, zmq.POLLIN)
@@ -250,22 +244,24 @@ class Agent(object):
         msg.info = self.agent_info['info']
         
         for mid, module in self.moduleIds.iteritems():
-            module = msg.modules.add()
-            module.id = mid
-            module.name = module.name
+            moduleMsg = msg.modules.add()
+            moduleMsg.id = mid
+            moduleMsg.name = module.name
             for f in module.capabilities:
-                function = module.functions.add()
+                function = moduleMsg.functions.add()
                 function.name = f
 
-        print self.iface_to_module_mapping
-        #for iface, modules in self.iface_to_module_mapping.iteritems():
-        #    iface = msg.interfaces.add()
-        #    iface.id = iface
-        #    iface.name = self.interfaces[iface]
-        #    for module in modules:
-        #        imodule = iface.modules.add()
-        #        imodule.id = module.id
-        #        imodule.name = module.name
+        for ifaceId, modules in self.iface_to_module_mapping.iteritems():
+            if self.interfaces[ifaceId] == "ALL":
+                continue
+                
+            iface = msg.interfaces.add()
+            iface.id = int(ifaceId)
+            iface.name = self.interfaces[ifaceId]
+            for module in modules:
+                imodule = iface.modules.add()
+                imodule.id = module.id
+                imodule.name = module.name
 
 
         msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
