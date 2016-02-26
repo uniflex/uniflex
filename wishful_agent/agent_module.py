@@ -11,9 +11,10 @@ __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 #TODO: create base class
 
 class AgentInProcModule(object):
-    def __init__(self, name, py_module_name, class_name, interfaces):
+    def __init__(self, module_id, name, py_module_name, class_name, interfaces):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
+        self.id = module_id
         self.name = name
         self.class_name = class_name
         py_module = self.my_import(py_module_name)
@@ -39,9 +40,10 @@ class AgentInProcModule(object):
 
 
 class AgentModule(object):
-    def __init__(self, name, path, args, interfaces):
+    def __init__(self, module_id, name, path, args, interfaces):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
+        self.id = module_id
         self.name = name
         self.path = path
         self.args = args

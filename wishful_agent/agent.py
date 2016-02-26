@@ -56,7 +56,30 @@ class Agent(object):
     modules = {}
     module_groups = {}
     system_modules = {}
+
+    moduleIdGen = 0
+    moduleIds = {}
+    ifaceIdGen = 0
+    interfaces = {}
+    r_interfaces = {}
     iface_to_module_mapping = {}
+
+    def generate_new_module_id(self):
+        newId = self.moduleIdGen
+        self.moduleIdGen = self.moduleIdGen + 1
+        return newId
+
+    def generate_new_iface_id(self):
+        newId = self.ifaceIdGen
+        self.ifaceIdGen = self.ifaceIdGen + 1
+        return newId
+
+    def get_iface_id(self, name):
+        for k,v in self.interfaces.iteritems():
+            if v == name:
+                return k
+
+        return None
 
     def read_config_file(self, path=None):
         self.log.debug("Path to module: {0}".format(path))
@@ -80,7 +103,7 @@ class Agent(object):
 
             self.add_system_module(
                 module_name,
-                AgentModule(module_name, module_parameters['path'], 
+                AgentModule(self.generate_new_module_id(), module_name, module_parameters['path'], 
                             module_parameters['args'], supported_interfaces))
 
         #load upi modules
@@ -93,23 +116,27 @@ class Agent(object):
             
             self.add_upi_module(
                 supported_interfaces,
-                AgentInProcModule(module_name, module_parameters['module'],
+                AgentInProcModule(self.generate_new_module_id(), module_name, module_parameters['module'],
                                   module_parameters['class_name'],
                                   supported_interfaces))
 
 
     def add_upi_module(self, interfaces, module):
         self.log.debug("Adding new inproc module: {0}".format(module))
-        self.modules[module.name] = module
-
+        
         capabilities = module.module.get_capabilities()
         module.capabilities = capabilities
+        self.modules[module.name] = module
 
         for iface in interfaces:
-            if not iface in self.iface_to_module_mapping:
-                self.iface_to_module_mapping[iface] = [module]
-            else:
-                self.iface_to_module_mapping[iface].append(module)
+            if iface not in self.interfaces.values():
+                iface_id = self.generate_new_iface_id()
+                self.interfaces[iface_id] = str(iface)
+
+                if not iface_id in self.iface_to_module_mapping:
+                    self.iface_to_module_mapping[iface_id] = [module]
+                else:
+                    self.iface_to_module_mapping[iface_id].append(module)
 
 
     def add_system_module(self, name, module):
@@ -117,11 +144,11 @@ class Agent(object):
         self.modules[module.name] = module
         self.system_modules[name] = module
 
-        iface = "ALL"
-        if not iface in self.iface_to_module_mapping:
-            self.iface_to_module_mapping[iface] = [module]
-        else:
-            self.iface_to_module_mapping[iface].append(module)
+        #iface = "ALL"
+        #if not iface in self.iface_to_module_mapping:
+        #    self.iface_to_module_mapping[iface] = [module]
+        #else:
+        #    self.iface_to_module_mapping[iface].append(module)
 
         #register module socket in poller
         self.poller.register(module.socket, zmq.POLLIN)
@@ -147,7 +174,8 @@ class Agent(object):
             iface = cmdDesc.interface
         
         #find UPI module
-        modules = self.iface_to_module_mapping[iface]
+        ifaceId = self.get_iface_id(str(iface))
+        modules = self.iface_to_module_mapping[ifaceId]
 
         functionFound = False
         for module in modules:
@@ -202,41 +230,24 @@ class Agent(object):
         msg.name = self.agent_info['name']
         msg.info = self.agent_info['info']
         
-        iface = msg.interfaces.add()
-        iface.id = 0
-        iface.name = "wlan0"
-        imodule = iface.modules.add()
-        imodule.id = 0
-        imodule.name = "wifi_module"
-        imodule = iface.modules.add()
-        imodule.id = 1
-        imodule.name = "ath9k_module"
+        for mid, module in self.moduleIds.iteritems():
+            module = msg.modules.add()
+            module.id = mid
+            module.name = module.name
+            for f in module.capabilities:
+                function = module.functions.add()
+                function.name = f
 
-        iface = msg.interfaces.add()
-        iface.id = 1
-        iface.name = "wlan1"
-        imodule = iface.modules.add()
-        imodule.id = 0
-        imodule.name = "wifi_module"
-        imodule = iface.modules.add()
-        imodule.id = 1
-        imodule.name = "ath9k_module"
+        print self.iface_to_module_mapping
+        #for iface, modules in self.iface_to_module_mapping.iteritems():
+        #    iface = msg.interfaces.add()
+        #    iface.id = iface
+        #    iface.name = self.interfaces[iface]
+        #    for module in modules:
+        #        imodule = iface.modules.add()
+        #        imodule.id = module.id
+        #        imodule.name = module.name
 
-        module = msg.modules.add()
-        module.id = 0
-        module.name = "wifi_module"
-        function = module.functions.add()
-        function.name = "set_channel"
-        function = module.functions.add()
-        function.name = "get_channel"
-
-        module = msg.modules.add()
-        module.id = 1
-        module.name = "ath9k_module"
-        function = module.functions.add()
-        function.name = "set_power"
-        function = module.functions.add()
-        function.name = "get_power"
 
         msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
 
