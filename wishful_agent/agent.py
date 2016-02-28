@@ -13,6 +13,7 @@ import fcntl
 import struct
 
 import wishful_framework as msgs
+from transport_channel import TransportChannel
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -35,8 +36,7 @@ class Agent(object):
             module=self.__class__.__module__, name=self.__class__.__name__))
         self.log.debug("Controller: {0}".format(controller))
         self.config = None
-        self.myUuid = uuid.uuid4()
-        self.myId = str(self.myUuid)
+        self.uuid = str(uuid.uuid4())
         self.agent_info = {}
         self.ip = None
 
@@ -56,10 +56,12 @@ class Agent(object):
 
         self.ruleManager = RuleManager(self)
 
+
+        #self.transport = TransportChannel(ul, dl)
         self.poller = zmq.Poller()
         self.context = zmq.Context()
         self.socket_sub = self.context.socket(zmq.SUB) # for downlink communication with controller
-        self.socket_sub.setsockopt(zmq.SUBSCRIBE,  self.myId)
+        self.socket_sub.setsockopt(zmq.SUBSCRIBE,  self.uuid)
         self.socket_sub.setsockopt(zmq.LINGER, 100)
         self.socket_pub = self.context.socket(zmq.PUB) # for uplink communication with controller
 
@@ -170,7 +172,7 @@ class Agent(object):
         ## stamp with my uuid
         cmdDesc = msgs.CmdDesc()
         cmdDesc.ParseFromString(msgContainer[1])
-        cmdDesc.caller_id = self.myId
+        cmdDesc.caller_id = self.uuid
         msgContainer[1] = cmdDesc.SerializeToString()
         self.socket_pub.send_multipart(msgContainer)
 
@@ -238,7 +240,7 @@ class Agent(object):
         cmdDesc.type = msgs.get_msg_type(msgs.NewNodeMsg)
         cmdDesc.func_name = msgs.get_msg_type(msgs.NewNodeMsg)
         msg = msgs.NewNodeMsg()
-        msg.agent_uuid =  self.myId
+        msg.agent_uuid =  self.uuid
         msg.ip = self.ip
         msg.name = self.agent_info['name']
         msg.info = self.agent_info['info']
@@ -279,7 +281,7 @@ class Agent(object):
         self.log.debug("Controller received msgType: {} with status: {}".format(cmdDesc.type, msg.status))
 
         self.log.debug("Agent connects to controller and subscribes to received topics")
-        self.socket_sub.setsockopt(zmq.SUBSCRIBE,  self.myId)
+        self.socket_sub.setsockopt(zmq.SUBSCRIBE,  self.uuid)
         for topic in msg.topics:
             self.log.debug("Agent subscribes to topic: {}".format(topic))
             self.socket_sub.setsockopt(zmq.SUBSCRIBE, str(topic))
@@ -307,12 +309,12 @@ class Agent(object):
 
     def send_hello_msg_to_controller(self):
         self.log.debug("Agent sends HelloMsg to controller")
-        group = self.myId
+        group = self.uuid
         cmdDesc = msgs.CmdDesc()
         cmdDesc.type = msgs.get_msg_type(msgs.HelloMsg)
         cmdDesc.func_name = msgs.get_msg_type(msgs.HelloMsg)
         msg = msgs.HelloMsg()
-        msg.uuid = str(self.myId)
+        msg.uuid = str(self.uuid)
         msg.timeout = 3 * self.echoMsgInterval
         msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
         self.send_msg_to_controller(msgContainer)
@@ -361,7 +363,7 @@ class Agent(object):
         cmdDesc.type = msgs.get_msg_type(msgs.NodeExitMsg)
         cmdDesc.func_name = msgs.get_msg_type(msgs.NodeExitMsg)
         msg = msgs.NodeExitMsg()
-        msg.agent_uuid =  self.myId
+        msg.agent_uuid =  self.uuid
         msg.reason = "Process terminated"
 
         msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
@@ -384,7 +386,7 @@ class Agent(object):
 
                     if not group:
                         self.log.debug("Field group not set -> stamp with my UUID".format())
-                        msgContainer[0] = self.myId
+                        msgContainer[0] = self.uuid
 
                     self.log.debug("Agent received message of type: {}:{} from module: {}".format(cmdDesc.type, cmdDesc.func_name, name))
 
