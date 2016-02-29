@@ -88,9 +88,8 @@ def build_module(module_class):
     return module_class
 
 
-
-class AgentUpiModule(object):
-    def __init__(self, port=None):
+class AgentModule(object):
+    def __init__(self):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
 
