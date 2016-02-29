@@ -20,10 +20,10 @@ __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
 
 class Agent(object):
-    def __init__(self, controller):
+    def __init__(self):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
-        self.log.debug("Controller: {0}".format(controller))
+
         self.config = None
         self.uuid = str(uuid.uuid4())
         self.name = None
