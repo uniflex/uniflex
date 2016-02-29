@@ -3,6 +3,7 @@ import zmq
 import random
 import sys
 import time
+import threading
 import wishful_framework as msgs
 try:
    import cPickle as pickle
@@ -15,8 +16,25 @@ __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
 
+class discover_controller(object):
+    def __init__(self, ):
+        self.discover_controller = True
+
+    def __call__(self, f):
+        f._discover_controller = self.discover_controller
+        return f
+
+class loop(object):
+    def __init__(self, ):
+        self.loop = True
+
+    def __call__(self, f):
+        f._loop = self.loop
+        return f
+
+
 class on_start(object):
-    def __init__(self):
+    def __init__(self, ):
         self.onStart = True
 
     def __call__(self, f):
@@ -33,30 +51,21 @@ class on_exit(object):
         return f
 
 
-class on_connect(object):
-    def __init__(self):
-        self.onExit = True
-
-    def __call__(self, f):
-        f._onExit = self.onExit
-        return f
-
-
 class on_connected(object):
     def __init__(self):
-        self.onExit = True
+        self.onConnected = True
 
     def __call__(self, f):
-        f._onExit = self.onExit
+        f._onConnected = self.onConnected
         return f
 
 
-class on_disconnect(object):
+class on_disconnected(object):
     def __init__(self):
-        self.onExit = True
+        self.onDisconnected = True
 
     def __call__(self, f):
-        f._onExit = self.onExit
+        f._onDisconnected = self.onDisconnected
         return f
 
 
@@ -79,11 +88,15 @@ def build_module(module_class):
     return module_class
 
 
+
 class AgentUpiModule(object):
-    def __init__(self, port=None):
+    def __init__(self, module_id, port=None):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
-        
+
+        self.id = module_id
+        self.capabilities = []
+
         #discover UPI function implementation and create upi_capabilities list
         func_name = [method for method in dir(self) if callable(getattr(self, method)) and hasattr(getattr(self, method), '_upi_fname')]
         self.upi_callbacks = {list(getattr(self, method)._upi_fname)[0] : method for method in func_name}
@@ -92,18 +105,69 @@ class AgentUpiModule(object):
         #interface to be used in UPI functions, it is set before function call
         self.interface = None
 
-        if port:
-            self.port = port
-            self.log.debug("Connect to Agent on port: {0}".format(port))
-
-            # Connect to WiSHFUL Agent
-            self.context = zmq.Context()
-            self.socket = self.context.socket(zmq.PAIR)
-            self.socket.setsockopt(zmq.LINGER, 100)
-            self.socket.connect("tcp://localhost:%s" % port)
 
     def get_capabilities(self):
         return self.upis_capabilities
+
+
+    def send_msg_to_module(self, msgContainer):
+        self.log.debug("Module {} received cmd".format(self.__class__.__name__))
+        result = self.process_cmds(msgContainer)
+        self.log.debug("Module {} return value".format(self.__class__.__name__))
+        return result
+
+
+    def get_controller(self):
+        #discover controller discovery function
+        funcs = [method for method in dir(self) if callable(getattr(self, method)) and hasattr(getattr(self, method), '_discover_controller')]
+        fname = funcs[0]
+        func = getattr(self, fname)
+        if func:
+            return func()
+        else:
+            return
+
+
+    def execute_function(self, func):
+        loop = hasattr(func, '_loop')
+        if loop:
+            self.threads = threading.Thread(target=func)
+            self.threads.setDaemon(True)
+            self.threads.start()
+        else:
+            func()
+
+
+    def start(self):
+        #discover all functions that have to be executen on start
+        funcs = [method for method in dir(self) if callable(getattr(self, method)) and hasattr(getattr(self, method), '_onStart')]
+        for fname in funcs:
+            f = getattr(self, fname)
+            self.execute_function(f)
+
+
+    def exit(self):
+        #discover all functions that have to be executen on exit
+        funcs = [method for method in dir(self) if callable(getattr(self, method)) and hasattr(getattr(self, method), '_onExit')]
+        for fname in funcs:
+            f = getattr(self, fname)
+            self.execute_function(f)
+
+
+    def connected(self):
+        #discover all functions that have to be executen on connected
+        funcs = [method for method in dir(self) if callable(getattr(self, method)) and hasattr(getattr(self, method), '_onConnected')]
+        for fname in funcs:
+            f = getattr(self, fname)
+            self.execute_function(f)
+
+
+    def disconnected(self):
+        #discover all functions that have to be executen on disconnected
+        funcs = [method for method in dir(self) if callable(getattr(self, method)) and hasattr(getattr(self, method), '_onDisconnected')]
+        for fname in funcs:
+            f = getattr(self, fname)
+            self.execute_function(f)
 
 
     def process_cmds(self, msgContainer):
@@ -154,28 +218,3 @@ class AgentUpiModule(object):
             response = [group, respDesc.SerializeToString(), serialized_retVal]
 
         return response
-
-    def start_receive_cmds(self, socket):
-        while True:
-            msgContainer = socket.recv_multipart()
-
-            assert len(msgContainer) == 3
-            group = msgContainer[0]
-            cmdDesc = msgs.CmdDesc()
-            cmdDesc.ParseFromString(msgContainer[1])
-            msg = msgContainer[2]
-
-            self.log.debug("Recived msg: {}:{}:{}".format(group, cmdDesc.type, cmdDesc.func_name))
-
-            response = self.process_cmds(msgContainer)
-
-            if response:
-                self.log.debug("Sending response: {0}".format(response))
-                socket.send_multipart(response)
-
-    def run(self):
-        self.log.debug("Module starts".format())
-        try:
-            self.start_receive_msgs(self.socket)
-        except KeyboardInterrupt:
-            self.log.debug("Module exits")
