@@ -31,8 +31,14 @@ class ControllerMonitor(object):
         self.echoSendJob = None
         self.connectionLostJob = None
 
+
     def start(self):
         self.start_discovery_procedure()
+
+
+    def stop(self):
+        self.terminate_connection_to_controller()
+
 
     def start_discovery_procedure(self):
         self.discoveryThread = threading.Thread(target=self.discover_controller)
@@ -52,10 +58,6 @@ class ControllerMonitor(object):
             time.sleep(3)
 
         self.agent.moduleManager.discoveryModule.connected()
-
-
-    def stop(self):
-    	self.terminate_connection_to_controller()
 
 
     def setup_connection_to_controller(self, dlink, uplink):
@@ -116,6 +118,9 @@ class ControllerMonitor(object):
         self.connectedToController = True
         self.controller_uuid = msg.controller_uuid
 
+        #notify CONNECTED to modules
+        self.agent.moduleManager.connected()
+
         #start sending hello msgs
         execTime =  str(datetime.datetime.now() + datetime.timedelta(seconds=self.echoMsgInterval))
         self.log.debug("Agent schedule sending of Hello message".format())
@@ -149,6 +154,9 @@ class ControllerMonitor(object):
         self.agent.transport.disconnect()
         self.connectedToController = False
         self.controller_uuid = None
+
+        #notify DISCONNECTED to modules
+        self.agent.moduleManager.disconnected()
 
         self.log.debug("Agent restarts discovery procedure".format())
         self.start_discovery_procedure()
