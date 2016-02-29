@@ -80,6 +80,7 @@ class ModuleManager(object):
 
         pyModule = self.my_import(pyModuleName)
         wishful_module = getattr(pyModule, className)()
+        wishful_module.id = moduleId
 
         self.modules[moduleId] = wishful_module
 

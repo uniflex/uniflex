@@ -148,7 +148,22 @@ class Agent(object):
         msg.name = self.agent_info['name']
         msg.info = self.agent_info['info']
         
+        for mid, module in self.moduleManager.modules.iteritems():
+            moduleMsg = msg.modules.add()
+            moduleMsg.id = mid
+            moduleMsg.name = module.name
+            for f in module.get_capabilities():
+                function = moduleMsg.functions.add()
+                function.name = f
 
+        for ifaceId, modules in self.moduleManager.iface_to_module_mapping.iteritems():              
+            iface = msg.interfaces.add()
+            iface.id = int(ifaceId)
+            iface.name = self.moduleManager.interfaces[ifaceId]
+            for module in modules:
+                imodule = iface.modules.add()
+                imodule.id = module.id
+                imodule.name = module.name
 
         msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
 

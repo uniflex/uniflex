@@ -90,11 +90,12 @@ def build_module(module_class):
 
 
 class AgentUpiModule(object):
-    def __init__(self, module_id, port=None):
+    def __init__(self, port=None):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
 
-        self.id = module_id
+        self.id = None
+        self.name = self.__class__.__name__
         self.capabilities = []
 
         #discover UPI function implementation and create upi_capabilities list
