@@ -112,7 +112,6 @@ class ModuleManager(object):
         #find UPI module
         if iface:
             ifaceId = self.get_iface_id(str(iface))
-            print ifaceId
             modules = self.iface_to_module_mapping[ifaceId]
         else:
             modules = self.modules_without_iface
