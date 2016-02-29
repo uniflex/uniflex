@@ -2,16 +2,29 @@ import logging
 import time
 import sys
 import zmq.green as zmq
-import wishful_framework as msgs
+import socket
+import fcntl
+import struct
 try:
    import cPickle as pickle
 except:
    import pickle
 
+import wishful_framework as msgs
+
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
 __version__ = "0.1.0"
 __email__ = "gawlowicz@tkn.tu-berlin.de"
+
+
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15])
+    )[20:24])
 
 
 class TransportChannel(object):
@@ -32,6 +45,7 @@ class TransportChannel(object):
 
         #register module socket in poller
         self.poller.register(self.socket_sub, zmq.POLLIN)
+
 
     def connect(self, downlink, uplink):
         if self.controllerDL and self.controllerUL:
@@ -61,8 +75,10 @@ class TransportChannel(object):
         self.log.debug("Agent subscribes to topic: {}".format(topic))
         self.socket_sub.setsockopt(zmq.SUBSCRIBE, str(topic))
  
+
     def set_recv_callback(self, callback):
         self.recv_callback = callback
+
 
     def send_to_controller(self, msgContainer):
         ## stamp with my uuid
@@ -71,6 +87,7 @@ class TransportChannel(object):
         cmdDesc.caller_id = self.agent.uuid
         msgContainer[1] = cmdDesc.SerializeToString()
         self.socket_pub.send_multipart(msgContainer)
+
 
     def start(self):
         # Work on requests from controller

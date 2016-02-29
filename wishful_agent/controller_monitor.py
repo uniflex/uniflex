@@ -69,8 +69,8 @@ class ControllerMonitor(object):
         msg = msgs.NewNodeMsg()
         msg.agent_uuid =  self.agent.uuid
         msg.ip = self.agent.ip
-        msg.name = self.agent.agent_info['name']
-        msg.info = self.agent.agent_info['info']
+        msg.name = self.agent.name
+        msg.info = self.agent.info
         
         for mid, module in self.agent.moduleManager.modules.iteritems():
             moduleMsg = msg.modules.add()

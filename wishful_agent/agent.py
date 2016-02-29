@@ -2,34 +2,21 @@ import logging
 import time
 import sys
 import yaml
-from agent_module import *
-from rule_manager import *
-from apscheduler.schedulers.background import BackgroundScheduler
 import datetime
 import uuid
-
-import socket
-import fcntl
-import struct
+from apscheduler.schedulers.background import BackgroundScheduler
 
 import wishful_framework as msgs
-from transport_channel import TransportChannel
+from transport_channel import TransportChannel, get_ip_address
 from controller_monitor import ControllerMonitor
 from module_manager import ModuleManager
+
+from rule_manager import *
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
 __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
-
-
-def get_ip_address(ifname):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(
-        s.fileno(),
-        0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname[:15])
-    )[20:24])
 
 
 class Agent(object):
@@ -39,7 +26,9 @@ class Agent(object):
         self.log.debug("Controller: {0}".format(controller))
         self.config = None
         self.uuid = str(uuid.uuid4())
-        self.agent_info = {}
+        self.name = None
+        self.info = None
+        self.iface = None
         self.ip = None
 
         apscheduler_logger = logging.getLogger('apscheduler')
@@ -56,6 +45,19 @@ class Agent(object):
         self.ruleManager = RuleManager(self)
 
 
+    def set_agent_info(self, name=None, info=None, iface=None, ip=None):
+        self.name = name
+        self.info = info
+        self.iface = iface
+        self.ip = ip
+
+        if self.ip == None and self.iface:
+            self.ip = get_ip_address(self.iface)
+
+    def add_module(self, moduleName, pyModule, className, interfaces):
+        self.moduleManager.add_module(moduleName, pyModule, className, interfaces)
+
+
     def read_config_file(self, path=None):
         self.log.debug("Path to module: {0}".format(path))
 
@@ -64,18 +66,23 @@ class Agent(object):
 
         return config
 
+    def load_config(self, path=None):
+        config = self.read_config_file(path)
 
-    def add_module(self, moduleName, pyModule, className, interfaces):
-        self.moduleManager.add_module(moduleName, pyModule, className, interfaces)
-
-
-    def load_modules(self, config):
         self.log.debug("Config: {0}".format(config))
-        self.agent_info = config['agent_info']
-        if 'ip' in self.agent_info:
-            self.ip = self.agent_info['ip']
-        else:
-            self.ip = get_ip_address(self.agent_info['iface'])
+        
+        agent_info = config['agent_info']
+
+        if 'name' in agent_info:
+            self.name = agent_info['name']
+
+        if 'info' in agent_info:
+            self.info = agent_info['info']    
+
+        if 'iface' in agent_info:
+            self.iface = agent_info['iface']
+            self.ip = get_ip_address(self.iface)
+            
 
         #load modules
         moduleDesc = config['modules']
