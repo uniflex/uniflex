@@ -203,7 +203,7 @@ class AgentUpiModule(object):
         #    retVal = e
 
         if retVal is not None:
-            group = "RESPONSE"
+            group = None
             respDesc = msgs.CmdDesc()
             respDesc.type = cmdDesc.type
             respDesc.func_name = cmdDesc.func_name

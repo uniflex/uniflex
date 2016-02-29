@@ -92,10 +92,6 @@ class Agent(object):
         #TODO: return some rule ID to controller, so it is able to remove it
 
 
-    def send_to_controller(self, msgContainer):
-        self.transport.send_to_controller(msgContainer)
-
-
     def process_msgs(self, msgContainer):
         group = msgContainer[0]
         cmdDesc = msgContainer[1]

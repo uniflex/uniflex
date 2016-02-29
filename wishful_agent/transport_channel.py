@@ -80,7 +80,17 @@ class TransportChannel(object):
         self.recv_callback = callback
 
 
+    def send_ctr_to_controller(self, msgContainer):
+        ## stamp with my uuid
+        cmdDesc = msgs.CmdDesc()
+        cmdDesc.ParseFromString(msgContainer[1])
+        cmdDesc.caller_id = self.agent.uuid
+        msgContainer[1] = cmdDesc.SerializeToString()
+        self.socket_pub.send_multipart(msgContainer)
+
+
     def send_to_controller(self, msgContainer):
+        msgContainer[0] = str(self.agent.controllerMonitor.controller_uuid)
         ## stamp with my uuid
         cmdDesc = msgs.CmdDesc()
         cmdDesc.ParseFromString(msgContainer[1])

@@ -23,6 +23,7 @@ class ControllerMonitor(object):
 
         self.agent = agent
 
+        self.controller_uuid = None
         self.discoveryThread = None
         self.connectedToController = False
         self.echoMsgInterval = 3
@@ -96,7 +97,7 @@ class ControllerMonitor(object):
 
         self.log.debug("Agent sends context-setup request to controller")
         time.sleep(1) # TODO: are we waiting for connection?
-        self.agent.transport.send_to_controller(msgContainer)
+        self.agent.transport.send_ctr_to_controller(msgContainer)
 
 
     def setup_connection_to_controller_complete(self, msgContainer):
@@ -104,7 +105,7 @@ class ControllerMonitor(object):
         msg = msgs.NewNodeAck()
         msg.ParseFromString(msgContainer[2])
 
-        self.log.debug("Controller received msgType: {} with status: {}".format(cmdDesc.type, msg.status))
+        self.log.debug("Agent received msgType: {} with status: {}".format(cmdDesc.type, msg.status))
 
         self.log.debug("Agent connects to controller and subscribes to received topics")
         self.agent.transport.subscribe_to(self.agent.uuid)
@@ -113,6 +114,7 @@ class ControllerMonitor(object):
 
         #stop discovery module:
         self.connectedToController = True
+        self.controller_uuid = msg.controller_uuid
 
         #start sending hello msgs
         execTime =  str(datetime.datetime.now() + datetime.timedelta(seconds=self.echoMsgInterval))
@@ -132,7 +134,7 @@ class ControllerMonitor(object):
         msg.uuid = str(self.agent.uuid)
         msg.timeout = 3 * self.echoMsgInterval
         msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
-        self.agent.transport.send_to_controller(msgContainer)
+        self.agent.transport.send_ctr_to_controller(msgContainer)
 
         #reschedule hello msg
         self.log.debug("Agent schedule sending of Hello message".format())
@@ -146,6 +148,7 @@ class ControllerMonitor(object):
 
         self.agent.transport.disconnect()
         self.connectedToController = False
+        self.controller_uuid = None
 
         self.log.debug("Agent restarts discovery procedure".format())
         self.start_discovery_procedure()
@@ -168,4 +171,4 @@ class ControllerMonitor(object):
         msg.reason = "Process terminated"
 
         msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
-        self.agent.transport.send_to_controller(msgContainer)
+        self.agent.transport.send_ctr_to_controller(msgContainer)
