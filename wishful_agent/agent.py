@@ -93,7 +93,7 @@ class Agent(object):
             self.ip = get_ip_address(self.agent_info['iface'])
 
         #load modules
-        moduleDesc = config['upi_modules']
+        moduleDesc = config['modules']
         for m_name, m_params in moduleDesc.iteritems():
             
             supported_interfaces = None
