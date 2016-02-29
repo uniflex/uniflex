@@ -1,7 +1,6 @@
 import logging
 import time
 import sys
-import yaml
 import datetime
 import uuid
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -58,17 +57,7 @@ class Agent(object):
         self.moduleManager.add_module(moduleName, pyModule, className, interfaces)
 
 
-    def read_config_file(self, path=None):
-        self.log.debug("Path to module: {0}".format(path))
-
-        with open(path, 'r') as f:
-           config = yaml.load(f)
-
-        return config
-
-    def load_config(self, path=None):
-        config = self.read_config_file(path)
-
+    def load_config(self, config):
         self.log.debug("Config: {0}".format(config))
         
         agent_info = config['agent_info']
