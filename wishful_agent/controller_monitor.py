@@ -31,6 +31,9 @@ class ControllerMonitor(object):
         self.connectionLostJob = None
 
     def start(self):
+        self.start_discovery_procedure()
+
+    def start_discovery_procedure(self):
         self.discoveryThread = threading.Thread(target=self.discover_controller)
         self.discoveryThread.setDaemon(True)
         self.discoveryThread.start()
@@ -145,7 +148,7 @@ class ControllerMonitor(object):
         self.connectedToController = False
 
         self.log.debug("Agent restarts discovery procedure".format())
-        self.agent.start_discovery_procedure()
+        self.start_discovery_procedure()
 
     def serve_hello_msg(self, msgContainer):
         self.log.debug("Agent received HELLO MESSAGE from controller".format())
