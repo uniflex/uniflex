@@ -43,13 +43,15 @@ class Agent(object):
         self.agent_info = {}
         self.ip = None
 
-
         apscheduler_logger = logging.getLogger('apscheduler')
         apscheduler_logger.setLevel(logging.CRITICAL)
         self.jobScheduler = BackgroundScheduler()
         self.jobScheduler.start()
 
         self.moduleManager = ModuleManager(self)
+        
+        self.transport = TransportChannel(self)
+        self.transport.set_recv_callback(self.process_msgs)
 
         self.discoveryThread = None
         self.connectedToController = False
@@ -63,17 +65,6 @@ class Agent(object):
 
         self.ruleManager = RuleManager(self)
 
-
-        #self.transport = TransportChannel(ul, dl)
-        self.poller = zmq.Poller()
-        self.context = zmq.Context()
-        self.socket_sub = self.context.socket(zmq.SUB) # for downlink communication with controller
-        self.socket_sub.setsockopt(zmq.SUBSCRIBE,  self.uuid)
-        self.socket_sub.setsockopt(zmq.LINGER, 100)
-        self.socket_pub = self.context.socket(zmq.PUB) # for uplink communication with controller
-
-        #register module socket in poller
-        self.poller.register(self.socket_sub, zmq.POLLIN)
 
 
     def read_config_file(self, path=None):
@@ -109,34 +100,16 @@ class Agent(object):
         ruleId = self.ruleManager.add_rule(ruleDesc)
         #TODO: return some rule ID to controller, so it is able to remove it
 
-
-    def send_msg_to_controller(self, msgContainer):
-        ## stamp with my uuid
-        cmdDesc = msgs.CmdDesc()
-        cmdDesc.ParseFromString(msgContainer[1])
-        cmdDesc.caller_id = self.uuid
-        msgContainer[1] = cmdDesc.SerializeToString()
-        self.socket_pub.send_multipart(msgContainer)
+    def send_to_controller(self, msgContainer):
+        self.transport.send_to_controller(msgContainer)
 
     def setup_connection_to_controller(self, dlink, uplink):
-
         if self.connectedToController:
             self.log.debug("Agent already connected to controller".format())
             return
 
         self.log.debug("Agent connects controller: DL-{}, UL-{}".format(dlink, uplink))
-
-        if self.controllerDL and self.controllerUL:
-            try:
-                self.socket_pub.disconnect(self.controllerDL)
-                self.socket_sub.disconnect(self.controllerUL)
-            except:
-                pass
-
-        self.controllerDL = dlink
-        self.controllerUL = uplink
-        self.socket_pub.connect(self.controllerDL)
-        self.socket_sub.connect(self.controllerUL)
+        self.transport.connect(dlink, uplink)
 
         group = "NEW_NODE"
         cmdDesc = msgs.CmdDesc()
@@ -169,21 +142,19 @@ class Agent(object):
 
         self.log.debug("Agent sends context-setup request to controller")
         time.sleep(1) # TODO: are we waiting for connection?
-        self.send_msg_to_controller(msgContainer)
+        self.transport.send_to_controller(msgContainer)
 
     def setup_connection_to_controller_complete(self, msgContainer):
-        cmdDesc = msgs.CmdDesc()
-        cmdDesc.ParseFromString(msgContainer[1])
+        cmdDesc = msgContainer[1]
         msg = msgs.NewNodeAck()
         msg.ParseFromString(msgContainer[2])
 
         self.log.debug("Controller received msgType: {} with status: {}".format(cmdDesc.type, msg.status))
 
         self.log.debug("Agent connects to controller and subscribes to received topics")
-        self.socket_sub.setsockopt(zmq.SUBSCRIBE,  self.uuid)
+        self.transport.subscribe_to(self.uuid)
         for topic in msg.topics:
-            self.log.debug("Agent subscribes to topic: {}".format(topic))
-            self.socket_sub.setsockopt(zmq.SUBSCRIBE, str(topic))
+            self.transport.subscribe_to(topic)
 
         #stop discovery module:
         self.connectedToController = True
@@ -206,7 +177,7 @@ class Agent(object):
         msg.uuid = str(self.uuid)
         msg.timeout = 3 * self.echoMsgInterval
         msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
-        self.send_msg_to_controller(msgContainer)
+        self.transport.send_to_controller(msgContainer)
 
         #reschedule hello msg
         self.log.debug("Agent schedule sending of Hello message".format())
@@ -218,14 +189,7 @@ class Agent(object):
         self.log.debug("Agent lost connection with controller, stop sending EchoMsg".format())
         self.echoSendJob.remove()
 
-        #disconnect
-        if self.controllerDL and self.controllerUL:
-            try:
-                self.socket_pub.disconnect(self.controllerDL)
-                self.socket_sub.disconnect(self.controllerUL)
-            except:
-                pass
-
+        self.transport.disconnect()
         self.connectedToController = False
 
         self.log.debug("Agent restarts discovery procedure".format())
@@ -249,7 +213,7 @@ class Agent(object):
         msg.reason = "Process terminated"
 
         msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
-        self.send_msg_to_controller(msgContainer)
+        self.transport.send_to_controller(msgContainer)
 
 
     def start_discovery_procedure(self):
@@ -270,36 +234,27 @@ class Agent(object):
 
         self.moduleManager.discoveryModule.connected()
 
-    def process_msgs(self):
-        # Work on requests from both controller and modules
-        while True:
-            socks = dict(self.poller.poll())
-            if self.socket_sub in socks and socks[self.socket_sub] == zmq.POLLIN:
-                msgContainer = self.socket_sub.recv_multipart()
+    def process_msgs(self, msgContainer):
+        group = msgContainer[0]
+        cmdDesc = msgContainer[1]
+        msg = msgContainer[2]          
+        self.log.debug("Agent received message: {} from controller".format(cmdDesc.type))
 
-                assert len(msgContainer) == 3
-                group = msgContainer[0]
-                cmdDesc = msgs.CmdDesc()
-                cmdDesc.ParseFromString(msgContainer[1])
-                msg = msgContainer[2]
-                
-                self.log.debug("Agent received message: {} from controller".format(cmdDesc.type))
-
-                if cmdDesc.type == msgs.get_msg_type(msgs.NewNodeAck):
-                    self.setup_connection_to_controller_complete(msgContainer)
-                elif cmdDesc.type == msgs.get_msg_type(msgs.HelloMsg):
-                    self.serve_hello_msg(msgContainer)
-                elif cmdDesc.type == msgs.get_msg_type(msgs.RuleDesc):
-                    self.serve_rule(msgContainer)
-                else:
-                    self.log.debug("Agent serves command: {}:{} from controller".format(cmdDesc.type, cmdDesc.func_name))
-                    if not cmdDesc.exec_time or cmdDesc.exec_time == 0:
-                        self.log.debug("Agent sends message: {}:{} to module".format(cmdDesc.type, cmdDesc.func_name))
-                        self.moduleManager.send_cmd_to_module(msgContainer)
-                    else:
-                        execTime = datetime.datetime.strptime(cmdDesc.exec_time, "%Y-%m-%d %H:%M:%S.%f")
-                        self.log.debug("Agent schedule task for message: {}:{} at {}".format(cmdDesc.type, cmdDesc.func_name, execTime))
-                        self.jobScheduler.add_job(self.moduleManager.send_cmd_to_module, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer})
+        if cmdDesc.type == msgs.get_msg_type(msgs.NewNodeAck):
+            self.setup_connection_to_controller_complete(msgContainer)
+        elif cmdDesc.type == msgs.get_msg_type(msgs.HelloMsg):
+            self.serve_hello_msg(msgContainer)
+        elif cmdDesc.type == msgs.get_msg_type(msgs.RuleDesc):
+            self.serve_rule(msgContainer)
+        else:
+            self.log.debug("Agent serves command: {}:{} from controller".format(cmdDesc.type, cmdDesc.func_name))
+            if not cmdDesc.exec_time or cmdDesc.exec_time == 0:
+                self.log.debug("Agent sends message: {}:{} to module".format(cmdDesc.type, cmdDesc.func_name))
+                self.moduleManager.send_cmd_to_module(msgContainer)
+            else:
+                execTime = datetime.datetime.strptime(cmdDesc.exec_time, "%Y-%m-%d %H:%M:%S.%f")
+                self.log.debug("Agent schedule task for message: {}:{} at {}".format(cmdDesc.type, cmdDesc.func_name, execTime))
+                self.jobScheduler.add_job(self.moduleManager.send_cmd_to_module, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer})
 
 
     def run(self):
@@ -309,7 +264,7 @@ class Agent(object):
             self.start_discovery_procedure()
             #nofity START to modules
             self.moduleManager.start()
-            self.process_msgs()
+            self.transport.start()
 
         except KeyboardInterrupt:
             self.log.debug("Agent exits")
@@ -320,8 +275,4 @@ class Agent(object):
             #nofity EXIT to modules
             self.moduleManager.exit()
             self.jobScheduler.shutdown()
-            self.socket_sub.setsockopt(zmq.LINGER, 0)
-            self.socket_sub.setsockopt(zmq.LINGER, 0)
-            self.socket_sub.close()
-            self.socket_pub.close()
-            self.context.term()
+            self.transport.stop()

@@ -103,8 +103,7 @@ class ModuleManager(object):
 
 
     def send_cmd_to_module(self, msgContainer):
-        cmdDesc = msgs.CmdDesc()
-        cmdDesc.ParseFromString(msgContainer[1])
+        cmdDesc = msgContainer[1]
 
         iface = None
         if cmdDesc.HasField('interface'):
@@ -122,9 +121,9 @@ class ModuleManager(object):
         for module in modules:
             if cmdDesc.func_name in module.get_capabilities():
                 functionFound = True
-                retVal = module.send_msg_to_module(msgContainer)
+                retVal = module.send_to_module(msgContainer)
                 if retVal:
-                    self.agent.send_msg_to_controller(retVal)
+                    self.agent.send_to_controller(retVal)
                 break
         
         if not functionFound:

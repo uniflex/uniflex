@@ -20,6 +20,9 @@ class TransportChannel(object):
             module=self.__class__.__module__, name=self.__class__.__name__))
 
         self.agent = agent
+        self.controllerDL = None
+        self.controllerUL = None
+
         self.poller = zmq.Poller()
         self.context = zmq.Context()
         self.socket_sub = self.context.socket(zmq.SUB) # for downlink communication with controller
@@ -30,46 +33,70 @@ class TransportChannel(object):
         #register module socket in poller
         self.poller.register(self.socket_sub, zmq.POLLIN)
 
+    def connect(self, downlink, uplink):
+        if self.controllerDL and self.controllerUL:
+            try:
+                self.socket_pub.disconnect(self.controllerDL)
+                self.socket_sub.disconnect(self.controllerUL)
+            except:
+                pass
+
+        self.controllerDL = downlink
+        self.controllerUL = uplink
+        self.socket_pub.connect(self.controllerDL)
+        self.socket_sub.connect(self.controllerUL)
+
+
+    def disconnect(self):
+        #disconnect
+        if self.controllerDL and self.controllerUL:
+            try:
+                self.socket_pub.disconnect(self.controllerDL)
+                self.socket_sub.disconnect(self.controllerUL)
+            except:
+                pass
+
 
     def subscribe_to(self, topic):
-        self.ul_socket.setsockopt(zmq.SUBSCRIBE, topic)
+        self.log.debug("Agent subscribes to topic: {}".format(topic))
+        self.socket_sub.setsockopt(zmq.SUBSCRIBE, str(topic))
  
     def set_recv_callback(self, callback):
         self.recv_callback = callback
 
-    def send_msg_to_controller(self, msgContainer):
+    def send_to_controller(self, msgContainer):
         ## stamp with my uuid
         cmdDesc = msgs.CmdDesc()
         cmdDesc.ParseFromString(msgContainer[1])
-        cmdDesc.caller_id = self.uuid
+        cmdDesc.caller_id = self.agent.uuid
         msgContainer[1] = cmdDesc.SerializeToString()
         self.socket_pub.send_multipart(msgContainer)
 
     def start(self):
-        socks = dict(self.poller.poll())
-        if self.ul_socket in socks and socks[self.ul_socket] == zmq.POLLIN:
-            try:
-                msgContainer = self.ul_socket.recv_multipart(zmq.NOBLOCK)
-            except zmq.ZMQError:
-                raise zmq.ZMQError
+        # Work on requests from controller
+        while True:
+            socks = dict(self.poller.poll())
+            if self.socket_sub in socks and socks[self.socket_sub] == zmq.POLLIN:
+                msgContainer = self.socket_sub.recv_multipart()
 
-            assert len(msgContainer) == 3
-            group = msgContainer[0]
-            cmdDesc = msgs.CmdDesc()
-            cmdDesc.ParseFromString(msgContainer[1])
-            msg = msgContainer[2]
-            if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
-                msg = pickle.loads(msg)
+                assert len(msgContainer) == 3
+                group = msgContainer[0]
+                cmdDesc = msgs.CmdDesc()
+                cmdDesc.ParseFromString(msgContainer[1])
+                msg = msgContainer[2]
 
-            msgContainer[0] = group
-            msgContainer[1] = cmdDesc
-            msgContainer[2] = msg
-            self.recv_callback(msgContainer)
+                if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
+                    msg = pickle.loads(msg)
+
+                msgContainer[0] = group
+                msgContainer[1] = cmdDesc
+                msgContainer[2] = msg
+                self.recv_callback(msgContainer)
 
 
     def stop(self):
-        self.ul_socket.setsockopt(zmq.LINGER, 0)
-        self.dl_socket.setsockopt(zmq.LINGER, 0)
-        self.ul_socket.close()
-        self.dl_socket.close()
-        self.context.term() 
+        self.socket_sub.setsockopt(zmq.LINGER, 0)
+        self.socket_sub.setsockopt(zmq.LINGER, 0)
+        self.socket_sub.close()
+        self.socket_pub.close()
+        self.context.term()

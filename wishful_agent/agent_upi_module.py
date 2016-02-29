@@ -111,7 +111,7 @@ class AgentUpiModule(object):
         return self.upis_capabilities
 
 
-    def send_msg_to_module(self, msgContainer):
+    def send_to_module(self, msgContainer):
         self.log.debug("Module {} received cmd".format(self.__class__.__name__))
         result = self.process_cmds(msgContainer)
         self.log.debug("Module {} return value".format(self.__class__.__name__))
@@ -174,13 +174,9 @@ class AgentUpiModule(object):
     def process_cmds(self, msgContainer):
         assert len(msgContainer) == 3
         group = msgContainer[0]
-        cmdDesc = msgs.CmdDesc()
-        cmdDesc.ParseFromString(msgContainer[1])
-        msg = msgContainer[2]
+        cmdDesc = msgContainer[1]
+        kwargs = msgContainer[2]
         
-        if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
-            kwargs = pickle.loads(msg)
-
         self.log.debug("Process msg: {}:{}".format(cmdDesc.type, cmdDesc.func_name))
         command = cmdDesc.func_name
 
