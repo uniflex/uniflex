@@ -100,10 +100,13 @@ class Agent(object):
 
         if cmdDesc.type == msgs.get_msg_type(msgs.NewNodeAck):
             self.controllerMonitor.setup_connection_to_controller_complete(msgContainer)
+
         elif cmdDesc.type == msgs.get_msg_type(msgs.HelloMsg):
             self.controllerMonitor.serve_hello_msg(msgContainer)
+
         elif cmdDesc.type == msgs.get_msg_type(msgs.RuleDesc):
             self.serve_rule(msgContainer)
+            
         else:
             self.log.debug("Agent serves command: {}:{} from controller".format(cmdDesc.type, cmdDesc.func_name))
             if not cmdDesc.exec_time or cmdDesc.exec_time == 0:
