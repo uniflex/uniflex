@@ -97,7 +97,7 @@ class Agent(object):
 
 
     def process_msgs(self, msgContainer):
-        group = msgContainer[0]
+        dest = msgContainer[0]
         cmdDesc = msgContainer[1]
         msg = msgContainer[2]          
         self.log.debug("Agent received message: {} from controller".format(cmdDesc.type))

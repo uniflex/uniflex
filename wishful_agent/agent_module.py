@@ -172,7 +172,7 @@ class AgentModule(object):
 
     def process_cmds(self, msgContainer):
         assert len(msgContainer) == 3
-        group = msgContainer[0]
+        dest = msgContainer[0]
         cmdDesc = msgContainer[1]
         kwargs = msgContainer[2]
         
@@ -202,7 +202,7 @@ class AgentModule(object):
         #    retVal = e
 
         if retVal is not None:
-            group = None
+            dest = "controller"
             respDesc = msgs.CmdDesc()
             respDesc.type = cmdDesc.type
             respDesc.func_name = cmdDesc.func_name
@@ -211,6 +211,6 @@ class AgentModule(object):
             #Serialize return value
             respDesc.serialization_type = msgs.CmdDesc.PICKLE
             serialized_retVal = pickle.dumps(retVal)
-            response = [group, respDesc.SerializeToString(), serialized_retVal]
+            response = [dest, respDesc.SerializeToString(), serialized_retVal]
 
         return response

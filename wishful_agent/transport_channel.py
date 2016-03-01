@@ -107,7 +107,7 @@ class TransportChannel(object):
                 msgContainer = self.socket_sub.recv_multipart()
 
                 assert len(msgContainer) == 3
-                group = msgContainer[0]
+                dest = msgContainer[0]
                 cmdDesc = msgs.CmdDesc()
                 cmdDesc.ParseFromString(msgContainer[1])
                 msg = msgContainer[2]
@@ -115,7 +115,7 @@ class TransportChannel(object):
                 if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
                     msg = pickle.loads(msg)
 
-                msgContainer[0] = group
+                msgContainer[0] = dest
                 msgContainer[1] = cmdDesc
                 msgContainer[2] = msg
                 self.recv_callback(msgContainer)

@@ -68,7 +68,7 @@ class ControllerMonitor(object):
         self.log.debug("Agent connects controller: DL-{}, UL-{}".format(dlink, uplink))
         self.agent.transport.connect(dlink, uplink)
 
-        group = "NEW_NODE"
+        topic = "NEW_NODE"
         cmdDesc = msgs.CmdDesc()
         cmdDesc.type = msgs.get_msg_type(msgs.NewNodeMsg)
         cmdDesc.func_name = msgs.get_msg_type(msgs.NewNodeMsg)
@@ -95,7 +95,7 @@ class ControllerMonitor(object):
                 imodule.id = module.id
                 imodule.name = module.name
 
-        msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
+        msgContainer = [topic, cmdDesc.SerializeToString(), msg.SerializeToString()]
 
         self.log.debug("Agent sends context-setup request to controller")
         time.sleep(1) # TODO: are we waiting for connection?
@@ -131,14 +131,14 @@ class ControllerMonitor(object):
 
     def send_hello_msg_to_controller(self):
         self.log.debug("Agent sends HelloMsg to controller")
-        group = self.agent.uuid
+        topic = self.agent.uuid
         cmdDesc = msgs.CmdDesc()
         cmdDesc.type = msgs.get_msg_type(msgs.HelloMsg)
         cmdDesc.func_name = msgs.get_msg_type(msgs.HelloMsg)
         msg = msgs.HelloMsg()
         msg.uuid = str(self.agent.uuid)
         msg.timeout = 3 * self.echoMsgInterval
-        msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
+        msgContainer = [topic, cmdDesc.SerializeToString(), msg.SerializeToString()]
         self.agent.transport.send_ctr_to_controller(msgContainer)
 
         #reschedule hello msg
@@ -170,7 +170,7 @@ class ControllerMonitor(object):
 
     def terminate_connection_to_controller(self):
         self.log.debug("Agend sends NodeExitMsg to Controller".format())
-        group = "NODE_EXIT"
+        topic = "NODE_EXIT"
         cmdDesc= msgs.CmdDesc()
         cmdDesc.type = msgs.get_msg_type(msgs.NodeExitMsg)
         cmdDesc.func_name = msgs.get_msg_type(msgs.NodeExitMsg)
@@ -178,5 +178,5 @@ class ControllerMonitor(object):
         msg.agent_uuid =  self.agent.uuid
         msg.reason = "Process terminated"
 
-        msgContainer = [group, cmdDesc.SerializeToString(), msg.SerializeToString()]
+        msgContainer = [topic, cmdDesc.SerializeToString(), msg.SerializeToString()]
         self.agent.transport.send_ctr_to_controller(msgContainer)
