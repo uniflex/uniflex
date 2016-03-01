@@ -31,6 +31,9 @@ class ControllerMonitor(object):
         self.echoSendJob = None
         self.connectionLostJob = None
 
+        self.connectionTimeout = 10
+        self.connectionTimeoutJob = None
+
 
     def start(self):
         self.start_discovery_procedure()
@@ -55,9 +58,12 @@ class ControllerMonitor(object):
 
             if dlink and uplink:
                 self.setup_connection_to_controller(dlink,uplink)
+                execTime = datetime.datetime.now() + datetime.timedelta(seconds=self.connectionTimeout)
+                self.connectionTimeoutJob = self.agent.jobScheduler.add_job(self.start_discovery_procedure, 'date', run_date=execTime)
                 break
+
             time.sleep(5)
-            #TODO: add timeout if will not manage to connnect to controller, to start discovery it again
+
 
 
     def setup_connection_to_controller(self, dlink, uplink):
@@ -120,6 +126,9 @@ class ControllerMonitor(object):
 
         #notify CONNECTED to modules
         self.agent.moduleManager.connected()
+
+        #remove connection timeout job
+        self.connectionTimeoutJob.remove()
 
         #start sending hello msgs
         execTime =  str(datetime.datetime.now() + datetime.timedelta(seconds=self.echoMsgInterval))
