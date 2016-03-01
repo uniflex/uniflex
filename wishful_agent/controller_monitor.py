@@ -55,9 +55,9 @@ class ControllerMonitor(object):
 
             if dlink and uplink:
                 self.setup_connection_to_controller(dlink,uplink)
-            time.sleep(3)
-
-        self.agent.moduleManager.discoveryModule.connected()
+                break
+            time.sleep(5)
+            #TODO: add timeout if will not manage to connnect to controller, to start discovery it again
 
 
     def setup_connection_to_controller(self, dlink, uplink):
