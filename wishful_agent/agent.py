@@ -53,8 +53,8 @@ class Agent(object):
         if self.ip == None and self.iface:
             self.ip = get_ip_address(self.iface)
 
-    def add_module(self, moduleName, pyModule, className, interfaces):
-        self.moduleManager.add_module(moduleName, pyModule, className, interfaces)
+    def add_module(self, moduleName, pyModule, className, interfaces, kwargs={}):
+        self.moduleManager.add_module(moduleName, pyModule, className, interfaces, kwargs)
 
 
     def load_config(self, config):
@@ -79,9 +79,13 @@ class Agent(object):
             
             supported_interfaces = None
             if 'interfaces' in m_params:
-                supported_interfaces=m_params['interfaces'] 
+                supported_interfaces=m_params['interfaces']
 
-            self.add_module(m_name, m_params['module'], m_params['class_name'], supported_interfaces)
+            kwargs = {}
+            if 'kwargs' in m_params:
+                kwargs = m_params['kwargs']
+
+            self.add_module(m_name, m_params['module'], m_params['class_name'], supported_interfaces, kwargs)
 
 
     #TODO: put it in new module
