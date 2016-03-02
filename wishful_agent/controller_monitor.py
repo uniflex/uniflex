@@ -22,6 +22,7 @@ class ControllerMonitor(object):
             module=self.__class__.__module__, name=self.__class__.__name__))
 
         self.agent = agent
+        self.forceStop = False
 
         self.controller_uuid = None
         self.discoveryThread = None
@@ -40,6 +41,7 @@ class ControllerMonitor(object):
 
 
     def stop(self):
+        self.forceStop = True
         self.terminate_connection_to_controller()
 
 
@@ -50,7 +52,7 @@ class ControllerMonitor(object):
 
 
     def discover_controller(self):
-        while not self.connectedToController:
+        while not self.connectedToController and not self.forceStop:
             discoveryModule = self.agent.moduleManager.discoveryModule
             assert discoveryModule
 
