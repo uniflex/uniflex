@@ -5,6 +5,7 @@ import zmq.green as zmq
 import socket
 import fcntl
 import struct
+import threading
 try:
    import cPickle as pickle
 except:
@@ -36,6 +37,7 @@ class TransportChannel(object):
         self.controllerDL = None
         self.controllerUL = None
 
+        self.uplinkSocketLock = threading.Lock()
         self.poller = zmq.Poller()
         self.context = zmq.Context()
         self.socket_sub = self.context.socket(zmq.SUB) # for downlink communication with controller
@@ -80,13 +82,22 @@ class TransportChannel(object):
         self.recv_callback = callback
 
 
+    def send_uplink(self, msgContainer):
+        #TODO: it is quick fix; find better solution with socket per thread
+        self.uplinkSocketLock.acquire()
+        try:
+            self.socket_pub.send_multipart(msgContainer)
+        finally:
+            self.uplinkSocketLock.release()
+
+
     def send_ctr_to_controller(self, msgContainer):
         ## stamp with my uuid
         cmdDesc = msgs.CmdDesc()
         cmdDesc.ParseFromString(msgContainer[1])
         cmdDesc.caller_id = self.agent.uuid
         msgContainer[1] = cmdDesc.SerializeToString()
-        self.socket_pub.send_multipart(msgContainer)
+        self.send_uplink(msgContainer)
 
 
     def send_to_controller(self, msgContainer):
@@ -96,7 +107,7 @@ class TransportChannel(object):
         cmdDesc.ParseFromString(msgContainer[1])
         cmdDesc.caller_id = self.agent.uuid
         msgContainer[1] = cmdDesc.SerializeToString()
-        self.socket_pub.send_multipart(msgContainer)
+        self.send_uplink(msgContainer)
 
 
     def start(self):
