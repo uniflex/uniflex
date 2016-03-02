@@ -124,21 +124,16 @@ class Agent(object):
 
     def run(self):
         self.log.debug("Agent starting".format())
+        #nofity START to modules
+        self.moduleManager.start()
+        self.controllerMonitor.start()
+        self.transport.start()
 
-        try:
-            #nofity START to modules
-            self.moduleManager.start()
-            self.controllerMonitor.start()
-            self.transport.start()
 
-        except KeyboardInterrupt:
-            self.log.debug("Agent exits")
-
-        finally:
-            self.log.debug("Stop all modules")
-            #nofity EXIT to modules
-            self.moduleManager.exit()
-
-            self.jobScheduler.shutdown()
-            self.controllerMonitor.stop()
-            self.transport.stop()
+    def stop(self):
+        self.log.debug("Stop all modules")
+        #nofity EXIT to modules
+        self.moduleManager.exit()
+        self.jobScheduler.shutdown()
+        self.controllerMonitor.stop()
+        self.transport.stop()
