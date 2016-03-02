@@ -106,10 +106,30 @@ class Agent(object):
         #TODO: return some rule ID to controller, so it is able to remove it
 
 
+    def send_upstream(self, msgContainer):
+        if not self.local:
+            self.transport.send_to_controller(msgContainer)
+
+
+    def process_cmd(self, msgContainer):
+        dest = msgContainer[0]
+        cmdDesc = msgContainer[1]
+        msg = msgContainer[2]
+
+        self.log.debug("Agent serves command: {}:{} from controller".format(cmdDesc.type, cmdDesc.func_name))
+        if not cmdDesc.exec_time or cmdDesc.exec_time == 0:
+            self.log.debug("Agent sends message: {}:{} to module".format(cmdDesc.type, cmdDesc.func_name))
+            self.moduleManager.send_cmd_to_module(msgContainer)
+        else:
+            execTime = datetime.datetime.strptime(cmdDesc.exec_time, "%Y-%m-%d %H:%M:%S.%f")
+            self.log.debug("Agent schedule task for message: {}:{} at {}".format(cmdDesc.type, cmdDesc.func_name, execTime))
+            self.jobScheduler.add_job(self.moduleManager.send_cmd_to_module, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer})
+
+
     def process_msgs(self, msgContainer):
         dest = msgContainer[0]
         cmdDesc = msgContainer[1]
-        msg = msgContainer[2]          
+        msg = msgContainer[2]
         self.log.debug("Agent received message: {} from controller".format(cmdDesc.type))
 
         if cmdDesc.type == msgs.get_msg_type(msgs.NewNodeAck):
@@ -122,14 +142,7 @@ class Agent(object):
             self.serve_rule(msgContainer)
             
         else:
-            self.log.debug("Agent serves command: {}:{} from controller".format(cmdDesc.type, cmdDesc.func_name))
-            if not cmdDesc.exec_time or cmdDesc.exec_time == 0:
-                self.log.debug("Agent sends message: {}:{} to module".format(cmdDesc.type, cmdDesc.func_name))
-                self.moduleManager.send_cmd_to_module(msgContainer)
-            else:
-                execTime = datetime.datetime.strptime(cmdDesc.exec_time, "%Y-%m-%d %H:%M:%S.%f")
-                self.log.debug("Agent schedule task for message: {}:{} at {}".format(cmdDesc.type, cmdDesc.func_name, execTime))
-                self.jobScheduler.add_job(self.moduleManager.send_cmd_to_module, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer})
+            self.process_cmd(msgContainer)
 
 
     def run(self):

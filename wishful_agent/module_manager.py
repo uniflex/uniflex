@@ -123,7 +123,7 @@ class ModuleManager(object):
                 functionFound = True
                 retVal = module.send_to_module(msgContainer)
                 if retVal:
-                    self.agent.transport.send_to_controller(retVal)
+                    self.agent.send_upstream(retVal)
                 break
         
         if not functionFound:
