@@ -133,8 +133,11 @@ class TransportChannel(object):
 
 
     def stop(self):
-        self.socket_sub.setsockopt(zmq.LINGER, 0)
-        self.socket_sub.setsockopt(zmq.LINGER, 0)
-        self.socket_sub.close()
-        self.socket_pub.close()
-        self.context.term()
+        try:
+            self.socket_sub.setsockopt(zmq.LINGER, 0)
+            self.socket_sub.setsockopt(zmq.LINGER, 0)
+            self.socket_sub.close()
+            self.socket_pub.close()
+            self.context.term()
+        except:
+            pass
