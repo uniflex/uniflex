@@ -148,7 +148,7 @@ class ControllerMonitor(object):
         msg.uuid = str(self.agent.uuid)
         msg.timeout = 3 * self.echoMsgInterval
         msgContainer = [topic, cmdDesc.SerializeToString(), msg.SerializeToString()]
-        self.agent.transport.send_ctr_to_controller(msgContainer)
+        self.agent.transport.send_to_controller(msgContainer)
 
         #reschedule hello msg
         self.log.debug("Agent schedule sending of Hello message".format())
