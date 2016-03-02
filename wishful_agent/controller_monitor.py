@@ -103,7 +103,7 @@ class ControllerMonitor(object):
                 imodule.id = module.id
                 imodule.name = module.name
 
-        msgContainer = [topic, cmdDesc.SerializeToString(), msg.SerializeToString()]
+        msgContainer = [topic, cmdDesc, msg.SerializeToString()]
 
         self.log.debug("Agent sends context-setup request to controller")
         time.sleep(1) # TODO: are we waiting for connection?
@@ -149,7 +149,7 @@ class ControllerMonitor(object):
         msg = msgs.HelloMsg()
         msg.uuid = str(self.agent.uuid)
         msg.timeout = 3 * self.echoMsgInterval
-        msgContainer = [topic, cmdDesc.SerializeToString(), msg.SerializeToString()]
+        msgContainer = [topic, cmdDesc, msg.SerializeToString()]
         self.agent.transport.send_to_controller(msgContainer)
 
         #reschedule hello msg
@@ -189,5 +189,5 @@ class ControllerMonitor(object):
         msg.agent_uuid =  self.agent.uuid
         msg.reason = "Process terminated"
 
-        msgContainer = [topic, cmdDesc.SerializeToString(), msg.SerializeToString()]
+        msgContainer = [topic, cmdDesc, msg.SerializeToString()]
         self.agent.transport.send_ctr_to_controller(msgContainer)

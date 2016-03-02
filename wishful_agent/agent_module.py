@@ -71,6 +71,6 @@ class AgentModule(WishfulModule):
             #Serialize return value
             respDesc.serialization_type = msgs.CmdDesc.PICKLE
             serialized_retVal = pickle.dumps(retVal)
-            response = [dest, respDesc.SerializeToString(), serialized_retVal]
+            response = [dest, respDesc, serialized_retVal]
 
         return response
