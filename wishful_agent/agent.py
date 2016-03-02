@@ -47,6 +47,7 @@ class Agent(object):
             self.local_controller = self.add_module("local_control",
                                                     'wishful_module_local_control', 
                                                     'LocalControlModule')
+            self.local_controller.set_agent(self)
 
         self.ruleManager = RuleManager(self)
 
@@ -109,6 +110,8 @@ class Agent(object):
     def send_upstream(self, msgContainer):
         if not self.local:
             self.transport.send_to_controller(msgContainer)
+        else:
+            self.local_controller.recv_cmd_response(msgContainer)
 
 
     def process_cmd(self, msgContainer):

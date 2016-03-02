@@ -128,3 +128,28 @@ class ModuleManager(object):
         
         if not functionFound:
             print "function not supported EXCEPTION", cmdDesc.func_name, cmdDesc.interface
+
+    def send_cmd_to_module_blocking(self, msgContainer):
+        cmdDesc = msgContainer[1]
+
+        iface = None
+        if cmdDesc.HasField('interface'):
+            iface = cmdDesc.interface
+
+        #find UPI module
+        if iface:
+            ifaceId = self.get_iface_id(str(iface))
+            modules = self.iface_to_module_mapping[ifaceId]
+        else:
+            modules = self.modules_without_iface
+
+        retVal = None
+        functionFound = False
+        for module in modules:
+            if cmdDesc.func_name in module.get_capabilities():
+                functionFound = True
+                retVal = module.send_to_module(msgContainer)
+                return retVal
+        
+        if not functionFound:
+            print "function not supported EXCEPTION", cmdDesc.func_name, cmdDesc.interface
