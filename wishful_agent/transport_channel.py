@@ -117,7 +117,7 @@ class TransportChannel(object):
             if self.socket_sub in socks and socks[self.socket_sub] == zmq.POLLIN:
                 msgContainer = self.socket_sub.recv_multipart()
 
-                assert len(msgContainer) == 3
+                assert len(msgContainer) == 3, msgContainer
                 dest = msgContainer[0]
                 cmdDesc = msgs.CmdDesc()
                 cmdDesc.ParseFromString(msgContainer[1])
