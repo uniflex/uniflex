@@ -19,10 +19,11 @@ __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
 
 class Agent(object):
-    def __init__(self):
+    def __init__(self, local=False):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
 
+        self.local = local
         self.config = None
         self.uuid = str(uuid.uuid4())
         self.name = None
@@ -36,13 +37,22 @@ class Agent(object):
         self.jobScheduler.start()
 
         self.moduleManager = ModuleManager(self)
-        self.controllerMonitor = ControllerMonitor(self)
 
-        self.transport = TransportChannel(self)
-        self.transport.set_recv_callback(self.process_msgs)
+        if not self.local:
+            self.controllerMonitor = ControllerMonitor(self)
+
+            self.transport = TransportChannel(self)
+            self.transport.set_recv_callback(self.process_msgs)
+        else:
+            self.local_controller = self.add_module("local_control",
+                                                    'wishful_module_local_control', 
+                                                    'LocalControlModule')
 
         self.ruleManager = RuleManager(self)
 
+    def get_local_controller(self):
+        assert self.local_controller, "Start agent in local mode"
+        return self.local_controller
 
     def set_agent_info(self, name=None, info=None, iface=None, ip=None):
         self.name = name
@@ -53,8 +63,8 @@ class Agent(object):
         if self.ip == None and self.iface:
             self.ip = get_ip_address(self.iface)
 
-    def add_module(self, moduleName, pyModule, className, interfaces, kwargs={}):
-        self.moduleManager.add_module(moduleName, pyModule, className, interfaces, kwargs)
+    def add_module(self, moduleName, pyModule, className, interfaces=None, kwargs={}):
+        return self.moduleManager.add_module(moduleName, pyModule, className, interfaces, kwargs)
 
 
     def load_config(self, config):
@@ -126,8 +136,9 @@ class Agent(object):
         self.log.debug("Agent starting".format())
         #nofity START to modules
         self.moduleManager.start()
-        self.controllerMonitor.start()
-        self.transport.start()
+        if not self.local:
+            self.controllerMonitor.start()
+            self.transport.start()
 
 
     def stop(self):
@@ -135,5 +146,6 @@ class Agent(object):
         #nofity EXIT to modules
         self.moduleManager.exit()
         self.jobScheduler.shutdown()
-        self.controllerMonitor.stop()
-        self.transport.stop()
+        if not self.local:
+            self.controllerMonitor.stop()
+            self.transport.stop()

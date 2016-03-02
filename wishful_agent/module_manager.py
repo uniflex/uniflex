@@ -88,7 +88,7 @@ class ModuleManager(object):
 
         if interfaces == None:
             self.modules_without_iface.append(wishful_module)
-            return 
+            return wishful_module
 
         for iface in interfaces:
             if iface not in self.interfaces.values():
@@ -99,6 +99,8 @@ class ModuleManager(object):
                 self.iface_to_module_mapping[iface_id] = [wishful_module]
             else:
                 self.iface_to_module_mapping[iface_id].append(wishful_module)
+
+        return wishful_module
 
 
     def send_cmd_to_module(self, msgContainer):
