@@ -4,11 +4,6 @@ import random
 import sys
 import time
 import threading
-try:
-   import cPickle as pickle
-except:
-   import pickle
-
 from wishful_framework.modules import *
 from wishful_framework import msgs
 
@@ -70,7 +65,6 @@ class AgentModule(WishfulModule):
             
             #Serialize return value
             respDesc.serialization_type = msgs.CmdDesc.PICKLE
-            serialized_retVal = pickle.dumps(retVal)
-            response = [dest, respDesc, serialized_retVal]
+            response = [dest, respDesc, retVal]
 
         return response

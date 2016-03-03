@@ -94,8 +94,16 @@ class TransportChannel(object):
     def send_ctr_to_controller(self, msgContainer):
         ## stamp with my uuid
         cmdDesc = msgContainer[1]
+        msg = msgContainer[2]
+        
         cmdDesc.caller_id = self.agent.uuid
         msgContainer[1] = cmdDesc.SerializeToString()
+
+        if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
+            msg = pickle.dumps(msg)
+        
+        msgContainer[2] = msg
+
         self.send_uplink(msgContainer)
 
 
@@ -103,8 +111,16 @@ class TransportChannel(object):
         msgContainer[0] = str(self.agent.controllerMonitor.controller_uuid)
         ## stamp with my uuid
         cmdDesc = msgContainer[1]
+        msg = msgContainer[2]
+        
         cmdDesc.caller_id = self.agent.uuid
         msgContainer[1] = cmdDesc.SerializeToString()
+
+        if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
+            msg = pickle.dumps(msg)
+        
+        msgContainer[2] = msg
+
         self.send_uplink(msgContainer)
 
 

@@ -3,11 +3,6 @@ import time
 import sys
 import datetime
 import threading
-try:
-   import cPickle as pickle
-except:
-   import pickle
-
 import wishful_framework as msgs
 
 __author__ = "Piotr Gawlowicz"
