@@ -101,6 +101,8 @@ class TransportChannel(object):
 
         if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
             msg = pickle.dumps(msg)
+        elif cmdDesc.serialization_type == msgs.CmdDesc.PROTOBUF:
+            msg = msg.SerializeToString()
         
         msgContainer[2] = msg
 
@@ -118,7 +120,9 @@ class TransportChannel(object):
 
         if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
             msg = pickle.dumps(msg)
-        
+        elif cmdDesc.serialization_type == msgs.CmdDesc.PROTOBUF:
+            msg = msg.SerializeToString()
+                    
         msgContainer[2] = msg
 
         self.send_uplink(msgContainer)

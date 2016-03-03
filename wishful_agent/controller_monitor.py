@@ -75,6 +75,8 @@ class ControllerMonitor(object):
         cmdDesc = msgs.CmdDesc()
         cmdDesc.type = msgs.get_msg_type(msgs.NewNodeMsg)
         cmdDesc.func_name = msgs.get_msg_type(msgs.NewNodeMsg)
+        cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
+
         msg = msgs.NewNodeMsg()
         msg.agent_uuid =  self.agent.uuid
         msg.ip = self.agent.ip
@@ -98,7 +100,7 @@ class ControllerMonitor(object):
                 imodule.id = module.id
                 imodule.name = module.name
 
-        msgContainer = [topic, cmdDesc, msg.SerializeToString()]
+        msgContainer = [topic, cmdDesc, msg]
 
         self.log.debug("Agent sends context-setup request to controller")
         time.sleep(1) # TODO: are we waiting for connection?
@@ -141,10 +143,12 @@ class ControllerMonitor(object):
         cmdDesc = msgs.CmdDesc()
         cmdDesc.type = msgs.get_msg_type(msgs.HelloMsg)
         cmdDesc.func_name = msgs.get_msg_type(msgs.HelloMsg)
+        cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
+
         msg = msgs.HelloMsg()
         msg.uuid = str(self.agent.uuid)
         msg.timeout = 3 * self.echoMsgInterval
-        msgContainer = [topic, cmdDesc, msg.SerializeToString()]
+        msgContainer = [topic, cmdDesc, msg]
         self.agent.transport.send_to_controller(msgContainer)
 
         #reschedule hello msg
@@ -180,9 +184,11 @@ class ControllerMonitor(object):
         cmdDesc= msgs.CmdDesc()
         cmdDesc.type = msgs.get_msg_type(msgs.NodeExitMsg)
         cmdDesc.func_name = msgs.get_msg_type(msgs.NodeExitMsg)
+        cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
+
         msg = msgs.NodeExitMsg()
         msg.agent_uuid =  self.agent.uuid
         msg.reason = "Process terminated"
 
-        msgContainer = [topic, cmdDesc, msg.SerializeToString()]
+        msgContainer = [topic, cmdDesc, msg]
         self.agent.transport.send_ctr_to_controller(msgContainer)
