@@ -19,6 +19,8 @@ class ModuleManager(object):
         self.ifaceIdGen = 0
         
         self.discoveryModule = None
+        self.localControlProgramManager = None
+
         self.modules = {}
         self.interfaces = {}
         self.iface_to_module_mapping = {}
@@ -86,6 +88,9 @@ class ModuleManager(object):
 
         if moduleName == "discovery":
             self.discoveryModule = wishful_module
+        elif pyModuleName == "wishful_module_local_control" and className == "LocalControlModule":
+            self.localControlProgramManager = wishful_module
+
 
         if interfaces == None:
             self.modules_without_iface.append(wishful_module)
@@ -118,6 +123,14 @@ class ModuleManager(object):
 
         return modules   
 
+    def send_to_local_ctr_programs_manager(self, msgContainer):
+        assert self.localControlProgramManager
+        localControlProgramId = msgContainer[0]
+        if localControlProgramId in self.localControlProgramManager.controlPrograms:
+            localCP = self.localControlProgramManager.controlPrograms[localControlProgramId]
+            localCP.recv_cmd_response(msgContainer)
+
+
     def send_cmd_to_module(self, msgContainer, localControllerId=None):
         cmdDesc = msgContainer[1]
         modules = self.find_upi_modules(cmdDesc)
@@ -129,6 +142,9 @@ class ModuleManager(object):
                 retVal = module.send_to_module(msgContainer)
                 if retVal and not localControllerId:
                     self.agent.send_upstream(retVal)
+                elif retVal and localControllerId:
+                    retVal[0] = localControllerId
+                    self.agent.send_to_local_ctr_program(retVal)
                 break
         
         if not functionFound:

@@ -104,6 +104,8 @@ class Agent(object):
         else:
             self.local_controller.recv_cmd_response(msgContainer)
 
+    def send_to_local_ctr_program(self, retVal):
+        self.moduleManager.send_to_local_ctr_programs_manager(retVal)
 
     def process_cmd(self, msgContainer, localControllerId=None):
         dest = msgContainer[0]
