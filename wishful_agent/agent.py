@@ -46,7 +46,7 @@ class Agent(object):
         else:
             self.local_controller = self.add_module("local_control",
                                                     'wishful_module_local_control', 
-                                                    'LocalControlModule')
+                                                    'LocalController')
             self.local_controller.set_agent(self)
 
         self.ruleManager = RuleManager(self)
@@ -97,14 +97,6 @@ class Agent(object):
                 kwargs = m_params['kwargs']
 
             self.add_module(m_name, m_params['module'], m_params['class_name'], supported_interfaces, kwargs)
-
-
-    #TODO: put it in new module
-    def serve_rule(self, msgContainer):
-        ruleDesc = msgs.RuleDesc()
-        ruleDesc.ParseFromString(msgContainer[2])
-        ruleId = self.ruleManager.add_rule(ruleDesc)
-        #TODO: return some rule ID to controller, so it is able to remove it
 
 
     def send_upstream(self, msgContainer):
