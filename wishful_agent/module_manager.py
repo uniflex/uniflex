@@ -104,19 +104,23 @@ class ModuleManager(object):
         return wishful_module
 
 
-    def send_cmd_to_module(self, msgContainer):
-        cmdDesc = msgContainer[1]
-
+    def find_upi_modules(self, cmdDesc):
         iface = None
+        modules = []
         if cmdDesc.HasField('interface'):
             iface = cmdDesc.interface
 
-        #find UPI module
         if iface:
             ifaceId = self.get_iface_id(str(iface))
             modules = self.iface_to_module_mapping[ifaceId]
         else:
             modules = self.modules_without_iface
+
+        return modules   
+
+    def send_cmd_to_module(self, msgContainer):
+        cmdDesc = msgContainer[1]
+        modules = self.find_upi_modules(cmdDesc)
 
         functionFound = False
         for module in modules:
@@ -132,17 +136,7 @@ class ModuleManager(object):
 
     def send_cmd_to_module_blocking(self, msgContainer):
         cmdDesc = msgContainer[1]
-
-        iface = None
-        if cmdDesc.HasField('interface'):
-            iface = cmdDesc.interface
-
-        #find UPI module
-        if iface:
-            ifaceId = self.get_iface_id(str(iface))
-            modules = self.iface_to_module_mapping[ifaceId]
-        else:
-            modules = self.modules_without_iface
+        modules = self.find_upi_modules(cmdDesc)
 
         retVal = None
         functionFound = False
