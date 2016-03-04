@@ -16,7 +16,10 @@ __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 class AgentModule(WishfulModule):
     def __init__(self):
         super(AgentModule, self).__init__()
+        self.agent = None
 
+    def set_agent(self, agent):
+        self.agent = agent
 
     def send_to_module(self, msgContainer):
         self.log.debug("Module {} received cmd".format(self.__class__.__name__))

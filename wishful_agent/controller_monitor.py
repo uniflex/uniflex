@@ -51,7 +51,7 @@ class ControllerMonitor(object):
             discoveryModule = self.agent.moduleManager.discoveryModule
             assert discoveryModule
 
-            [dlink, uplink] = discoveryModule.get_controller()
+            [dlink, uplink] = discoveryModule.get_discovered_controller_address()
 
             if dlink and uplink:
                 self.setup_connection_to_controller(dlink,uplink)

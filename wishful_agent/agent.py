@@ -47,7 +47,6 @@ class Agent(object):
             self.local_controller = self.add_module("local_control",
                                                     'wishful_module_local_control', 
                                                     'LocalController')
-            self.local_controller.set_agent(self)
 
         self.ruleManager = RuleManager(self)
 
