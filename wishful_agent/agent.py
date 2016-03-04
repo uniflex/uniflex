@@ -105,7 +105,7 @@ class Agent(object):
             self.local_controller.recv_cmd_response(msgContainer)
 
 
-    def process_cmd(self, msgContainer):
+    def process_cmd(self, msgContainer, localControllerId=None):
         dest = msgContainer[0]
         cmdDesc = msgContainer[1]
         msg = msgContainer[2]
@@ -113,11 +113,11 @@ class Agent(object):
         self.log.debug("Agent serves command: {}:{} from controller".format(cmdDesc.type, cmdDesc.func_name))
         if not cmdDesc.exec_time or cmdDesc.exec_time == 0:
             self.log.debug("Agent sends message: {}:{} to module".format(cmdDesc.type, cmdDesc.func_name))
-            self.moduleManager.send_cmd_to_module(msgContainer)
+            self.moduleManager.send_cmd_to_module(msgContainer, localControllerId)
         else:
             execTime = datetime.datetime.strptime(cmdDesc.exec_time, "%Y-%m-%d %H:%M:%S.%f")
             self.log.debug("Agent schedule task for message: {}:{} at {}".format(cmdDesc.type, cmdDesc.func_name, execTime))
-            self.jobScheduler.add_job(self.moduleManager.send_cmd_to_module, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer})
+            self.jobScheduler.add_job(self.moduleManager.send_cmd_to_module, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer, 'localControllerId':localControllerId})
 
 
     def process_msgs(self, msgContainer):

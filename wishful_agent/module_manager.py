@@ -118,7 +118,7 @@ class ModuleManager(object):
 
         return modules   
 
-    def send_cmd_to_module(self, msgContainer):
+    def send_cmd_to_module(self, msgContainer, localControllerId=None):
         cmdDesc = msgContainer[1]
         modules = self.find_upi_modules(cmdDesc)
 
@@ -127,7 +127,7 @@ class ModuleManager(object):
             if cmdDesc.func_name in module.get_capabilities():
                 functionFound = True
                 retVal = module.send_to_module(msgContainer)
-                if retVal:
+                if retVal and not localControllerId:
                     self.agent.send_upstream(retVal)
                 break
         
