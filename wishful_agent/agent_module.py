@@ -47,11 +47,12 @@ class AgentModule(WishfulModule):
         func = getattr(self, command)
 
         my_args = ()
+        my_kwargs = {}
         if kwargs:
             my_args = kwargs['args']
             my_kwargs = kwargs['kwargs']
 
-        retVal = func(*my_args)
+        retVal = func(*my_args, **my_kwargs)
 
         #TODO: add exception handling
         #try:
