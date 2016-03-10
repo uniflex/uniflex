@@ -9,7 +9,6 @@ import wishful_framework as msgs
 from transport_channel import TransportChannel, get_ip_address
 from controller_monitor import ControllerMonitor
 from module_manager import ModuleManager
-from rule_manager import *
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -47,7 +46,6 @@ class Agent(object):
                                                     'wishful_module_local_control', 
                                                     'LocalController')
 
-        self.ruleManager = RuleManager(self)
 
     def get_local_controller(self):
         assert self.local_controller, "Start agent in local mode"
