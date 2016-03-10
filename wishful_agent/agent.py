@@ -9,7 +9,6 @@ import wishful_framework as msgs
 from transport_channel import TransportChannel, get_ip_address
 from controller_monitor import ControllerMonitor
 from module_manager import ModuleManager
-
 from rule_manager import *
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
