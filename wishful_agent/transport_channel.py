@@ -40,42 +40,42 @@ class TransportChannel(object):
         self.uplinkSocketLock = threading.Lock()
         self.poller = zmq.Poller()
         self.context = zmq.Context()
-        self.socket_sub = self.context.socket(zmq.SUB) # for downlink communication with controller
-        self.socket_sub.setsockopt(zmq.SUBSCRIBE,  self.agent.uuid)
-        self.socket_sub.setsockopt(zmq.LINGER, 100)
-        self.socket_pub = self.context.socket(zmq.PUB) # for uplink communication with controller
+        self.dl_socket = self.context.socket(zmq.SUB) # for downlink communication with controller
+        self.dl_socket.setsockopt(zmq.SUBSCRIBE,  self.agent.uuid)
+        self.dl_socket.setsockopt(zmq.LINGER, 100)
+        self.ul_socket = self.context.socket(zmq.PUB) # for uplink communication with controller
 
         #register module socket in poller
-        self.poller.register(self.socket_sub, zmq.POLLIN)
+        self.poller.register(self.dl_socket, zmq.POLLIN)
 
 
     def connect(self, downlink, uplink):
         if self.controllerDL and self.controllerUL:
             try:
-                self.socket_pub.disconnect(self.controllerDL)
-                self.socket_sub.disconnect(self.controllerUL)
+                self.ul_socket.disconnect(self.controllerUL)
+                self.dl_socket.disconnect(self.controllerDL)
             except:
                 pass
 
         self.controllerDL = downlink
         self.controllerUL = uplink
-        self.socket_pub.connect(self.controllerDL)
-        self.socket_sub.connect(self.controllerUL)
+        self.ul_socket.connect(self.controllerUL)
+        self.dl_socket.connect(self.controllerDL)
 
 
     def disconnect(self):
         #disconnect
         if self.controllerDL and self.controllerUL:
             try:
-                self.socket_pub.disconnect(self.controllerDL)
-                self.socket_sub.disconnect(self.controllerUL)
+                self.ul_socket.disconnect(self.controllerUL)
+                self.dl_socket.disconnect(self.controllerDL)
             except:
                 pass
 
 
     def subscribe_to(self, topic):
         self.log.debug("Agent subscribes to topic: {}".format(topic))
-        self.socket_sub.setsockopt(zmq.SUBSCRIBE, str(topic))
+        self.dl_socket.setsockopt(zmq.SUBSCRIBE, str(topic))
  
 
     def set_recv_callback(self, callback):
@@ -86,7 +86,7 @@ class TransportChannel(object):
         #TODO: it is quick fix; find better solution with socket per thread
         self.uplinkSocketLock.acquire()
         try:
-            self.socket_pub.send_multipart(msgContainer)
+            self.ul_socket.send_multipart(msgContainer)
         finally:
             self.uplinkSocketLock.release()
 
@@ -132,8 +132,8 @@ class TransportChannel(object):
         # Work on requests from controller
         while True:
             socks = dict(self.poller.poll())
-            if self.socket_sub in socks and socks[self.socket_sub] == zmq.POLLIN:
-                msgContainer = self.socket_sub.recv_multipart()
+            if self.dl_socket in socks and socks[self.dl_socket] == zmq.POLLIN:
+                msgContainer = self.dl_socket.recv_multipart()
 
                 assert len(msgContainer) == 3, msgContainer
                 dest = msgContainer[0]
@@ -152,10 +152,10 @@ class TransportChannel(object):
 
     def stop(self):
         try:
-            self.socket_sub.setsockopt(zmq.LINGER, 0)
-            self.socket_pub.setsockopt(zmq.LINGER, 0)
-            self.socket_sub.close()
-            self.socket_pub.close()
+            self.dl_socket.setsockopt(zmq.LINGER, 0)
+            self.ul_socket.setsockopt(zmq.LINGER, 0)
+            self.dl_socket.close()
+            self.ul_socket.close()
             self.context.term()
         except:
             pass
