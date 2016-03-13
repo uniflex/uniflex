@@ -27,7 +27,7 @@ class ControllerMonitor(object):
         self.echoSendJob = None
         self.connectionLostJob = None
 
-        self.connectionTimeout = 10
+        self.connectionTimeout = 5
         self.connectionTimeoutJob = None
 
 
@@ -59,7 +59,7 @@ class ControllerMonitor(object):
                 self.connectionTimeoutJob = self.agent.jobScheduler.add_job(self.start_discovery_procedure, 'date', run_date=execTime)
                 break
 
-            time.sleep(5)
+            time.sleep(2)
 
 
 
