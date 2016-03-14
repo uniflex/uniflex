@@ -164,3 +164,14 @@ class ModuleManager(object):
         
         if not functionFound:
             print "function not supported EXCEPTION", cmdDesc.func_name, cmdDesc.interface
+
+    def get_generator(self, msgContainer):
+        cmdDesc = msgContainer[1]
+        modules = self.find_upi_modules(cmdDesc)
+
+        myGenerator = None
+        for module in modules:
+            if cmdDesc.func_name in module.get_generators():
+                myGenerator = getattr(module, cmdDesc.func_name)
+
+        return myGenerator
