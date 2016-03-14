@@ -87,9 +87,14 @@ class ControllerMonitor(object):
             moduleMsg = msg.modules.add()
             moduleMsg.id = mid
             moduleMsg.name = module.name
-            for f in module.get_capabilities():
+            for f in module.get_functions():
                 function = moduleMsg.functions.add()
                 function.name = f
+
+            for g in module.get_generators():
+                generator = moduleMsg.generators.add()
+                generator.name = g
+
 
         for ifaceId, modules in self.agent.moduleManager.iface_to_module_mapping.iteritems():              
             iface = msg.interfaces.add()
