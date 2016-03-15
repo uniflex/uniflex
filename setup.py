@@ -15,5 +15,5 @@ setup(
     description='WiSHFUL Agent Implementation Framework',
     long_description='Implementation of a wireless agent using the unified programming interfaces (UPIs) of the Wishful project.',
     keywords='wireless control',
-    install_requires=['pyzmq', 'apscheduler']
+    install_requires=['pyzmq', 'apscheduler', 'dill']
 )

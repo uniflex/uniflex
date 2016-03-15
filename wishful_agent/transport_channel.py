@@ -6,10 +6,12 @@ import socket
 import fcntl
 import struct
 import threading
+import dill #for pickling what standard pickle can’t cope with
 try:
    import cPickle as pickle
 except:
    import pickle
+
 
 import wishful_framework as msgs
 
@@ -100,7 +102,10 @@ class TransportChannel(object):
         msgContainer[1] = cmdDesc.SerializeToString()
 
         if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
-            msg = pickle.dumps(msg)
+            try:
+                msg = pickle.dumps(msg)
+            except:
+                msg = dill.dumps(msg)
         elif cmdDesc.serialization_type == msgs.CmdDesc.PROTOBUF:
             msg = msg.SerializeToString()
         
@@ -119,7 +124,10 @@ class TransportChannel(object):
         msgContainer[1] = cmdDesc.SerializeToString()
 
         if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
-            msg = pickle.dumps(msg)
+            try:
+                msg = pickle.dumps(msg)
+            except:
+                msg = dill.dumps(msg)
         elif cmdDesc.serialization_type == msgs.CmdDesc.PROTOBUF:
             msg = msg.SerializeToString()
                     
