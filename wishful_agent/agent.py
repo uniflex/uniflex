@@ -6,9 +6,9 @@ import uuid
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import wishful_framework as msgs
-from transport_channel import TransportChannel, get_ip_address
-from controller_monitor import ControllerMonitor
-from module_manager import ModuleManager
+from .transport_channel import TransportChannel, get_ip_address
+from .controller_monitor import ControllerMonitor
+from .module_manager import ModuleManager
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -82,7 +82,7 @@ class Agent(object):
 
         #load modules
         moduleDesc = config['modules']
-        for m_name, m_params in moduleDesc.iteritems():
+        for m_name, m_params in moduleDesc.items():
             
             supported_interfaces = None
             if 'interfaces' in m_params:

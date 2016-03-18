@@ -46,29 +46,29 @@ class ModuleManager(object):
 
     def start(self):
         self.log.debug("Notify START to modules".format())
-        for module in self.modules.values():
+        for module in list(self.modules.values()):
             module.start()
 
 
     def exit(self):
         self.log.debug("Notify EXIT to modules".format())
-        for module in self.modules.values():
+        for module in list(self.modules.values()):
             module.exit()
 
 
     def connected(self):
         self.log.debug("Notify CONNECTED to modules".format())
-        for module in self.modules.values():
+        for module in list(self.modules.values()):
             module.connected()
 
     def disconnected(self):
         self.log.debug("Notify DISCONNECTED to modules".format())
-        for module in self.modules.values():
+        for module in list(self.modules.values()):
             module.disconnected()
 
 
     def get_iface_id(self, name):
-        for k,v in self.interfaces.iteritems():
+        for k,v in self.interfaces.items():
             if v == name:
                 return k
 
@@ -97,7 +97,7 @@ class ModuleManager(object):
             return wishful_module
 
         for iface in interfaces:
-            if iface not in self.interfaces.values():
+            if iface not in list(self.interfaces.values()):
                 iface_id = self.generate_new_iface_id()
                 self.interfaces[iface_id] = str(iface)
 
@@ -148,7 +148,7 @@ class ModuleManager(object):
                 break
         
         if not functionFound:
-            print "function not supported EXCEPTION", cmdDesc.func_name, cmdDesc.interface
+            print("function not supported EXCEPTION", cmdDesc.func_name, cmdDesc.interface)
 
     def send_cmd_to_module_blocking(self, msgContainer):
         cmdDesc = msgContainer[1]
@@ -163,7 +163,7 @@ class ModuleManager(object):
                 return retVal
         
         if not functionFound:
-            print "function not supported EXCEPTION", cmdDesc.func_name, cmdDesc.interface
+            print ("function not supported EXCEPTION", cmdDesc.func_name, cmdDesc.interface)
 
 
     def get_module(self, msgContainer):

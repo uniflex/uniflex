@@ -41,7 +41,7 @@ class ControllerMonitor(object):
 
 
     def start_discovery_procedure(self):
-        self.discoveryThread = threading.Thread(target=self.discover_controller)
+        self.discoveryThread = threading.Thread(target=self.discover_controller, name="discovery")
         self.discoveryThread.setDaemon(True)
         self.discoveryThread.start()
 
@@ -83,7 +83,7 @@ class ControllerMonitor(object):
         msg.name = self.agent.name
         msg.info = self.agent.info
         
-        for mid, module in self.agent.moduleManager.modules.iteritems():
+        for mid, module in self.agent.moduleManager.modules.items():
             moduleMsg = msg.modules.add()
             moduleMsg.id = mid
             moduleMsg.name = module.name
@@ -96,7 +96,7 @@ class ControllerMonitor(object):
                 generator.name = g
 
 
-        for ifaceId, modules in self.agent.moduleManager.iface_to_module_mapping.iteritems():              
+        for ifaceId, modules in self.agent.moduleManager.iface_to_module_mapping.items():
             iface = msg.interfaces.add()
             iface.id = int(ifaceId)
             iface.name = self.agent.moduleManager.interfaces[ifaceId]

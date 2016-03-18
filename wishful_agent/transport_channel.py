@@ -12,7 +12,6 @@ try:
 except:
    import pickle
 
-
 import wishful_framework as msgs
 
 __author__ = "Piotr Gawlowicz"
@@ -23,11 +22,14 @@ __email__ = "gawlowicz@tkn.tu-berlin.de"
 
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(
+    val = socket.inet_ntoa(fcntl.ioctl(
         s.fileno(),
         0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname[:15])
-    )[20:24])
+        struct.pack('256s', bytes(ifname[:15], 'utf-8'))
+        )[20:24])
+    s.close()
+
+    return val
 
 
 class TransportChannel(object):
@@ -43,7 +45,7 @@ class TransportChannel(object):
         self.poller = zmq.Poller()
         self.context = zmq.Context()
         self.dl_socket = self.context.socket(zmq.SUB) # for downlink communication with controller
-        self.dl_socket.setsockopt(zmq.SUBSCRIBE,  self.agent.uuid)
+        self.dl_socket.setsockopt_string(zmq.SUBSCRIBE,  self.agent.uuid)
         self.dl_socket.setsockopt(zmq.LINGER, 100)
         self.ul_socket = self.context.socket(zmq.PUB) # for uplink communication with controller
 
@@ -77,7 +79,7 @@ class TransportChannel(object):
 
     def subscribe_to(self, topic):
         self.log.debug("Agent subscribes to topic: {}".format(topic))
-        self.dl_socket.setsockopt(zmq.SUBSCRIBE, str(topic))
+        self.dl_socket.setsockopt_string(zmq.SUBSCRIBE, str(topic))
  
 
     def set_recv_callback(self, callback):
@@ -94,6 +96,7 @@ class TransportChannel(object):
 
 
     def send_ctr_to_controller(self, msgContainer):
+        msgContainer[0] = msgContainer[0].encode('utf-8')
         ## stamp with my uuid
         cmdDesc = msgContainer[1]
         msg = msgContainer[2]
@@ -116,6 +119,7 @@ class TransportChannel(object):
 
     def send_to_controller(self, msgContainer):
         msgContainer[0] = str(self.agent.controllerMonitor.controller_uuid)
+        msgContainer[0] = msgContainer[0].encode('utf-8')
         ## stamp with my uuid
         cmdDesc = msgContainer[1]
         msg = msgContainer[2]
@@ -152,7 +156,7 @@ class TransportChannel(object):
                 if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
                     msg = pickle.loads(msg)
 
-                msgContainer[0] = dest
+                msgContainer[0] = dest.decode('utf-8')
                 msgContainer[1] = cmdDesc
                 msgContainer[2] = msg
                 self.recv_callback(msgContainer)
