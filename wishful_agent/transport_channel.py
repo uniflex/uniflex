@@ -22,10 +22,15 @@ __email__ = "gawlowicz@tkn.tu-berlin.de"
 
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    if sys.version_info.major >= 3:
+        ifname = bytes(ifname[:15], 'utf-8')
+    else:
+        ifname = ifname[:15]
+
     val = socket.inet_ntoa(fcntl.ioctl(
         s.fileno(),
         0x8915,  # SIOCGIFADDR
-        struct.pack('256s', bytes(ifname[:15], 'utf-8'))
+        struct.pack('256s', ifname)
         )[20:24])
     s.close()
 
@@ -45,7 +50,10 @@ class TransportChannel(object):
         self.poller = zmq.Poller()
         self.context = zmq.Context()
         self.dl_socket = self.context.socket(zmq.SUB) # for downlink communication with controller
-        self.dl_socket.setsockopt_string(zmq.SUBSCRIBE,  self.agent.uuid)
+        if sys.version_info.major >= 3:
+            self.dl_socket.setsockopt_string(zmq.SUBSCRIBE,  self.agent.uuid)
+        else:
+            self.dl_socket.setsockopt(zmq.SUBSCRIBE,  self.agent.uuid)
         self.dl_socket.setsockopt(zmq.LINGER, 100)
         self.ul_socket = self.context.socket(zmq.PUB) # for uplink communication with controller
 
@@ -79,7 +87,10 @@ class TransportChannel(object):
 
     def subscribe_to(self, topic):
         self.log.debug("Agent subscribes to topic: {}".format(topic))
-        self.dl_socket.setsockopt_string(zmq.SUBSCRIBE, str(topic))
+        if sys.version_info.major >= 3:
+            self.dl_socket.setsockopt_string(zmq.SUBSCRIBE, str(topic))
+        else:
+            self.dl_socket.setsockopt(zmq.SUBSCRIBE, str(topic))
  
 
     def set_recv_callback(self, callback):
