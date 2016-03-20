@@ -95,9 +95,11 @@ class Agent(object):
             self.add_module(m_name, m_params['module'], m_params['class_name'], supported_interfaces, kwargs)
 
 
-    def send_upstream(self, msgContainer):
-        if not self.local:
+    def send_upstream(self, msgContainer, localControllerId=None):
+        if not self.local and not localControllerId:
             self.transport.send_to_controller(msgContainer)
+        elif not self.local and localControllerId:
+            self.send_to_local_ctr_program(msgContainer)
         else:
             self.local_controller.recv_cmd_response(msgContainer)
 
