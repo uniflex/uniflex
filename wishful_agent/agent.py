@@ -28,6 +28,7 @@ class Agent(object):
         self.info = None
         self.iface = None
         self.ip = None
+        self.capabilities = None
 
         apscheduler_logger = logging.getLogger('apscheduler')
         apscheduler_logger.setLevel(logging.CRITICAL)
@@ -94,6 +95,12 @@ class Agent(object):
 
             self.add_module(m_name, m_params['module'], m_params['class_name'], supported_interfaces, kwargs)
 
+    def get_capabilities(self):
+        self.capabilities = self.moduleManager.get_capabilities()
+        return self.capabilities
+
+    def is_upi_supported(self, iface, upi_type, fname):
+        return self.moduleManager.is_upi_supported(iface, upi_type, fname)
 
     def send_upstream(self, msgContainer, localControllerId=None):
         if not self.local and not localControllerId:
@@ -142,6 +149,7 @@ class Agent(object):
 
     def run(self):
         self.log.debug("Agent starting".format())
+        self.get_capabilities()
         #nofity START to modules
         self.moduleManager.start()
         if not self.local:

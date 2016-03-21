@@ -190,3 +190,38 @@ class ModuleManager(object):
                 myGenerator = getattr(module, cmdDesc.func_name)
 
         return myGenerator
+
+    def get_capabilities(self):
+        return {"modules": self.modules,
+                "interfaces": self.interfaces,
+                "iface_to_module_mapping": self.iface_to_module_mapping,
+                "modules_without_iface": self.modules_without_iface}
+
+    def is_upi_supported(self, iface, upi_type, fname):
+        modules = []
+
+        if iface:
+            ifaceId = self.get_iface_id(str(iface))
+            modules = self.iface_to_module_mapping[ifaceId]
+        else:
+            modules = self.modules_without_iface
+
+        for module in modules:
+            if fname in module.get_functions():
+                return True
+
+        #check if function is generator
+        for module in modules:
+            if fname in module.get_generators():
+                raise Exception("UPI is generator, please call with proper way")
+
+        #check if function requires iface
+        modules = self.modules_without_iface
+        for module in modules:
+            if fname in module.get_capabilities():
+                raise Exception("UPI function: {}:{} cannot be called with iface")
+
+        raise Exception("UPI : {}:{} not supported for iface: {}, \
+                        please install proper module".format(upi_type,fname,iface))
+
+        return False
