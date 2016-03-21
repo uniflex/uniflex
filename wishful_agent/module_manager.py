@@ -77,30 +77,44 @@ class ModuleManager(object):
 
     def add_module(self, moduleName, pyModuleName, className, interfaces, kwargs):
         self.log.debug("Add new module: {}:{}:{}:{}".format(moduleName, pyModuleName, className, interfaces))
-        moduleId = self.generate_new_module_id()
 
         pyModule = self.my_import(pyModuleName)
-        wishful_module = getattr(pyModule, className)(**kwargs)
-        wishful_module.id = moduleId
-        wishful_module.set_agent(self.agent)
+        wishful_module_class = getattr(pyModule, className)
 
-        self.modules[moduleId] = wishful_module
-
-        if moduleName == "discovery":
-            self.discoveryModule = wishful_module
-        elif pyModuleName == "wishful_module_local_control" and className == "LocalControlModule":
-            self.localControlProgramManager = wishful_module
-
-
+        #add single module, that do not need interface
         if interfaces == None:
+            wishful_module = wishful_module_class(**kwargs)
+            moduleId = self.generate_new_module_id()
+            wishful_module.id = moduleId
+            wishful_module.set_agent(self.agent)
+
+            self.modules[moduleId] = wishful_module
             self.modules_without_iface.append(wishful_module)
+
+            if moduleName == "discovery":
+                self.discoveryModule = wishful_module
+            elif pyModuleName == "wishful_module_local_control" and className == "LocalControlModule":
+                self.localControlProgramManager = wishful_module
+
             return wishful_module
 
+        #create and add module for each interface
         for iface in interfaces:
+            #create interface dict (id:name)
             if iface not in list(self.interfaces.values()):
                 iface_id = self.generate_new_iface_id()
                 self.interfaces[iface_id] = str(iface)
 
+            #create module object
+            wishful_module = wishful_module_class(**kwargs)
+            moduleId = self.generate_new_module_id()
+            wishful_module.id = moduleId
+            wishful_module.set_agent(self.agent)
+            wishful_module.interface = iface
+
+            self.modules[moduleId] = wishful_module
+
+            #add module to interface's module list
             if not iface_id in self.iface_to_module_mapping:
                 self.iface_to_module_mapping[iface_id] = [wishful_module]
             else:
