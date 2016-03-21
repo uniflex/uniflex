@@ -213,15 +213,14 @@ class ModuleManager(object):
         #check if function is generator
         for module in modules:
             if fname in module.get_generators():
-                raise Exception("UPI is generator, please call with proper way")
+                raise Exception("UPI: {}:{} is generator, please call with proper way".format(upi_type,fname))
 
         #check if function requires iface
         modules = self.modules_without_iface
         for module in modules:
             if fname in module.get_capabilities():
-                raise Exception("UPI function: {}:{} cannot be called with iface")
+                raise Exception("UPI function: {}:{} cannot be called with iface".format(upi_type,fname))
 
-        raise Exception("UPI : {}:{} not supported for iface: {}, \
-                        please install proper module".format(upi_type,fname,iface))
+        raise Exception("UPI function: {}:{} not supported for iface: {}, please install proper module".format(upi_type,fname,iface))
 
         return False
