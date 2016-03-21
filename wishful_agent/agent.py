@@ -124,6 +124,24 @@ class Agent(object):
             self.moduleManager.send_cmd_to_module(msgContainer, localControllerId)
         else:
             execTime = datetime.datetime.strptime(cmdDesc.exec_time, "%Y-%m-%d %H:%M:%S.%f")
+            if execTime < datetime.datetime.now():
+                e = Exception("Node: {} tried to schedule function: {}:{} call in past, consider time synchronization".format(self.name, upi_type,fname))
+
+                dest = "controller"
+                respDesc = msgs.CmdDesc()
+                respDesc.type = cmdDesc.type
+                respDesc.func_name = cmdDesc.func_name
+                respDesc.call_id = cmdDesc.call_id
+                #TODO: define new protobuf message for return values; currently using repeat_number in CmdDesc 
+                #0-executed correctly, 1-exception
+                respDesc.repeat_number = 1
+                #Serialize return value
+                respDesc.serialization_type = msgs.CmdDesc.PICKLE
+                retVal = e
+                response = [dest, respDesc, retVal]
+                self.send_upstream(response)
+                return
+
             self.log.debug("Agent schedule task for message: {}:{} at {}".format(cmdDesc.type, cmdDesc.func_name, execTime))
             self.jobScheduler.add_job(self.moduleManager.send_cmd_to_module, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer, 'localControllerId':localControllerId})
 
