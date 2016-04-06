@@ -115,9 +115,8 @@ class ModuleManager(object):
         pyModule = self.my_import(pyModuleName)
         wishful_module_class = getattr(pyModule, className)
         wishfulModule = wishful_module_class(**kwargs)
-        self.add_module_obj(moduleName, wishfulModule, interfaces)
 
-        return wishfulModule
+        return self.add_module_obj(moduleName, wishfulModule, interfaces)
 
 
     def find_upi_modules(self, cmdDesc):
