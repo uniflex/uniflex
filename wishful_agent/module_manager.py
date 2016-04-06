@@ -75,28 +75,26 @@ class ModuleManager(object):
         return None
 
 
-    def add_module(self, moduleName, pyModuleName, className, interfaces, kwargs):
-        self.log.debug("Add new module: {}:{}:{}:{}".format(moduleName, pyModuleName, className, interfaces))
+    def add_local_control_program_manager(self, wishfulModule):
+        self.add_module_obj("localControlProgramManager", wishfulModule)
+        self.localControlProgramManager = wishfulModule
 
-        pyModule = self.my_import(pyModuleName)
-        wishful_module_class = getattr(pyModule, className)
 
-        wishful_module = wishful_module_class(**kwargs)
+    def add_module_obj(self, moduleName, wishfulModule, interfaces=None):
+        self.log.debug("Add new module: {}:{}:{}".format(moduleName, wishfulModule, interfaces))
+
         moduleId = self.generate_new_module_id()
-        wishful_module.id = moduleId
-        wishful_module.set_agent(self.agent)
+        wishfulModule.id = moduleId
+        wishfulModule.set_agent(self.agent)
 
-        self.modules[moduleId] = wishful_module
+        self.modules[moduleId] = wishfulModule
 
         if moduleName == "discovery":
-            self.discoveryModule = wishful_module
-        elif pyModuleName == "wishful_module_local_control" and className == "LocalControlModule":
-            self.localControlProgramManager = wishful_module
-
+            self.discoveryModule = wishfulModule
 
         if interfaces == None:
-            self.modules_without_iface.append(wishful_module)
-            return wishful_module
+            self.modules_without_iface.append(wishfulModule)
+            return wishfulModule
 
         for iface in interfaces:
             if iface not in list(self.interfaces.values()):
@@ -104,11 +102,22 @@ class ModuleManager(object):
                 self.interfaces[iface_id] = str(iface)
 
             if not iface_id in self.iface_to_module_mapping:
-                self.iface_to_module_mapping[iface_id] = [wishful_module]
+                self.iface_to_module_mapping[iface_id] = [wishfulModule]
             else:
-                self.iface_to_module_mapping[iface_id].append(wishful_module)
+                self.iface_to_module_mapping[iface_id].append(wishfulModule)
 
-        return wishful_module
+        return wishfulModule
+
+
+    def add_module(self, moduleName, pyModuleName, className, interfaces, kwargs):
+        self.log.debug("Add new module: {}:{}:{}:{}".format(moduleName, pyModuleName, className, interfaces))
+
+        pyModule = self.my_import(pyModuleName)
+        wishful_module_class = getattr(pyModule, className)
+        wishfulModule = wishful_module_class(**kwargs)
+        self.add_module_obj(moduleName, wishfulModule, interfaces)
+
+        return wishfulModule
 
 
     def find_upi_modules(self, cmdDesc):

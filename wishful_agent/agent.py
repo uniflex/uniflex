@@ -9,6 +9,8 @@ import wishful_framework as msgs
 from .transport_channel import TransportChannel, get_ip_address
 from .controller_monitor import ControllerMonitor
 from .module_manager import ModuleManager
+from .local_controller import LocalController
+from .local_control_module import LocalControlModule
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -42,10 +44,12 @@ class Agent(object):
 
             self.transport = TransportChannel(self)
             self.transport.set_recv_callback(self.process_msgs)
+
+            localControlProgramManager = LocalControlModule()
+            self.moduleManager.add_local_control_program_manager(localControlProgramManager)
         else:
-            self.local_controller = self.add_module("local_control",
-                                                    'wishful_module_local_control', 
-                                                    'LocalController')
+            self.local_controller = LocalController()
+            self.local_controller.set_agent(self)
 
 
     def get_local_controller(self):
@@ -61,9 +65,11 @@ class Agent(object):
         if self.ip == None and self.iface:
             self.ip = get_ip_address(self.iface)
 
+    def add_module_obj(self, moduleName, moduleObj):
+        return self.moduleManager.add_module_obj(moduleName, moduleObj)
+
     def add_module(self, moduleName, pyModule, className, interfaces=None, kwargs={}):
         return self.moduleManager.add_module(moduleName, pyModule, className, interfaces, kwargs)
-
 
     def load_config(self, config):
         self.log.debug("Config: {0}".format(config))
