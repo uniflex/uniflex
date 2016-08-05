@@ -6,6 +6,7 @@ import uuid
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import wishful_framework as msgs
+import wishful_upis as upis
 from .transport_channel import TransportChannel, get_ip_address
 from .controller_monitor import ControllerMonitor
 from .module_manager import ModuleManager
@@ -26,6 +27,7 @@ class Agent(object):
         self.local = local
         self.config = None
         self.uuid = str(uuid.uuid4())
+        self.controllerUuid = None
         self.name = None
         self.info = None
         self.iface = None
@@ -38,10 +40,9 @@ class Agent(object):
         self.jobScheduler.start()
 
         self.moduleManager = ModuleManager(self)
+        self.moduleManager.add_module_obj("controller_monitor", ControllerMonitor(self))
 
         if not self.local:
-            self.controllerMonitor = ControllerMonitor(self)
-
             self.transport = TransportChannel(self)
             self.transport.set_recv_callback(self.process_msgs)
 
@@ -65,41 +66,43 @@ class Agent(object):
         if self.ip == None and self.iface:
             self.ip = get_ip_address(self.iface)
 
-    def add_module_obj(self, moduleName, moduleObj):
-        return self.moduleManager.add_module_obj(moduleName, moduleObj)
-
-    def add_module(self, moduleName, pyModule, className, interfaces=None, kwargs={}):
-        return self.moduleManager.add_module(moduleName, pyModule, className, interfaces, kwargs)
+    def add_module(self, moduleName, pyModule, className, interfaces=[], kwargs={}):
+        return self.moduleManager.register_module(moduleName, pyModule, className, interfaces, kwargs)
 
     def load_config(self, config):
         self.log.debug("Config: {0}".format(config))
-        
+
         agent_info = config['agent_info']
 
         if 'name' in agent_info:
             self.name = agent_info['name']
 
         if 'info' in agent_info:
-            self.info = agent_info['info']    
+            self.info = agent_info['info']
 
         if 'iface' in agent_info:
             self.iface = agent_info['iface']
             self.ip = get_ip_address(self.iface)
-            
 
         #load modules
         moduleDesc = config['modules']
-        for m_name, m_params in moduleDesc.items():
-            
-            supported_interfaces = None
+        for moduleName, m_params in moduleDesc.items():
+
+            controlled_devices = []
             if 'interfaces' in m_params:
-                supported_interfaces=m_params['interfaces']
+                controlled_devices=m_params['interfaces']
+
+            if 'devices' in m_params:
+                controlled_devices=m_params['devices']
 
             kwargs = {}
             if 'kwargs' in m_params:
                 kwargs = m_params['kwargs']
 
-            self.add_module(m_name, m_params['module'], m_params['class_name'], supported_interfaces, kwargs)
+            pyModuleName = m_params['module']
+            className = m_params['class_name']
+
+            self.moduleManager.register_module(moduleName, pyModuleName, className, controlled_devices, kwargs)
 
     def get_capabilities(self):
         self.capabilities = self.moduleManager.get_capabilities()
@@ -138,7 +141,7 @@ class Agent(object):
                 respDesc.type = cmdDesc.type
                 respDesc.func_name = cmdDesc.func_name
                 respDesc.call_id = cmdDesc.call_id
-                #TODO: define new protobuf message for return values; currently using repeat_number in CmdDesc 
+                #TODO: define new protobuf message for return values; currently using repeat_number in CmdDesc
                 #0-executed correctly, 1-exception
                 respDesc.repeat_number = 1
                 #Serialize return value
@@ -159,14 +162,16 @@ class Agent(object):
         self.log.debug("Agent received message: {} from controller".format(cmdDesc.type))
 
         if cmdDesc.type == msgs.get_msg_type(msgs.NewNodeAck):
-            self.controllerMonitor.setup_connection_to_controller_complete(msgContainer)
+            event = upis.mgmt.ControllerConnectionCompletedEvent(cmdDesc, msg)
+            self.moduleManager.send_event(event)
 
         elif cmdDesc.type == msgs.get_msg_type(msgs.HelloMsg):
-            self.controllerMonitor.serve_hello_msg(msgContainer)
+            event = upis.mgmt.HelloMsgEvent()
+            self.moduleManager.send_event(event)
 
         elif cmdDesc.type == msgs.get_msg_type(msgs.RuleDesc):
             self.serve_rule(msgContainer)
-            
+
         else:
             self.process_cmd(msgContainer)
 
@@ -174,18 +179,16 @@ class Agent(object):
     def run(self):
         self.log.debug("Agent starting".format())
         self.get_capabilities()
-        #nofity START to modules
+        # nofity START to modules
         self.moduleManager.start()
         if not self.local:
-            self.controllerMonitor.start()
             self.transport.start()
 
 
     def stop(self):
         self.log.debug("Stop all modules")
-        #nofity EXIT to modules
+        # nofity EXIT to modules
         self.moduleManager.exit()
         self.jobScheduler.shutdown()
         if not self.local:
-            self.controllerMonitor.stop()
             self.transport.stop()

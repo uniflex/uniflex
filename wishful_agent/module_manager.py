@@ -1,13 +1,15 @@
 import logging
-import subprocess
-import zmq.green as zmq
-import random
-import wishful_framework as msgs
+import inspect
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
 __version__ = "0.1.0"
 __email__ = "gawlowicz@tkn.tu-berlin.de"
+
+
+def _has_caller(meth):
+    return hasattr(meth, 'callers')
+
 
 class ModuleManager(object):
     def __init__(self, agent):
@@ -17,27 +19,23 @@ class ModuleManager(object):
         self.agent = agent
         self.moduleIdGen = 0
         self.ifaceIdGen = 0
-        
-        self.discoveryModule = None
-        self.localControlProgramManager = None
 
         self.modules = {}
         self.interfaces = {}
         self.iface_to_module_mapping = {}
         self.modules_without_iface = []
 
+        self._event_handlers = {}
 
     def my_import(self, module_name):
         pyModule = __import__(module_name)
         globals()[module_name] = pyModule
         return pyModule
 
-
     def generate_new_module_id(self):
         newId = self.moduleIdGen
         self.moduleIdGen = self.moduleIdGen + 1
         return newId
-
 
     def generate_new_iface_id(self):
         newId = self.ifaceIdGen
@@ -49,12 +47,10 @@ class ModuleManager(object):
         for module in list(self.modules.values()):
             module.start()
 
-
     def exit(self):
         self.log.debug("Notify EXIT to modules".format())
         for module in list(self.modules.values()):
             module.exit()
-
 
     def connected(self):
         self.log.debug("Notify CONNECTED to modules".format())
@@ -66,33 +62,41 @@ class ModuleManager(object):
         for module in list(self.modules.values()):
             module.disconnected()
 
-
     def get_iface_id(self, name):
-        for k,v in self.interfaces.items():
+        for k, v in self.interfaces.items():
             if v == name:
                 return k
-
         return None
-
 
     def add_local_control_program_manager(self, wishfulModule):
         self.add_module_obj("localControlProgramManager", wishfulModule)
         self.localControlProgramManager = wishfulModule
 
+    def register_event_handlers(self, i):
+        for _k, handler in inspect.getmembers(i, inspect.ismethod):
+            if _has_caller(handler):
+                for ev_cls, c in handler.callers.items():
+                    self._event_handlers.setdefault(ev_cls, [])
+                    self._event_handlers[ev_cls].append(handler)
+
+    def get_event_handlers(self, ev, state=None):
+        ev_cls = ev.__class__
+        handlers = self._event_handlers.get(ev_cls, [])
+        return handlers
 
     def add_module_obj(self, moduleName, wishfulModule, interfaces=None):
-        self.log.debug("Add new module: {}:{}:{}".format(moduleName, wishfulModule, interfaces))
+        self.log.debug("Add new module: {}:{}:{}".format(
+            moduleName, wishfulModule, interfaces))
 
         moduleId = self.generate_new_module_id()
         wishfulModule.id = moduleId
+        wishfulModule.set_module_manager(self)
         wishfulModule.set_agent(self.agent)
+        self.register_event_handlers(wishfulModule)
 
         self.modules[moduleId] = wishfulModule
 
-        if moduleName == "discovery":
-            self.discoveryModule = wishfulModule
-
-        if interfaces == None:
+        if interfaces is None:
             self.modules_without_iface.append(wishfulModule)
             return wishfulModule
 
@@ -101,23 +105,26 @@ class ModuleManager(object):
                 iface_id = self.generate_new_iface_id()
                 self.interfaces[iface_id] = str(iface)
 
-            if not iface_id in self.iface_to_module_mapping:
+            if iface_id not in self.iface_to_module_mapping:
                 self.iface_to_module_mapping[iface_id] = [wishfulModule]
             else:
                 self.iface_to_module_mapping[iface_id].append(wishfulModule)
 
         return wishfulModule
 
-
-    def add_module(self, moduleName, pyModuleName, className, interfaces, kwargs):
-        self.log.debug("Add new module: {}:{}:{}:{}".format(moduleName, pyModuleName, className, interfaces))
+    def register_module(self, moduleName, pyModuleName,
+                        className, devices, kwargs):
+        self.log.debug("Add new module: {}:{}:{}:{}".format(
+            moduleName, pyModuleName, className, devices))
 
         pyModule = self.my_import(pyModuleName)
         wishful_module_class = getattr(pyModule, className)
-        wishfulModule = wishful_module_class(**kwargs)
+        for device in devices:
+            wishfulModule = wishful_module_class(**kwargs)
+        else:
+            wishfulModule = wishful_module_class(**kwargs)
 
-        return self.add_module_obj(moduleName, wishfulModule, interfaces)
-
+        return self.add_module_obj(moduleName, wishfulModule, devices)
 
     def find_upi_modules(self, cmdDesc):
         iface = None
@@ -131,15 +138,15 @@ class ModuleManager(object):
         else:
             modules = self.modules_without_iface
 
-        return modules   
+        return modules
 
     def send_to_local_ctr_programs_manager(self, msgContainer):
         assert self.localControlProgramManager
         localControlProgramId = msgContainer[0]
         if localControlProgramId in self.localControlProgramManager.controlPrograms:
-            localCP = self.localControlProgramManager.controlPrograms[localControlProgramId]
+            localCP = self.localControlProgramManager.controlPrograms[
+                localControlProgramId]
             localCP.recv_cmd_response(msgContainer)
-
 
     def send_cmd_to_module(self, msgContainer, localControllerId=None):
         cmdDesc = msgContainer[1]
@@ -156,9 +163,10 @@ class ModuleManager(object):
                     retVal[0] = localControllerId
                     self.agent.send_to_local_ctr_program(retVal)
                 break
-        
+
         if not functionFound:
-            print("function not supported EXCEPTION", cmdDesc.func_name, cmdDesc.interface)
+            print("function not supported EXCEPTION",
+                  cmdDesc.func_name, cmdDesc.interface)
 
     def send_cmd_to_module_blocking(self, msgContainer):
         cmdDesc = msgContainer[1]
@@ -171,10 +179,10 @@ class ModuleManager(object):
                 functionFound = True
                 retVal = module.send_to_module(msgContainer)
                 return retVal
-        
-        if not functionFound:
-            print ("function not supported EXCEPTION", cmdDesc.func_name, cmdDesc.interface)
 
+        if not functionFound:
+            print("function not supported EXCEPTION",
+                  cmdDesc.func_name, cmdDesc.interface)
 
     def get_module(self, msgContainer):
         cmdDesc = msgContainer[1]
@@ -186,7 +194,6 @@ class ModuleManager(object):
                 myModule = module
 
         return myModule
-
 
     def get_generator(self, msgContainer):
         cmdDesc = msgContainer[1]
@@ -218,18 +225,36 @@ class ModuleManager(object):
             if fname in module.get_functions():
                 return True
 
-        #check if function is generator
+        # check if function is generator
         for module in modules:
             if fname in module.get_generators():
-                raise Exception("UPI: {}:{} is generator, please call with generator API".format(upi_type,fname))
+                raise Exception(
+                    "UPI: {}:{} is generator,"
+                    "please call with generator API".format(upi_type, fname))
 
-        #check if function requires iface
+        # check if function requires iface
         if iface:
             modules = self.modules_without_iface
             for module in modules:
                 if fname in module.get_capabilities():
-                    raise Exception("UPI function: {}:{} cannot be called with iface".format(upi_type,fname))
+                    raise Exception(
+                        "UPI function: {}:{} "
+                        "cannot be called with iface".format(upi_type, fname))
 
-        raise Exception("UPI function: {}:{} not supported for iface: {}, please install proper module".format(upi_type,fname,iface))
+        raise Exception("UPI function: {}:{} not "
+                        "supported for iface: {}, "
+                        "please install proper module".format(
+                            upi_type, fname, iface))
 
         return False
+
+    def send_event(self, event):
+        handlers = self.get_event_handlers(event)
+        for handler in handlers:
+            try:
+                handler(event)
+            except:
+                self.log.exception('Exception occurred during handler '
+                                   'processing. Backtrace from offending '
+                                   'handler [%s] servicing event [%s] follows',
+                                   handler.__name__, event.__class__.__name__)

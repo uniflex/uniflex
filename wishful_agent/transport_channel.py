@@ -1,16 +1,15 @@
 import logging
-import time
 import sys
 import zmq.green as zmq
 import socket
 import fcntl
 import struct
 import threading
-import dill #for pickling what standard pickle can’t cope with
+import dill  # for pickling what standard pickle can’t cope with
 try:
-   import cPickle as pickle
+    import cPickle as pickle
 except:
-   import pickle
+    import pickle
 
 import wishful_framework as msgs
 
@@ -31,7 +30,7 @@ def get_ip_address(ifname):
         s.fileno(),
         0x8915,  # SIOCGIFADDR
         struct.pack('256s', ifname)
-        )[20:24])
+    )[20:24])
     s.close()
 
     return val
@@ -49,17 +48,18 @@ class TransportChannel(object):
         self.uplinkSocketLock = threading.Lock()
         self.poller = zmq.Poller()
         self.context = zmq.Context()
-        self.dl_socket = self.context.socket(zmq.SUB) # for downlink communication with controller
+        # for downlink communication with controller
+        self.dl_socket = self.context.socket(zmq.SUB)
         if sys.version_info.major >= 3:
-            self.dl_socket.setsockopt_string(zmq.SUBSCRIBE,  self.agent.uuid)
+            self.dl_socket.setsockopt_string(zmq.SUBSCRIBE, self.agent.uuid)
         else:
-            self.dl_socket.setsockopt(zmq.SUBSCRIBE,  self.agent.uuid)
+            self.dl_socket.setsockopt(zmq.SUBSCRIBE, self.agent.uuid)
         self.dl_socket.setsockopt(zmq.LINGER, 100)
-        self.ul_socket = self.context.socket(zmq.PUB) # for uplink communication with controller
+        # for uplink communication with controller
+        self.ul_socket = self.context.socket(zmq.PUB)
 
-        #register module socket in poller
+        # register module socket in poller
         self.poller.register(self.dl_socket, zmq.POLLIN)
-
 
     def connect(self, downlink, uplink):
         if self.controllerDL and self.controllerUL:
@@ -74,9 +74,8 @@ class TransportChannel(object):
         self.ul_socket.connect(self.controllerUL)
         self.dl_socket.connect(self.controllerDL)
 
-
     def disconnect(self):
-        #disconnect
+        # disconnect
         if self.controllerDL and self.controllerUL:
             try:
                 self.ul_socket.disconnect(self.controllerUL)
@@ -84,34 +83,30 @@ class TransportChannel(object):
             except:
                 pass
 
-
     def subscribe_to(self, topic):
         self.log.debug("Agent subscribes to topic: {}".format(topic))
         if sys.version_info.major >= 3:
             self.dl_socket.setsockopt_string(zmq.SUBSCRIBE, str(topic))
         else:
             self.dl_socket.setsockopt(zmq.SUBSCRIBE, str(topic))
- 
 
     def set_recv_callback(self, callback):
         self.recv_callback = callback
 
-
     def send_uplink(self, msgContainer):
-        #TODO: it is quick fix; find better solution with socket per thread
+        # TODO: it is quick fix; find better solution with socket per thread
         self.uplinkSocketLock.acquire()
         try:
             self.ul_socket.send_multipart(msgContainer)
         finally:
             self.uplinkSocketLock.release()
 
-
     def send_ctr_to_controller(self, msgContainer):
         msgContainer[0] = msgContainer[0].encode('utf-8')
-        ## stamp with my uuid
+        # stamp with my uuid
         cmdDesc = msgContainer[1]
         msg = msgContainer[2]
-        
+
         cmdDesc.caller_id = self.agent.uuid
         msgContainer[1] = cmdDesc.SerializeToString()
 
@@ -122,19 +117,18 @@ class TransportChannel(object):
                 msg = dill.dumps(msg)
         elif cmdDesc.serialization_type == msgs.CmdDesc.PROTOBUF:
             msg = msg.SerializeToString()
-        
+
         msgContainer[2] = msg
 
         self.send_uplink(msgContainer)
-
 
     def send_to_controller(self, msgContainer):
-        msgContainer[0] = str(self.agent.controllerMonitor.controller_uuid)
+        msgContainer[0] = str(self.agent.controllerUuid)
         msgContainer[0] = msgContainer[0].encode('utf-8')
-        ## stamp with my uuid
+        # stamp with my uuid
         cmdDesc = msgContainer[1]
         msg = msgContainer[2]
-        
+
         cmdDesc.caller_id = self.agent.uuid
         msgContainer[1] = cmdDesc.SerializeToString()
 
@@ -145,11 +139,10 @@ class TransportChannel(object):
                 msg = dill.dumps(msg)
         elif cmdDesc.serialization_type == msgs.CmdDesc.PROTOBUF:
             msg = msg.SerializeToString()
-                    
+
         msgContainer[2] = msg
 
         self.send_uplink(msgContainer)
-
 
     def start(self):
         # Work on requests from controller
@@ -171,7 +164,6 @@ class TransportChannel(object):
                 msgContainer[1] = cmdDesc
                 msgContainer[2] = msg
                 self.recv_callback(msgContainer)
-
 
     def stop(self):
         try:
