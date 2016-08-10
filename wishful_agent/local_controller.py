@@ -1,14 +1,14 @@
-import logging
 import uuid
-import time
+import logging
+import threading
 import datetime
+
 from wishful_framework import upis_builder
 from wishful_framework import rule_manager
 from wishful_framework import generator_manager
 import wishful_framework as wishful_module
 import wishful_framework as msgs
 import wishful_upis as upis
-import threading
 
 
 __author__ = "Piotr Gawlowicz"
@@ -31,26 +31,26 @@ class LocalController(wishful_module.AgentModule):
         self.callbacks = {}
         self.call_id_gen = 0
 
-        #UPIs
+        # UPIs
         builder = upis_builder.UpiBuilder(self)
-        self.radio = builder.create_radio()
-        self.net = builder.create_net()
-        self.mgmt = builder.create_mgmt()
+        self.radio = builder.create_upi(upis.radio.Radio, "radio")
+        self.net = builder.create_upi(upis.net.Network, "net")
+        self.mgmt = builder.create_upi(upis.mgmt.Mgmt, "mgmt")
 
-        #Rule manager
+        # Rule manager
         self.rule = rule_manager.LocalRuleManager(self)
 
-        #Generator manager
+        # Generator manager
         self.generator = generator_manager.LocalGeneratorManager(self)
 
-        #function call context
+        # function call context
         self._iface = None
         self._exec_time = None
         self._delay = None
         self._timeout = None
         self._blocking = True
         self._callback = None
-        #container for blocking calls
+        # container for blocking calls
         self._asyncResults = {}
 
     def fire_callback(self, callback, *args, **kwargs):
@@ -63,7 +63,6 @@ class LocalController(wishful_module.AgentModule):
             self.callbacks[function.__name__] = callback
             return callback
         return decorator
-
 
     def set_default_callback(self, **options):
         def decorator(callback):
@@ -108,12 +107,13 @@ class LocalController(wishful_module.AgentModule):
         self.call_id_gen = self.call_id_gen + 1
         return self.call_id_gen
 
-
     def exec_cmd(self, upi_type, fname, *args, **kwargs):
-        self.log.debug("Controller executes cmd: {}.{} with args:{}, kwargs:{}".format(upi_type, fname, args, kwargs))
+        self.log.debug("Controller executes cmd: {}.{} with args:{}, kwargs:{}"
+                       .format(upi_type, fname, args, kwargs))
 
-        #get function call context
-        #TODO: setting and getting function call context is not thread-safe, improve it
+        # get function call context
+        # TODO: setting and getting function call
+        # context is not thread-safe, improve it
         iface = self._iface
         exec_time = self._exec_time
         delay = self._delay
@@ -122,10 +122,10 @@ class LocalController(wishful_module.AgentModule):
         callback = self._callback
         self._clear_call_context()
 
-        #TODO: support timeout, on controller and agent sides?
+        # TODO: support timeout, on controller and agent sides?
         callId = str(self.generate_call_id())
 
-        #build cmd desc message
+        # build cmd desc message
         cmdDesc = msgs.CmdDesc()
         cmdDesc.type = upi_type
         cmdDesc.func_name = fname
@@ -135,47 +135,50 @@ class LocalController(wishful_module.AgentModule):
             cmdDesc.interface = iface
 
         if delay:
-            exec_time = datetime.datetime.now() + datetime.timedelta(seconds=delay)
+            exec_time = (datetime.datetime.now() +
+                         datetime.timedelta(seconds=delay))
             blocking = False
 
         if exec_time:
             cmdDesc.exec_time = str(exec_time)
             blocking = False
 
-        #call check
+        # call check
         if exec_time and exec_time < datetime.datetime.now():
-            raise Exception("Scheduling function: {}:{} call in past".format(upi_type,fname))
+            raise Exception("Scheduling function: {}:{} call in past"
+                            .format(upi_type, fname))
 
-        if not self.agent.is_upi_supported(iface=iface, upi_type=upi_type, fname=fname):
-            raise Exception("UPI Function: {}:{} not supported for iface: {}, please install proper modules".format(upi_type,fname,iface))
+        if not self.agent.is_upi_supported(iface=iface,
+                                           upi_type=upi_type, fname=fname):
+            raise Exception("UPI Function: {}:{} not supported for iface: {}."
+                            "Please install proper modules"
+                            .format(upi_type, fname, iface))
 
-        #set callback for this function call
+        # set callback for this function call
         if callback:
             self.callbacks[callId] = callback
             blocking = False
 
         msgContainer = ["agent", cmdDesc, kwargs]
-        #if blocking call, return response
+        # if blocking call, return response
         if blocking:
-            #send command to execution engine
+            # send command to execution engine
             response = self.agent.moduleManager.send_cmd_to_module_blocking(msgContainer)
             cmdDesc = response[1]
             retVal = response[2]
             return retVal
 
-
-        #send command to execution engine (non-blocking)
+        # send command to execution engine (non-blocking)
         self.agent.process_cmd(msgContainer)
 
         return None
 
-
     def recv_cmd_response(self, msgContainer):
-        dest = msgContainer[0]
         cmdDesc = msgContainer[1]
         msg = msgContainer[2]
 
-        self.log.debug("Controller received message: {}:{} from agent".format(cmdDesc.type, cmdDesc.func_name))
+        self.log.debug("Controller received message: {}:{} from agent"
+                       .format(cmdDesc.type, cmdDesc.func_name))
 
         if cmdDesc.type == "wishful_rule":
             self.rule._receive(msg)
@@ -191,7 +194,7 @@ class LocalController(wishful_module.AgentModule):
             t = threading.Thread(target=self.fire_callback, args=(callback, msg), name="callback")
             t.daemon = True
             t.start()
-            #TODO: is it safe to remove it now?
+            # TODO: is it safe to remove it now?
             del self.callbacks[cmdDesc.call_id]
 
         elif cmdDesc.func_name in self.callbacks:
