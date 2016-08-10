@@ -1,6 +1,4 @@
 import logging
-import uuid
-import time
 import datetime
 import wishful_framework as wishful_module
 import wishful_framework as msgs
@@ -46,7 +44,7 @@ class LocalControlProgram(LocalController):
             self.log.debug("Waiting for msg in blocking call")
             msg = self.recvQueue.get(block=block, timeout=timeout)
             return msg
-        except queue.Empty as e:
+        except queue.Empty:
             return None
 
     def send_upstream(self, msg):
@@ -57,15 +55,16 @@ class LocalControlProgram(LocalController):
         cmdDesc.call_id = str(0)
         cmdDesc.serialization_type = msgs.CmdDesc.PICKLE
 
-        encapsulatedMsg = {"node_uuid":self.agent.uuid, "control_program_id":self.id, "msg":msg}
+        encapsulatedMsg = {"node_uuid": self.agent.uuid,
+                           "control_program_id": self.id, "msg": msg}
         msgContainer = [dest, cmdDesc, encapsulatedMsg]
         self.agent.send_upstream(msgContainer)
 
-
     def exec_cmd(self, upi_type, fname, *args, **kwargs):
-        self.log.debug("Controller executes cmd: {}.{} with args:{}, kwargs:{}".format(upi_type, fname, args, kwargs))
+        self.log.debug("Controller executes cmd: {}.{} with args:{}, kwargs:{}"
+                       .format(upi_type, fname, args, kwargs))
 
-        #get function call context
+        # get function call context
         iface = self._iface
         exec_time = self._exec_time
         delay = self._delay
@@ -74,10 +73,10 @@ class LocalControlProgram(LocalController):
         callback = self._callback
         self._clear_call_context()
 
-        #TODO: support timeout, on controller and agent sides?
+        # TODO: support timeout, on controller and agent sides?
         callId = str(self.generate_call_id())
 
-        #build cmd desc message
+        # build cmd desc message
         cmdDesc = msgs.CmdDesc()
         cmdDesc.type = upi_type
         cmdDesc.func_name = fname
@@ -94,30 +93,29 @@ class LocalControlProgram(LocalController):
             cmdDesc.exec_time = str(exec_time)
             blocking = False
 
-        #call check
+        # call check
         if exec_time and exec_time < datetime.datetime.now():
             raise Exception("Scheduling function: {}:{} call in past".format(upi_type,fname))
 
         if not self.agent.is_upi_supported(iface=iface, upi_type=upi_type, fname=fname):
             raise Exception("UPI Function: {}:{} not supported for iface: {}, please install proper modules".format(upi_type,fname,iface))
 
-        #set callback for this function call
+        # set callback for this function call
         if callback:
             self.callbacks[callId] = callback
             blocking = False
 
         msgContainer = ["agent", cmdDesc, kwargs]
 
-        #if blocking call, return response
+        # if blocking call, return response
         if blocking:
-            #send command to execution engine
+            # send command to execution engine
             response = self.agent.moduleManager.send_cmd_to_module_blocking(msgContainer)
             cmdDesc = response[1]
             retVal = response[2]
             return retVal
 
-
-        #send command to execution engine (non-blocking)
+        # send command to execution engine (non-blocking)
         self.agent.process_cmd(msgContainer=msgContainer, localControllerId=self.id)
 
         return None
@@ -125,7 +123,7 @@ class LocalControlProgram(LocalController):
 
 @wishful_module.build_module
 class LocalControlModule(wishful_module.AgentModule):
-    def __init__(self):
+    def __init__(self, agent):
         super(LocalControlModule, self).__init__()
         self.log = logging.getLogger('LocalControlModule')
 
@@ -139,7 +137,8 @@ class LocalControlModule(wishful_module.AgentModule):
     @wishful_module.bind_function(upis.mgmt.start_local_control_program)
     def start_local_control_program(self, program_name, program_code):
         ctrProgramId = self.generate_new_ctr_program_id()
-        self.log.debug("Starts new local control program, name: {}, ID: {}".format(program_name, ctrProgramId))
+        self.log.debug("Starts new local control program,"
+                       " name: {}, ID: {}".format(program_name, ctrProgramId))
 
         myGlobals = {}
         exec(program_code, myGlobals)
