@@ -34,7 +34,7 @@ class CommandExecutor(wishful_module.AgentModule):
         returnValue = None
         exception = False
         try:
-            returnValue = self._moduleManager.execute_function(
+            returnValue = self.moduleManager.execute_function(
                 upiFunc, device, args, kwargs)
         except Exception as e:
             self.log.debug("Exception: {}".format(e))

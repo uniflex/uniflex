@@ -82,6 +82,7 @@ class ModuleManager(object):
                 for ev_cls, c in handler.callers.items():
                     self._event_handlers.setdefault(ev_cls, [])
                     self._event_handlers[ev_cls].append(handler)
+                    i.events.append(handler.__name__)
 
     def get_event_handlers(self, ev, state=None):
         ev_cls = ev.__class__
@@ -105,6 +106,7 @@ class ModuleManager(object):
                 if handler._upiFunc_:
                     self._function_handlers.setdefault(handler._upiFunc_, [])
                     self._function_handlers[handler._upiFunc_].append(handler)
+                    i.functions.append(handler.__name__)
 
     def get_function_handlers(self, upiFunc, state=None):
         handlers = self._function_handlers.get(upiFunc, [])

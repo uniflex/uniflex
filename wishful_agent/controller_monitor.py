@@ -76,14 +76,25 @@ class ControllerMonitor(wishful_module.AgentModule):
             moduleMsg = msg.modules.add()
             moduleMsg.id = mid
             moduleMsg.name = module.name
-            for f in module.get_functions():
+
+            if module.device:
+                deviceDesc = msgs.Device()
+                deviceDesc.id = 0  # TODO: set it properly
+                deviceDesc.name = module.device
+                moduleMsg.device.CopyFrom(deviceDesc)
+
+            for name in module.get_attributes():
+                attribute = moduleMsg.attributes.add()
+                attribute.name = name
+            for name in module.get_functions():
                 function = moduleMsg.functions.add()
-                function.name = f
-
-            for g in module.get_generators():
-                generator = moduleMsg.generators.add()
-                generator.name = g
-
+                function.name = name
+            for name in module.get_events():
+                event = moduleMsg.events.add()
+                event.name = name
+            for name in module.get_services():
+                service = moduleMsg.services.add()
+                service.name = name
         msgContainer = [topic, cmdDesc, msg]
 
         self.log.debug("Agent sends context-setup request to controller")
