@@ -1,5 +1,8 @@
 import logging
 import time
+# TODO: remove this dependency, add timer
+from apscheduler.schedulers.background import BackgroundScheduler
+
 from datetime import datetime
 from datetime import timedelta
 import wishful_framework as msgs
@@ -23,6 +26,11 @@ class ControllerMonitor(wishful_module.AgentModule):
         self.agent = agent
         self.forceStop = False
 
+        apscheduler_logger = logging.getLogger('apscheduler')
+        apscheduler_logger.setLevel(logging.CRITICAL)
+        self.jobScheduler = BackgroundScheduler()
+        self.jobScheduler.start()
+
         self.discoveryThread = None
         self.connectedToController = False
         self.echoMsgInterval = 3
@@ -32,6 +40,7 @@ class ControllerMonitor(wishful_module.AgentModule):
 
     @wishful_module.on_exit()
     def stop_module(self):
+        self.jobScheduler.shutdown()
         self.forceStop = True
         self.terminate_connection_to_controller()
 
@@ -49,7 +58,7 @@ class ControllerMonitor(wishful_module.AgentModule):
 
         self.log.debug(
             "Agent connects controller: DL:{}, UL:{}".format(dlink, uplink))
-        self.agent.transport.connect(dlink, uplink)
+        self.send_event(upis.mgmt.ConnectToControllerEvent(dlink, uplink))
 
         topic = "NEW_NODE"
         cmdDesc = msgs.CmdDesc()
@@ -75,20 +84,11 @@ class ControllerMonitor(wishful_module.AgentModule):
                 generator = moduleMsg.generators.add()
                 generator.name = g
 
-        for ifaceId, modules in self.agent.moduleManager.iface_to_module_mapping.items():
-            iface = msg.interfaces.add()
-            iface.id = int(ifaceId)
-            iface.name = self.agent.moduleManager.interfaces[ifaceId]
-            for module in modules:
-                imodule = iface.modules.add()
-                imodule.id = module.id
-                imodule.name = module.name
-
         msgContainer = [topic, cmdDesc, msg]
 
         self.log.debug("Agent sends context-setup request to controller")
-        time.sleep(1)  # TODO: are we waiting for connection?
-        self.agent.transport.send_ctr_to_controller(msgContainer)
+        time.sleep(1)  # wait for zmq to exchange topics
+        self.send_event(upis.mgmt.SendControllMgsEvent(msgContainer))
 
     @wishful_module.on_event(upis.mgmt.ControllerConnectionCompletedEvent)
     def setup_connection_to_controller_complete(self, event):
@@ -101,9 +101,10 @@ class ControllerMonitor(wishful_module.AgentModule):
 
         self.log.debug(
             "Agent connects to controller and subscribes to received topics")
-        self.agent.transport.subscribe_to(self.agent.uuid)
+        self.send_event(upis.mgmt.SubscribeTopicEvent(self.agent.uuid))
+
         for topic in msg.topics:
-            self.agent.transport.subscribe_to(topic)
+            self.send_event(upis.mgmt.SubscribeTopicEvent(topic))
 
         # stop discovery module:
         self.connectedToController = True
@@ -116,12 +117,12 @@ class ControllerMonitor(wishful_module.AgentModule):
         execTime = str(datetime.now() +
                        timedelta(seconds=self.echoMsgInterval))
         self.log.debug("Agent schedule sending of Hello message".format())
-        self.echoSendJob = self.agent.jobScheduler.add_job(
+        self.echoSendJob = self.jobScheduler.add_job(
             self.send_hello_msg_to_controller, 'date', run_date=execTime)
 
         execTime = (datetime.now() +
                     timedelta(seconds=self.echoTimeOut))
-        self.connectionLostJob = self.agent.jobScheduler.add_job(
+        self.connectionLostJob = self.jobScheduler.add_job(
             self.connection_to_controller_lost, 'date', run_date=execTime)
 
     def send_hello_msg_to_controller(self):
@@ -136,13 +137,13 @@ class ControllerMonitor(wishful_module.AgentModule):
         msg.uuid = str(self.agent.uuid)
         msg.timeout = 3 * self.echoMsgInterval
         msgContainer = [topic, cmdDesc, msg]
-        self.agent.transport.send_to_controller(msgContainer)
+        self.send_event(upis.mgmt.SendMgsEvent(msgContainer))
 
         # reschedule hello msg
         self.log.debug("Agent schedule sending of Hello message".format())
         execTime = (datetime.now() +
                     timedelta(seconds=self.echoMsgInterval))
-        self.echoSendJob = self.agent.jobScheduler.add_job(
+        self.echoSendJob = self.jobScheduler.add_job(
             self.send_hello_msg_to_controller, 'date', run_date=execTime)
 
     def connection_to_controller_lost(self):
@@ -151,15 +152,12 @@ class ControllerMonitor(wishful_module.AgentModule):
             " stop sending EchoMsg".format())
         self.echoSendJob.remove()
 
-        self.agent.transport.disconnect()
+        self.send_event(upis.mgmt.DisconnectControllerEvent())
         self.connectedToController = False
         self.agent.controllerUuid = None
 
         # notify DISCONNECTED to modules
         self.agent.moduleManager.disconnected()
-
-        self.log.debug("Agent restarts discovery procedure".format())
-        self.start_discovery_procedure()
 
     @wishful_module.on_event(upis.mgmt.HelloMsgEvent)
     def serve_hello_msg(self, event):
@@ -167,7 +165,7 @@ class ControllerMonitor(wishful_module.AgentModule):
         self.connectionLostJob.remove()
         execTime = (datetime.now() +
                     timedelta(seconds=self.echoTimeOut))
-        self.connectionLostJob = self.agent.jobScheduler.add_job(
+        self.connectionLostJob = self.jobScheduler.add_job(
             self.connection_to_controller_lost, 'date', run_date=execTime)
 
     def terminate_connection_to_controller(self):
@@ -183,4 +181,4 @@ class ControllerMonitor(wishful_module.AgentModule):
         msg.reason = "Process terminated"
 
         msgContainer = [topic, cmdDesc, msg]
-        self.agent.transport.send_ctr_to_controller(msgContainer)
+        self.send_event(upis.mgmt.SendControllMgsEvent(msgContainer))

@@ -9,6 +9,8 @@ except:
     import pickle
 
 import wishful_framework as msgs
+import wishful_framework as wishful_module
+import wishful_upis as upis
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -16,8 +18,10 @@ __version__ = "0.1.0"
 __email__ = "gawlowicz@tkn.tu-berlin.de"
 
 
-class TransportChannel(object):
+@wishful_module.build_module
+class TransportChannel(wishful_module.AgentModule):
     def __init__(self, agent):
+        super().__init__()
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
 
@@ -28,6 +32,7 @@ class TransportChannel(object):
         self.uplinkSocketLock = threading.Lock()
         self.poller = zmq.Poller()
         self.context = zmq.Context()
+
         # for downlink communication with controller
         self.dl_socket = self.context.socket(zmq.SUB)
         if sys.version_info.major >= 3:
@@ -35,13 +40,15 @@ class TransportChannel(object):
         else:
             self.dl_socket.setsockopt(zmq.SUBSCRIBE, self.agent.uuid)
         self.dl_socket.setsockopt(zmq.LINGER, 100)
+
         # for uplink communication with controller
         self.ul_socket = self.context.socket(zmq.PUB)
 
         # register module socket in poller
         self.poller.register(self.dl_socket, zmq.POLLIN)
 
-    def connect(self, downlink, uplink):
+    @wishful_module.on_event(upis.mgmt.ConnectToControllerEvent)
+    def connect(self, event):
         if self.controllerDL and self.controllerUL:
             try:
                 self.ul_socket.disconnect(self.controllerUL)
@@ -49,12 +56,13 @@ class TransportChannel(object):
             except:
                 pass
 
-        self.controllerDL = downlink
-        self.controllerUL = uplink
+        self.controllerDL = event.dlink
+        self.controllerUL = event.ulink
         self.ul_socket.connect(self.controllerUL)
         self.dl_socket.connect(self.controllerDL)
 
-    def disconnect(self):
+    @wishful_module.on_event(upis.mgmt.DisconnectControllerEvent)
+    def disconnect(self, event):
         # disconnect
         if self.controllerDL and self.controllerUL:
             try:
@@ -63,15 +71,14 @@ class TransportChannel(object):
             except:
                 pass
 
-    def subscribe_to(self, topic):
+    @wishful_module.on_event(upis.mgmt.SubscribeTopicEvent)
+    def subscribe_to(self, event):
+        topic = event.topic
         self.log.debug("Agent subscribes to topic: {}".format(topic))
         if sys.version_info.major >= 3:
             self.dl_socket.setsockopt_string(zmq.SUBSCRIBE, str(topic))
         else:
             self.dl_socket.setsockopt(zmq.SUBSCRIBE, str(topic))
-
-    def set_recv_callback(self, callback):
-        self.recv_callback = callback
 
     def send_uplink(self, msgContainer):
         # TODO: it is quick fix; find better solution with socket per thread
@@ -80,6 +87,10 @@ class TransportChannel(object):
             self.ul_socket.send_multipart(msgContainer)
         finally:
             self.uplinkSocketLock.release()
+
+    @wishful_module.on_event(upis.mgmt.SendControllMgsEvent)
+    def send_ctr_to_controller_event(self, event):
+        self.send_ctr_to_controller(event.msg)
 
     def send_ctr_to_controller(self, msgContainer):
         msgContainer[0] = msgContainer[0].encode('utf-8')
@@ -101,6 +112,20 @@ class TransportChannel(object):
         msgContainer[2] = msg
 
         self.send_uplink(msgContainer)
+
+    @wishful_module.on_event(upis.mgmt.SendMgsEvent)
+    def send_to_controller_event(self, event):
+        self.send_to_controller(event.msg)
+
+    @wishful_module.on_event(upis.mgmt.ReturnValueEvent)
+    def serve_return_value_event(self, event):
+        dest = event.dest
+        cmdDesc = event.cmdDesc
+        value = event.msg
+        self.log.debug("Received ReturnValueEvent with dest: {}"
+                       " cmd: {}, value: {}". format(dest,
+                                                     cmdDesc.func_name, value))
+        self.send_to_controller([dest, cmdDesc, value])
 
     def send_to_controller(self, msgContainer):
         msgContainer[0] = str(self.agent.controllerUuid)
@@ -124,13 +149,32 @@ class TransportChannel(object):
 
         self.send_uplink(msgContainer)
 
-    def start(self):
-        # Work on requests from controller
+    def process_msgs(self, msgContainer):
+        cmdDesc = msgContainer[1]
+        msg = msgContainer[2]
+        self.log.debug(
+            "Agent received message: {} from controller".format(cmdDesc.type))
+
+        if cmdDesc.type == msgs.get_msg_type(msgs.NewNodeAck):
+            event = upis.mgmt.ControllerConnectionCompletedEvent(cmdDesc, msg)
+            self.send_event(event)
+
+        elif cmdDesc.type == msgs.get_msg_type(msgs.HelloMsg):
+            self.send_event(upis.mgmt.HelloMsgEvent())
+
+        # TODO: move it to executor
+        # elif cmdDesc.type == msgs.get_msg_type(msgs.RuleDesc):
+        #    self.serve_rule(msgContainer)
+        else:
+            event = upis.mgmt.CommandEvent(msgContainer[0],
+                                           msgContainer[1], msgContainer[2])
+            self.send_event(event)
+
+    def my_start(self):
         while True:
             socks = dict(self.poller.poll())
             if self.dl_socket in socks and socks[self.dl_socket] == zmq.POLLIN:
                 msgContainer = self.dl_socket.recv_multipart()
-
                 assert len(msgContainer) == 3, msgContainer
                 dest = msgContainer[0]
                 cmdDesc = msgs.CmdDesc()
@@ -143,9 +187,9 @@ class TransportChannel(object):
                 msgContainer[0] = dest.decode('utf-8')
                 msgContainer[1] = cmdDesc
                 msgContainer[2] = msg
-                self.recv_callback(msgContainer)
+                self.process_msgs(msgContainer)
 
-    def stop(self):
+    def my_stop(self):
         try:
             self.dl_socket.setsockopt(zmq.LINGER, 0)
             self.ul_socket.setsockopt(zmq.LINGER, 0)

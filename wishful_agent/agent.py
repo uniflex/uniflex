@@ -1,17 +1,12 @@
-import logging
-import time
-import sys
-import datetime
 import uuid
-from apscheduler.schedulers.background import BackgroundScheduler
+import logging
 
-import wishful_framework as msgs
-import wishful_upis as upis
-from .transport_channel import TransportChannel, get_ip_address
-from .controller_monitor import ControllerMonitor
+from .common import get_ip_address
 from .module_manager import ModuleManager
-from .local_controller import LocalController
+from .transport_channel import TransportChannel
+from .controller_monitor import ControllerMonitor
 from .local_control_module import LocalControlModule
+from .executor import CommandExecutor
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -20,11 +15,10 @@ __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
 
 class Agent(object):
-    def __init__(self, local=False):
+    def __init__(self):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
 
-        self.local = local
         self.config = None
         self.uuid = str(uuid.uuid4())
         self.controllerUuid = None
@@ -34,28 +28,26 @@ class Agent(object):
         self.ip = None
         self.capabilities = None
 
-        apscheduler_logger = logging.getLogger('apscheduler')
-        apscheduler_logger.setLevel(logging.CRITICAL)
-        self.jobScheduler = BackgroundScheduler()
-        self.jobScheduler.start()
-
         self.moduleManager = ModuleManager(self)
-        self.moduleManager.add_module_obj("controller_monitor", ControllerMonitor(self))
 
-        if not self.local:
-            self.transport = TransportChannel(self)
-            self.transport.set_recv_callback(self.process_msgs)
+        # transport channel has to be started manually
+        # after discovery module thread is started by manager
+        # otherwise agent is blocked
+        self.transport = TransportChannel(self)
+        self.moduleManager.add_module_obj(
+            "transport_channel", self.transport)
 
-            localControlProgramManager = LocalControlModule()
-            self.moduleManager.add_local_control_program_manager(localControlProgramManager)
-        else:
-            self.local_controller = LocalController()
-            self.local_controller.set_agent(self)
+        # monitoring of connection with discovered controller using HelloMsgs
+        self.moduleManager.add_module_obj(
+            "controller_monitor", ControllerMonitor(self))
 
+        # on-the-fly functions manager
+        self.moduleManager.add_module_obj(
+            "on_the_fly_function_manager", LocalControlModule(self))
 
-    def get_local_controller(self):
-        assert self.local_controller, "Start agent in local mode"
-        return self.local_controller
+        # command executor with scheduler
+        self.moduleManager.add_module_obj(
+            "command_executor", CommandExecutor(self))
 
     def set_agent_info(self, name=None, info=None, iface=None, ip=None):
         self.name = name
@@ -63,11 +55,14 @@ class Agent(object):
         self.iface = iface
         self.ip = ip
 
-        if self.ip == None and self.iface:
+        if self.ip is None and self.iface:
             self.ip = get_ip_address(self.iface)
 
-    def add_module(self, moduleName, pyModule, className, interfaces=[], kwargs={}):
-        return self.moduleManager.register_module(moduleName, pyModule, className, interfaces, kwargs)
+    def add_module(self, moduleName, pyModule, className,
+                   device=None, kwargs={}):
+
+        return self.moduleManager.register_module(
+            moduleName, pyModule, className, device, kwargs)
 
     def load_config(self, config):
         self.log.debug("Config: {0}".format(config))
@@ -84,16 +79,16 @@ class Agent(object):
             self.iface = agent_info['iface']
             self.ip = get_ip_address(self.iface)
 
-        #load modules
+        # load modules
         moduleDesc = config['modules']
         for moduleName, m_params in moduleDesc.items():
 
             controlled_devices = []
             if 'interfaces' in m_params:
-                controlled_devices=m_params['interfaces']
+                controlled_devices = m_params['interfaces']
 
             if 'devices' in m_params:
-                controlled_devices=m_params['devices']
+                controlled_devices = m_params['devices']
 
             kwargs = {}
             if 'kwargs' in m_params:
@@ -102,93 +97,24 @@ class Agent(object):
             pyModuleName = m_params['module']
             className = m_params['class_name']
 
-            self.moduleManager.register_module(moduleName, pyModuleName, className, controlled_devices, kwargs)
-
-    def get_capabilities(self):
-        self.capabilities = self.moduleManager.get_capabilities()
-        return self.capabilities
-
-    def is_upi_supported(self, iface, upi_type, fname):
-        return self.moduleManager.is_upi_supported(iface, upi_type, fname)
-
-    def send_upstream(self, msgContainer, localControllerId=None):
-        if not self.local and not localControllerId:
-            self.transport.send_to_controller(msgContainer)
-        elif not self.local and localControllerId:
-            self.send_to_local_ctr_program(msgContainer)
-        else:
-            self.local_controller.recv_cmd_response(msgContainer)
-
-    def send_to_local_ctr_program(self, retVal):
-        self.moduleManager.send_to_local_ctr_programs_manager(retVal)
-
-    def process_cmd(self, msgContainer, localControllerId=None):
-        dest = msgContainer[0]
-        cmdDesc = msgContainer[1]
-        msg = msgContainer[2]
-
-        self.log.debug("Agent serves command: {}:{} from controller".format(cmdDesc.type, cmdDesc.func_name))
-        if not cmdDesc.exec_time or cmdDesc.exec_time == 0:
-            self.log.debug("Agent sends message: {}:{} to module".format(cmdDesc.type, cmdDesc.func_name))
-            self.moduleManager.send_cmd_to_module(msgContainer, localControllerId)
-        else:
-            execTime = datetime.datetime.strptime(cmdDesc.exec_time, "%Y-%m-%d %H:%M:%S.%f")
-            if execTime < datetime.datetime.now():
-                e = Exception("Node: {} tried to schedule function: {}:{} call in past, consider time synchronization".format(self.name, upi_type,fname))
-
-                dest = "controller"
-                respDesc = msgs.CmdDesc()
-                respDesc.type = cmdDesc.type
-                respDesc.func_name = cmdDesc.func_name
-                respDesc.call_id = cmdDesc.call_id
-                #TODO: define new protobuf message for return values; currently using repeat_number in CmdDesc
-                #0-executed correctly, 1-exception
-                respDesc.repeat_number = 1
-                #Serialize return value
-                respDesc.serialization_type = msgs.CmdDesc.PICKLE
-                retVal = e
-                response = [dest, respDesc, retVal]
-                self.send_upstream(response)
-                return
-
-            self.log.debug("Agent schedule task for message: {}:{} at {}".format(cmdDesc.type, cmdDesc.func_name, execTime))
-            self.jobScheduler.add_job(self.moduleManager.send_cmd_to_module, 'date', run_date=execTime, kwargs={'msgContainer' : msgContainer, 'localControllerId':localControllerId})
-
-
-    def process_msgs(self, msgContainer):
-        dest = msgContainer[0]
-        cmdDesc = msgContainer[1]
-        msg = msgContainer[2]
-        self.log.debug("Agent received message: {} from controller".format(cmdDesc.type))
-
-        if cmdDesc.type == msgs.get_msg_type(msgs.NewNodeAck):
-            event = upis.mgmt.ControllerConnectionCompletedEvent(cmdDesc, msg)
-            self.moduleManager.send_event(event)
-
-        elif cmdDesc.type == msgs.get_msg_type(msgs.HelloMsg):
-            event = upis.mgmt.HelloMsgEvent()
-            self.moduleManager.send_event(event)
-
-        elif cmdDesc.type == msgs.get_msg_type(msgs.RuleDesc):
-            self.serve_rule(msgContainer)
-
-        else:
-            self.process_cmd(msgContainer)
-
+            if controlled_devices:
+                for device in controlled_devices:
+                    self.moduleManager.register_module(
+                        moduleName, pyModuleName, className,
+                        device, kwargs)
+            else:
+                self.moduleManager.register_module(
+                    moduleName, pyModuleName, className,
+                    None, kwargs)
 
     def run(self):
-        self.log.debug("Agent starting".format())
-        self.get_capabilities()
+        self.log.debug("Agent starts all modules".format())
         # nofity START to modules
         self.moduleManager.start()
-        if not self.local:
-            self.transport.start()
-
+        self.transport.my_start()
 
     def stop(self):
         self.log.debug("Stop all modules")
         # nofity EXIT to modules
         self.moduleManager.exit()
-        self.jobScheduler.shutdown()
-        if not self.local:
-            self.transport.stop()
+        self.transport.my_stop()
