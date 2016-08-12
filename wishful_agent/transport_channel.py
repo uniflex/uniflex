@@ -28,6 +28,7 @@ class TransportChannel(wishful_module.AgentModule):
         self.agent = agent
         self.controllerDL = None
         self.controllerUL = None
+        self.controllerUuid = None
 
         self.uplinkSocketLock = threading.Lock()
         self.poller = zmq.Poller()
@@ -47,6 +48,14 @@ class TransportChannel(wishful_module.AgentModule):
         # register module socket in poller
         self.poller.register(self.dl_socket, zmq.POLLIN)
 
+    @wishful_module.on_event(upis.mgmt.ControllerConnectedEvent)
+    def controller_connected(self, event):
+        self.controllerUuid = event.ctrUuid
+
+    @wishful_module.on_event(upis.mgmt.ControllerLostEvent)
+    def controller_lost(self, event):
+        self.controllerUuid = None
+
     @wishful_module.on_event(upis.mgmt.ConnectToControllerEvent)
     def connect(self, event):
         if self.controllerDL and self.controllerUL:
@@ -63,7 +72,6 @@ class TransportChannel(wishful_module.AgentModule):
 
     @wishful_module.on_event(upis.mgmt.DisconnectControllerEvent)
     def disconnect(self, event):
-        # disconnect
         if self.controllerDL and self.controllerUL:
             try:
                 self.ul_socket.disconnect(self.controllerUL)
@@ -128,7 +136,7 @@ class TransportChannel(wishful_module.AgentModule):
         self.send_to_controller([dest, cmdDesc, value])
 
     def send_to_controller(self, msgContainer):
-        msgContainer[0] = str(self.agent.controllerUuid)
+        msgContainer[0] = str(self.controllerUuid)
         msgContainer[0] = msgContainer[0].encode('utf-8')
         # stamp with my uuid
         cmdDesc = msgContainer[1]
@@ -156,7 +164,7 @@ class TransportChannel(wishful_module.AgentModule):
             "Agent received message: {} from controller".format(cmdDesc.type))
 
         if cmdDesc.type == msgs.get_msg_type(msgs.NewNodeAck):
-            event = upis.mgmt.ControllerConnectionCompletedEvent(cmdDesc, msg)
+            event = upis.mgmt.ControllerConnectionResponseEvent(cmdDesc, msg)
             self.send_event(event)
 
         elif cmdDesc.type == msgs.get_msg_type(msgs.HelloMsg):

@@ -21,7 +21,6 @@ class Agent(object):
 
         self.config = None
         self.uuid = str(uuid.uuid4())
-        self.controllerUuid = None
         self.name = None
         self.info = None
         self.iface = None

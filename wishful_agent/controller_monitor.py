@@ -101,7 +101,7 @@ class ControllerMonitor(wishful_module.AgentModule):
         time.sleep(1)  # wait for zmq to exchange topics
         self.send_event(upis.mgmt.SendControllMgsEvent(msgContainer))
 
-    @wishful_module.on_event(upis.mgmt.ControllerConnectionCompletedEvent)
+    @wishful_module.on_event(upis.mgmt.ControllerConnectionResponseEvent)
     def setup_connection_to_controller_complete(self, event):
         cmdDesc = event.cmdDesc
         msg = msgs.NewNodeAck()
@@ -119,7 +119,8 @@ class ControllerMonitor(wishful_module.AgentModule):
 
         # stop discovery module:
         self.connectedToController = True
-        self.agent.controllerUuid = msg.controller_uuid
+        event = upis.mgmt.ControllerConnectedEvent(msg.controller_uuid)
+        self.send_event(event)
 
         # notify CONNECTED to modules
         self.agent.moduleManager.connected()
@@ -163,9 +164,11 @@ class ControllerMonitor(wishful_module.AgentModule):
             " stop sending EchoMsg".format())
         self.echoSendJob.remove()
 
-        self.send_event(upis.mgmt.DisconnectControllerEvent())
         self.connectedToController = False
-        self.agent.controllerUuid = None
+        event = upis.mgmt.ControllerLostEvent(0)
+        self.send_event(event)
+        event = upis.mgmt.DisconnectControllerEvent()
+        self.send_event(event)
 
         # notify DISCONNECTED to modules
         self.agent.moduleManager.disconnected()
