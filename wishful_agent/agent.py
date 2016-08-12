@@ -26,7 +26,6 @@ class Agent(object):
         self.info = None
         self.iface = None
         self.ip = None
-        self.capabilities = None
 
         self.moduleManager = ModuleManager(self)
 
