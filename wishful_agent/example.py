@@ -1,5 +1,6 @@
 import logging
 import datetime
+import random
 import wishful_upis as upis
 import wishful_framework as wishful_module
 from .node import NodeGroup
@@ -62,11 +63,11 @@ class MyController(wishful_module.ControllerModule):
 
         device = node.get_device(0)
         device.radio.set_power(15)
-        device.radio.set_channel(6)
+        device.radio.set_channel(random.randint(1, 11))
         # device.radio.add_interface(name="wlan0")
         # device.radio.set_mode(iface="wlan0", mode="STA")
         # device.radio.connect(iface="wlan0", ssid="1234")
-        #device.enable_event(upis.radio.PacketLossEvent())
+        # device.enable_event(upis.radio.PacketLossEvent())
         device.start_service(
             upis.radio.SpectralScanService(rate=1000, f_range=[2200, 2500]))
 
@@ -139,37 +140,35 @@ class MyController(wishful_module.ControllerModule):
         print("Connected nodes", [str(node) for node in self.nodes])
         self.timer.start(self.timeInterval)
 
-        if len(self.nodes) == 0:
-            pass
-
-        return
-
         node = self.nodes[0]
+        if not node:
+            return
+
         # execute non-blocking function immediately
-        node.blocking(False).iface("phy0").radio.set_power(12)
+        node.blocking(False).device("phy0").radio.set_power(12)
         device = node.get_device(0)
         response = device.radio.set_power(8)
         print(response)
 
         # execute non-blocking function immediately, with specific callback
-        node.callback(print_response).radio.iface("phy0").get_power()
+        node.callback(print_response).radio.device("phy0").get_power()
 
         # schedule non-blocking function delay
         node.delay(3).net.create_packetflow_sink(port=1234)
 
         # schedule non-blocking function exec time
         exec_time = datetime.datetime.now() + datetime.timedelta(seconds=3)
-        node.exec_time(exec_time).radio.iface(
-            "phy0").set_channel(channel=4)
+        node.exec_time(exec_time).radio.device(
+            "phy0").set_channel(channel=random.randint(1, 11))
 
         # execute blocking function immediately
-        result = node.radio.iface("phy0").get_channel()
+        result = node.radio.device("phy0").get_channel()
         print("{} Channel is: {}".format(datetime.datetime.now(), result))
 
         # exception handling, clean_per_flow_tx_power_table implementation
         # raises exception
         try:
-            node.radio.iface("phy0").clean_per_flow_tx_power_table()
+            node.radio.device("phy0").clean_per_flow_tx_power_table()
         except Exception as e:
             print("{} !!!Exception!!!: {}".format(
                 datetime.datetime.now(), e))
