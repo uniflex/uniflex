@@ -1,10 +1,11 @@
+import copy
 import logging
 import inspect
+import threading
+from queue import Queue
 from .node import Node
 from .node import Device
 import wishful_upis as upis
-from queue import Queue
-import copy
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -75,33 +76,18 @@ class ModuleManager(object):
         self.modules[moduleId] = wishfulModule
         return wishfulModule
 
-    # TODO: can be integrated with new event passing mechanism
     def start(self):
         self.log.debug("Notify START to modules".format())
-        for module in list(self.modules.values()):
-            module.start()
-
+        self.send_event(upis.mgmt.AgentStartEvent())
         # send new node event to interested control programs
         self.send_event(upis.mgmt.NewNodeEvent())
         self.serve_event_queue()
 
     def exit(self):
         self.log.debug("Notify EXIT to modules".format())
-        for module in list(self.modules.values()):
-            module.exit()
-
+        self.send_event(upis.mgmt.AgentExitEvent())
         # send node exit event to all interested control programs
         self.send_event(upis.mgmt.NodeExitEvent(0))
-
-    def connected(self):
-        self.log.debug("Notify CONNECTED to modules".format())
-        for module in list(self.modules.values()):
-            module.connected()
-
-    def disconnected(self):
-        self.log.debug("Notify DISCONNECTED to modules".format())
-        for module in list(self.modules.values()):
-            module.disconnected()
 
     def register_event_handlers(self, i):
         for _k, handler in inspect.getmembers(i, inspect.ismethod):
@@ -126,15 +112,32 @@ class ModuleManager(object):
     def serve_event_queue(self):
         while True:
             event = self.eventQueue.get()
+            self.log.info("Serving event: {}".format(event.__class__.__name__))
             handlers = self.get_event_handlers(event)
             for handler in handlers:
                 try:
-                    handler(event)
+                    if hasattr(handler, '_run_in_thread_'):
+                        if handler._run_in_thread_:
+                            t = None
+                            if len(inspect.getargspec(handler)[0]) == 1:
+                                t = threading.Thread(target=handler)
+                            else:
+                                t = threading.Thread(target=handler,
+                                                     args=(event))
+                            t.setDaemon(True)
+                            t.start()
+                    else:
+                        if len(inspect.getargspec(handler)[0]) == 1:
+                            handler()
+                        else:
+                            handler(event)
                 except:
                     self.log.exception('Exception occurred during handler '
                                        'processing. Backtrace from offending '
-                                       'handler [%s] servicing event [%s] follows',
-                                       handler.__name__, event.__class__.__name__)
+                                       'handler [%s] servicing event [%s]'
+                                       'follows',
+                                       handler.__name__,
+                                       event.__class__.__name__)
 
     def register_function_handlers(self, i):
         for _k, handler in inspect.getmembers(i, inspect.ismethod):
@@ -149,10 +152,16 @@ class ModuleManager(object):
         return handlers
 
     def send_cmd(self, ctx):
-        self.log.info("{}:{}".format(ctx._upi_type, ctx._upi))
+        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
         ctxCopy = copy.copy(ctx)
         event = upis.mgmt.CtxCommandEvent(ctx=ctxCopy)
+        if ctxCopy._blocking:
+            event.responseQueue = Queue()
         self.send_event(event)
+        if ctxCopy._blocking:
+            self.log.info("Waiting for return value for {}:{}"
+                          .format(ctx._upi_type, ctx._upi))
+            return event.responseQueue.get()
 
     def register_event_enable_handlers(self, i):
         for _k, handler in inspect.getmembers(i, inspect.ismethod):

@@ -117,13 +117,11 @@ class ControllerMonitor(wishful_module.AgentModule):
         for topic in msg.topics:
             self.send_event(upis.mgmt.SubscribeTopicEvent(topic))
 
-        # stop discovery module:
+        # stop discovery module
+        # and notify CONNECTED to modules
         self.connectedToController = True
         event = upis.mgmt.ControllerConnectedEvent(msg.controller_uuid)
         self.send_event(event)
-
-        # notify CONNECTED to modules
-        self.agent.moduleManager.connected()
 
         # start sending hello msgs
         execTime = str(datetime.now() +
@@ -167,11 +165,9 @@ class ControllerMonitor(wishful_module.AgentModule):
         self.connectedToController = False
         event = upis.mgmt.ControllerLostEvent(0)
         self.send_event(event)
+        # notify DISCONNECTED
         event = upis.mgmt.DisconnectControllerEvent()
         self.send_event(event)
-
-        # notify DISCONNECTED to modules
-        self.agent.moduleManager.disconnected()
 
     @wishful_module.on_event(upis.mgmt.HelloMsgEvent)
     def serve_hello_msg(self, event):

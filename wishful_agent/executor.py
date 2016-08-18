@@ -29,7 +29,8 @@ class CommandExecutor(wishful_module.AgentModule):
     def stop(self):
         self.jobScheduler.shutdown()
 
-    def _serve_ctx_command_event(self, ctx):
+    def _serve_ctx_command_event(self, event):
+        ctx = event.ctx
         handlers = []
         callNumber = 0
         returnValue = None
@@ -56,32 +57,30 @@ class CommandExecutor(wishful_module.AgentModule):
             args = ctx._kwargs["args"]
             kwargs = ctx._kwargs["kwargs"]
 
-        print("handlers")
         for handler in handlers:
-            print(handler)
             try:
                 module = handler.__self__
                 mdevice = module.get_device()
                 self.log.info("Execute function: {} in module: {}"
-                              " handler: {}; mdev: {}, cdev: {}"
-                              .format(ctx._upi, module.__class__.__name__,
-                                      handler.__name__, mdevice, ctx._device))
+                               " handler: {}; mdev: {}, cdev: {}"
+                               .format(ctx._upi, module.__class__.__name__,
+                                       handler.__name__, mdevice, ctx._device))
 
                 # filter based on device present:
                 # if device is not required execute function
                 execute = False
                 if (mdevice is None and ctx._device is None):
-                    self.log.info("Execute function: {} in module: {}"
-                                  " without device; handler: {}"
-                                  .format(ctx._upi, module.__class__.__name__,
-                                          handler.__name__))
+                    self.log.debug("Execute function: {} in module: {}"
+                                   " without device; handler: {}"
+                                   .format(ctx._upi, module.__class__.__name__,
+                                           handler.__name__))
                     execute = True
                 # if devices match execute function
                 elif mdevice == ctx._device:
-                    self.log.info("Execute function: {} in module: {}"
-                                  " with device: {} ; handler: {}"
-                                  .format(ctx._upi, module.__class__.__name__,
-                                          ctx._device, handler.__name__))
+                    self.log.debug("Execute function: {} in module: {}"
+                                   " with device: {} ; handler: {}"
+                                   .format(ctx._upi, module.__class__.__name__,
+                                           ctx._device, handler.__name__))
                     execute = True
 
                 if execute:
@@ -108,6 +107,10 @@ class CommandExecutor(wishful_module.AgentModule):
                         after_func()
 
                     # create and send return value event
+                    if ctx._blocking:
+                        event.responseQueue.put(returnValue)
+                    else:
+                        pass
 
                 else:
                     self.log.info("UPI: {} in module: {}"
@@ -123,10 +126,11 @@ class CommandExecutor(wishful_module.AgentModule):
                                'handler [%s] servicing UPI function '
                                '[%s] follows',
                                handler.__name__, ctx._upi)
-                raise
+                # raise
+                # create exception event and send it back to controller
 
-        self.log.info("UPI: {} was called {} times"
-                      .format(ctx._upi, callNumber))
+        self.log.debug("UPI: {} was called {} times"
+                       .format(ctx._upi, callNumber))
         # TODO: if callNum == 0 rise an exeption?
 
     @wishful_module.on_event(upis.mgmt.CtxCommandEvent)
@@ -137,21 +141,24 @@ class CommandExecutor(wishful_module.AgentModule):
             # execute now
             self.log.debug("Serves Cmd Event: Type: {} UPI: {}".format(
                            ctx._upi_type, ctx._upi))
-            self._serve_ctx_command_event(ctx)
+            self._serve_ctx_command_event(event)
         else:
             # schedule in future
-            execTime = datetime.datetime.strptime(
-                ctx.exec_time, "%Y-%m-%d %H:%M:%S.%f")
+            if isinstance(ctx._exec_time, str):
+                execTime = datetime.datetime.strptime(
+                    ctx._exec_time, "%Y-%m-%d %H:%M:%S.%f")
+            else:
+                execTime = ctx._exec_time
 
             if execTime < datetime.datetime.now():
                 # send exception event
-                pass
+                return
 
             self.log.debug("Schedule task for Cmd Event: {}:{} at {}"
                            .format(ctx._upi_type, ctx._upi, execTime))
             self.jobScheduler.add_job(self._serve_ctx_command_event,
                                       'date', run_date=execTime,
-                                      kwargs={"ctx": ctx})
+                                      kwargs={"event": event})
 
 
 
