@@ -75,6 +75,11 @@ class ControllableUnit(object):
         self._callingCtx._scope = nodelist
         return self
 
+    def device(self, dev):
+        self._callingCtx._iface = dev
+        self._callingCtx._device = dev
+        return self
+
     def iface(self, iface):
         self._callingCtx._iface = iface
         self._callingCtx._device = iface

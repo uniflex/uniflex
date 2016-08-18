@@ -16,7 +16,7 @@ class Device(ControllableUnit):
         self.node = node
 
     def send_msg(self, ctx):
-        self.log.info("{}:{}".format(ctx._upi_type, ctx._upi))
+        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
         ctx._iface = self.name
         ctx._device = self.name
         response = self.node.send_msg(ctx)
@@ -43,7 +43,7 @@ class Node(ControllableUnit):
             return None
 
     def send_msg(self, ctx):
-        self.log.info("{}:{}".format(ctx._upi_type, ctx._upi))
+        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
         ctx._scope = self
         response = self.moduleManager.send_cmd(ctx)
         self._clear_call_context()

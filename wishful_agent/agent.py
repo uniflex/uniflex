@@ -6,7 +6,6 @@ from .module_manager import ModuleManager
 from .transport_channel import TransportChannel
 from .controller_monitor import ControllerMonitor
 from .local_control_module import LocalControlModule
-from .node_manager import LocalNodeManager
 from .executor import CommandExecutor
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
