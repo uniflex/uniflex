@@ -1,5 +1,6 @@
 import logging
 import datetime
+import threading
 from apscheduler.schedulers.background import BackgroundScheduler
 
 import wishful_framework as msgs
@@ -28,13 +29,152 @@ class CommandExecutor(wishful_module.AgentModule):
     def stop(self):
         self.jobScheduler.shutdown()
 
-    def _execute_command(self, cmdDesc, upiFunc, device=None,
-                         args=(), kwargs={}):
+    def _serve_ctx_command_event(self, ctx):
+        handlers = []
+        callNumber = 0
+        returnValue = None
+        runInThread = False
 
+        if ctx._upi_type == "function":
+            handlers = self.moduleManager.get_function_handlers(ctx._upi)
+        elif ctx._upi_type == "event_enable":
+            handlers = self.moduleManager.get_event_enable_handlers(ctx._upi)
+            runInThread = True
+        elif ctx._upi_type == "event_disable":
+            handlers = self.moduleManager.get_event_disable_handlers(ctx._upi)
+        elif ctx._upi_type == "service_start":
+            handlers = self.moduleManager.get_service_start_handlers(ctx._upi)
+            runInThread = True
+        elif ctx._upi_type == "service_stop":
+            handlers = self.moduleManager.get_service_stop_handlers(ctx._upi)
+        else:
+            self.log.debug("UPI Type not supported")
+
+        args = ()
+        kwargs = {}
+        if ctx._kwargs:
+            args = ctx._kwargs["args"]
+            kwargs = ctx._kwargs["kwargs"]
+
+        print("handlers")
+        for handler in handlers:
+            print(handler)
+            try:
+                module = handler.__self__
+                mdevice = module.get_device()
+                self.log.info("Execute function: {} in module: {}"
+                              " handler: {}; mdev: {}, cdev: {}"
+                              .format(ctx._upi, module.__class__.__name__,
+                                      handler.__name__, mdevice, ctx._device))
+
+                # filter based on device present:
+                # if device is not required execute function
+                execute = False
+                if (mdevice is None and ctx._device is None):
+                    self.log.info("Execute function: {} in module: {}"
+                                  " without device; handler: {}"
+                                  .format(ctx._upi, module.__class__.__name__,
+                                          handler.__name__))
+                    execute = True
+                # if devices match execute function
+                elif mdevice == ctx._device:
+                    self.log.info("Execute function: {} in module: {}"
+                                  " with device: {} ; handler: {}"
+                                  .format(ctx._upi, module.__class__.__name__,
+                                          ctx._device, handler.__name__))
+                    execute = True
+
+                if execute:
+                    # if there is function that has to be
+                    # called before UPI function, call
+                    if hasattr(handler, '_before'):
+                        before_func = getattr(handler, "_before")
+                        before_func()
+
+                    if runInThread:
+                        thread = threading.Thread(target=handler,
+                                                  args=args, kwargs=kwargs)
+                        thread.setDaemon(True)
+                        thread.start()
+                        callNumber = callNumber + 1
+                    else:
+                        returnValue = handler(*args, **kwargs)
+                        callNumber = callNumber + 1
+
+                    # if there is function that has to be
+                    # called after UPI function, call
+                    if hasattr(handler, '_after'):
+                        after_func = getattr(handler, "_after")
+                        after_func()
+
+                    # create and send return value event
+
+                else:
+                    self.log.info("UPI: {} in module: {}"
+                                  " handler: {} was not executed"
+                                  .format(ctx._upi, module.__class__.__name__,
+                                          handler.__name__))
+                    # go to check next module
+                    continue
+
+            except:
+                self.log.debug('Exception occurred during handler '
+                               'processing. Backtrace from offending '
+                               'handler [%s] servicing UPI function '
+                               '[%s] follows',
+                               handler.__name__, ctx._upi)
+                raise
+
+        self.log.info("UPI: {} was called {} times"
+                      .format(ctx._upi, callNumber))
+        # TODO: if callNum == 0 rise an exeption?
+
+    @wishful_module.on_event(upis.mgmt.CtxCommandEvent)
+    def serve_ctx_command_event(self, event):
+        ctx = event.ctx
+
+        if not ctx._exec_time or ctx._exec_time == 0:
+            # execute now
+            self.log.debug("Serves Cmd Event: Type: {} UPI: {}".format(
+                           ctx._upi_type, ctx._upi))
+            self._serve_ctx_command_event(ctx)
+        else:
+            # schedule in future
+            execTime = datetime.datetime.strptime(
+                ctx.exec_time, "%Y-%m-%d %H:%M:%S.%f")
+
+            if execTime < datetime.datetime.now():
+                # send exception event
+                pass
+
+            self.log.debug("Schedule task for Cmd Event: {}:{} at {}"
+                           .format(ctx._upi_type, ctx._upi, execTime))
+            self.jobScheduler.add_job(self._serve_ctx_command_event,
+                                      'date', run_date=execTime,
+                                      kwargs={"ctx": ctx})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def _execute_command(self, ctx, upiFunc, device=None,
+                         args=(), kwargs={}):
         returnValue = None
         exception = False
         try:
-            returnValue = self.moduleManager.execute_function(
+            returnValue = self.execute_function(
                 upiFunc, device, args, kwargs)
         except Exception as e:
             self.log.debug("Exception: {}".format(e))
@@ -43,9 +183,9 @@ class CommandExecutor(wishful_module.AgentModule):
 
         dest = "controller"
         rvDesc = msgs.CmdDesc()
-        rvDesc.type = cmdDesc.type
-        rvDesc.func_name = cmdDesc.func_name
-        rvDesc.call_id = cmdDesc.call_id
+        rvDesc.type = ctx._upi_type
+        rvDesc.func_name = ctx._upi
+        rvDesc.call_id = ctx._callId
         # TODO: define new protobuf message for return values;
         # currently using repeat_number in CmdDesc
         # 0-executed correctly, 1-exception

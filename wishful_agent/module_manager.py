@@ -1,5 +1,9 @@
 import logging
 import inspect
+from .node import Node
+from .node import Device
+import wishful_upis as upis
+from queue import Queue
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -14,10 +18,18 @@ class ModuleManager(object):
 
         self.agent = agent
         self.moduleIdGen = 0
+        self.node = Node(agent.uuid)
+        self.node.moduleManager = self
+
+        self.eventQueue = Queue()
 
         self.modules = {}
         self._event_handlers = {}
         self._function_handlers = {}
+        self._event_enable_handlers = {}
+        self._event_disable_handlers = {}
+        self._service_start_handlers = {}
+        self._service_stop_handlers = {}
 
     def my_import(self, module_name):
         pyModule = __import__(module_name)
@@ -39,7 +51,11 @@ class ModuleManager(object):
         wishfulModule = wishful_module_class(**kwargs)
         wishfulModule.set_device(device)
 
-        return self.add_module_obj(moduleName, wishfulModule)
+        wishfulModule = self.add_module_obj(moduleName, wishfulModule)
+        if device:
+            dev = Device(device, self.node)
+            self.node.devices.append(dev)
+        return wishfulModule
 
     def add_module_obj(self, moduleName, wishfulModule):
         self.log.debug("Add new module: {}:{}"
@@ -52,6 +68,9 @@ class ModuleManager(object):
         self.register_event_handlers(wishfulModule)
         self.register_function_handlers(wishfulModule)
 
+        self.register_event_enable_handlers(wishfulModule)
+        self.register_event_disable_handlers(wishfulModule)
+
         self.modules[moduleId] = wishfulModule
         return wishfulModule
 
@@ -61,10 +80,17 @@ class ModuleManager(object):
         for module in list(self.modules.values()):
             module.start()
 
+        # send new node event to interested control programs
+        self.send_event(upis.mgmt.NewNodeEvent())
+        self.serve_event_queue()
+
     def exit(self):
         self.log.debug("Notify EXIT to modules".format())
         for module in list(self.modules.values()):
             module.exit()
+
+        # send node exit event to all interested control programs
+        self.send_event(upis.mgmt.NodeExitEvent(0))
 
     def connected(self):
         self.log.debug("Notify CONNECTED to modules".format())
@@ -90,15 +116,24 @@ class ModuleManager(object):
         return handlers
 
     def send_event(self, event):
-        handlers = self.get_event_handlers(event)
-        for handler in handlers:
-            try:
-                handler(event)
-            except:
-                self.log.exception('Exception occurred during handler '
-                                   'processing. Backtrace from offending '
-                                   'handler [%s] servicing event [%s] follows',
-                                   handler.__name__, event.__class__.__name__)
+        # stamp event with node if not present
+        # if event from transport channel, then node is present
+        if not event.node:
+            event.node = self.node
+        self.eventQueue.put(event)
+
+    def serve_event_queue(self):
+        while True:
+            event = self.eventQueue.get()
+            handlers = self.get_event_handlers(event)
+            for handler in handlers:
+                try:
+                    handler(event)
+                except:
+                    self.log.exception('Exception occurred during handler '
+                                       'processing. Backtrace from offending '
+                                       'handler [%s] servicing event [%s] follows',
+                                       handler.__name__, event.__class__.__name__)
 
     def register_function_handlers(self, i):
         for _k, handler in inspect.getmembers(i, inspect.ismethod):
@@ -112,73 +147,43 @@ class ModuleManager(object):
         handlers = self._function_handlers.get(upiFunc, [])
         return handlers
 
-    def execute_function(self, upiFunc, device=None, args=[], kwargs={}):
-        handlers = self.get_function_handlers(upiFunc)
-        callNumber = 0
-        returnValue = None
+    def send_cmd(self, ctx):
+        self.log.info("{}:{}".format(ctx._upi_type, ctx._upi))
+        event = upis.mgmt.CtxCommandEvent(ctx=ctx)
+        self.send_event(event)
 
-        for handler in handlers:
-            try:
-                module = handler.__self__
-                myDevice = module.get_device()
+    def register_event_enable_handlers(self, i):
+        for _k, handler in inspect.getmembers(i, inspect.ismethod):
+            if hasattr(handler, '_event_enable_'):
+                if handler._event_enable_:
+                    self._event_enable_handlers.setdefault(
+                        handler._event_enable_, [])
+                    self._event_enable_handlers[handler._event_enable_].append(
+                        handler)
+                    # i.events.append(handler.__name__)
 
-                # filter based on device present:
-                # if device is not required execute function
-                if myDevice is None and device is None:
-                    self.log.info("Execute function: {} in module: {}"
-                                  " without device"
-                                  .format(upiFunc, module.__class__.__name__))
+    def get_event_enable_handlers(self, event, state=None):
+        handlers = self._event_enable_handlers.get(event, [])
+        return handlers
 
-                    # if there is function that has to be
-                    # called before UPI function, call
-                    if hasattr(handler, '_before'):
-                        before_func = getattr(handler, "_before")
-                        before_func()
+    def register_event_disable_handlers(self, i):
+        for _k, handler in inspect.getmembers(i, inspect.ismethod):
+            if hasattr(handler, '_event_disable_'):
+                if handler._event_disable_:
+                    self._event_disable_handlers.setdefault(
+                        handler._event_disable_, [])
+                    self._event_disable_handlers[handler._event_disable_].append(
+                        handler)
+                    # i.events.append(handler.__name__)
 
-                    returnValue = handler(*args, **kwargs)
-                    callNumber = callNumber + 1
+    def get_event_disable_handlers(self, event, state=None):
+        handlers = self._event_disable_handlers.get(event, [])
+        return handlers
 
-                    # if there is function that has to be
-                    # called after UPI function, call
-                    if hasattr(handler, '_after'):
-                        after_func = getattr(handler, "_after")
-                        after_func()
+    def get_service_start_handlers(self, service, state=None):
+        handlers = []
+        return handlers
 
-                # if devices match execute function
-                elif myDevice == device:
-                    self.log.info("Execute function: {} in module: {}"
-                                  " with device: {}"
-                                  .format(upiFunc,
-                                          module.__class__.__name__, device))
-
-                    # if there is function that has to be
-                    # called before UPI function, call
-                    if hasattr(handler, '_before'):
-                        before_func = getattr(handler, "_before")
-                        before_func()
-
-                    returnValue = handler(*args, **kwargs)
-                    callNumber = callNumber + 1
-
-                    # if there is function that has to be
-                    # called after UPI function, call
-                    if hasattr(handler, '_after'):
-                        after_func = getattr(handler, "_after")
-                        after_func()
-
-                # otherwise go to next module
-                else:
-                    continue
-
-            except:
-                self.log.debug('Exception occurred during handler '
-                               'processing. Backtrace from offending '
-                               'handler [%s] servicing UPI function '
-                               '[%s] follows',
-                               handler.__name__, upiFunc)
-                raise
-
-        self.log.info("Function: {} was called {} times"
-                      .format(upiFunc, callNumber))
-        # TODO: if callNum == 0 rise an exeption?
-        return returnValue
+    def get_service_stop_handlers(self, service, state=None):
+        handlers = []
+        return handlers
