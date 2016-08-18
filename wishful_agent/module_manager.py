@@ -4,6 +4,7 @@ from .node import Node
 from .node import Device
 import wishful_upis as upis
 from queue import Queue
+import copy
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -149,7 +150,8 @@ class ModuleManager(object):
 
     def send_cmd(self, ctx):
         self.log.info("{}:{}".format(ctx._upi_type, ctx._upi))
-        event = upis.mgmt.CtxCommandEvent(ctx=ctx)
+        ctxCopy = copy.copy(ctx)
+        event = upis.mgmt.CtxCommandEvent(ctx=ctxCopy)
         self.send_event(event)
 
     def register_event_enable_handlers(self, i):
