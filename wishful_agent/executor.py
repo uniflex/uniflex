@@ -86,9 +86,9 @@ class CommandExecutor(wishful_module.AgentModule):
                 if execute:
                     # if there is function that has to be
                     # called before UPI function, call
-                    if hasattr(handler, '_before'):
-                        before_func = getattr(handler, "_before")
-                        before_func()
+                    if hasattr(handler, '_before_call_'):
+                        before_func = getattr(handler, "_before_call_")
+                        before_func(module)
 
                     if runInThread:
                         thread = threading.Thread(target=handler,
@@ -102,9 +102,9 @@ class CommandExecutor(wishful_module.AgentModule):
 
                     # if there is function that has to be
                     # called after UPI function, call
-                    if hasattr(handler, '_after'):
-                        after_func = getattr(handler, "_after")
-                        after_func()
+                    if hasattr(handler, '_after_call_'):
+                        after_func = getattr(handler, "_after_call_")
+                        after_func(module)
 
                     # create and send return value event
                     if ctx._blocking:
@@ -118,14 +118,18 @@ class CommandExecutor(wishful_module.AgentModule):
                     # go to check next module
                     continue
 
-            except:
+            except Exception as e:
                 self.log.debug('Exception occurred during handler '
                                'processing. Backtrace from offending '
                                'handler [%s] servicing UPI function '
                                '[%s] follows',
                                handler.__name__, ctx._upi)
-                # raise
+
                 # create exception event and send it back to controller
+                if ctx._blocking:
+                    event.responseQueue.put(e)
+                else:
+                    pass
 
         self.log.debug("UPI: {} was called {} times"
                        .format(ctx._upi, callNumber))

@@ -136,10 +136,8 @@ class ModuleManager(object):
                         self.log.debug("Add task: {} to worker"
                                        .format(handler.__name__))
                         if len(inspect.getargspec(handler)[0]) == 1:
-                            # handler()
                             module.worker.add_task(handler, [], {})
                         else:
-                            # handler(event)
                             module.worker.add_task(handler, [event], {})
                 except:
                     self.log.exception('Exception occurred during handler '
@@ -171,7 +169,11 @@ class ModuleManager(object):
         if ctxCopy._blocking:
             self.log.debug("Waiting for return value for {}:{}"
                            .format(ctx._upi_type, ctx._upi))
-            return event.responseQueue.get()
+            returnValue = event.responseQueue.get()
+            if issubclass(returnValue.__class__, Exception):
+                raise returnValue
+            else:
+                return returnValue
 
     def register_event_enable_handlers(self, i):
         for _k, handler in inspect.getmembers(i, inspect.ismethod):
