@@ -13,12 +13,6 @@ __version__ = "0.1.0"
 __email__ = "{gawlowicz}@tkn.tu-berlin.de"
 
 
-def print_response(node, data):
-    print("{} Print response : "
-          "NodeIP:{}, Result:{}"
-          .format(datetime.datetime.now(), node.ip, data))
-
-
 class PeriodicEvaluationTimeEvent(upis.mgmt.TimeEvent):
     def __init__(self):
         super().__init__()
@@ -54,7 +48,8 @@ class MyController(wishful_module.ControllerModule):
         self.nodes.append(node)
         self.log.info("Added new node: {}".format(node))
 
-        node.net.create_packetflow_sink(port=1234)
+        retVal = node.net.create_packetflow_sink(port=1234)
+        print(retVal)
         # node.net.add_route()
 
         devs = node.get_devices()
@@ -67,9 +62,11 @@ class MyController(wishful_module.ControllerModule):
         # device.radio.add_interface(name="wlan0")
         # device.radio.set_mode(iface="wlan0", mode="STA")
         # device.radio.connect(iface="wlan0", ssid="1234")
-        # device.enable_event(upis.radio.PacketLossEvent())
+        device.enable_event(upis.radio.PacketLossEvent())
+        self.packetLossEventsEnabled = True
         device.start_service(
             upis.radio.SpectralScanService(rate=1000, f_range=[2200, 2500]))
+        self.spectralScanStarted = True
 
         # remote rule
         # self.myRuleId = device.add_rule(
@@ -95,36 +92,22 @@ class MyController(wishful_module.ControllerModule):
 
     @wishful_module.on_event(upis.radio.PacketLossEvent)
     def serve_packet_loss_event(self, event):
-        print("Packet Loss Event Handler")
-        '''
+        node = event.node
         device = event.device
-        iface = event.iface
-        peerIface = device.get_peer()
-
-        if peerIface.get_type() == "STA":
-            txPower = peerIface.get_tx_power()
-            # or txPower = peerIface.txPower
-            # or txPower = peerIface.get_attribute(upi.radio.TxPower, ctx=None)
-            txPower = txPower + 1
-            peerIface.set_tx_power(txPower)
-            # or peerIface.txPower = txPower
-            # ctx = CallingContext()
-            # ctx.blocking = True
-            # or peerIface.set_attribute(upi.radio.TxPower, txpower, ctx=None)
-
-        elif peerIface.get_type() == "AP":
-            macAddr = device.get_mac()
-            txPower = peerIface.get_tx_power_for_sta(macAddr)
-            txPower = txPower + 1
-            peerIface.set_tx_power_for_sta(macAddr, txPower)
-        '''
-        # device.stop_event(upis.radio.PacketLossEvent)
+        self.log.info("Packet loss in node {}, dev: {}".format(node, device))
 
     @wishful_module.on_event(upis.radio.SpectralScanSampleEvent)
     def serve_spectral_scan_sample(self, event):
         sample = event.sample
         node = event.node
-        dev = event.dev
+        device = event.device
+        self.log.info("New Sample:{} from node {}, device: {}"
+                      .format(sample, node, device))
+
+    def print_response(self, node, dev, data):
+        print("{} Print response : "
+              "NodeIP:{}, Result:{}"
+              .format(datetime.datetime.now(), node.ip, data))
 
     @wishful_module.on_event(PeriodicEvaluationTimeEvent)
     def periodic_evaluation(self, event):
@@ -144,14 +127,31 @@ class MyController(wishful_module.ControllerModule):
         if not node:
             return
 
+        device = node.get_device(0)
+
+        if self.packetLossEventsEnabled:
+            device.disable_event(upis.radio.PacketLossEvent())
+            self.packetLossEventsEnabled = False
+        else:
+            device.enable_event(upis.radio.PacketLossEvent())
+            self.packetLossEventsEnabled = True
+
+        if self.spectralScanStarted:
+            device.stop_service(
+                upis.radio.SpectralScanService(rate=1000, f_range=[2200, 2500]))
+            self.spectralScanStarted = False
+        else:
+            device.start_service(
+                upis.radio.SpectralScanService(rate=1000, f_range=[2200, 2500]))
+            self.spectralScanStarted = True
+
         # execute non-blocking function immediately
         node.blocking(False).device("phy0").radio.set_power(12)
-        device = node.get_device(0)
         response = device.radio.set_power(8)
         print(response)
 
         # execute non-blocking function immediately, with specific callback
-        node.callback(print_response).radio.device("phy0").get_power()
+        node.callback(self.print_response).radio.device("phy0").get_power()
 
         # schedule non-blocking function delay
         node.delay(3).net.create_packetflow_sink(port=1234)
@@ -167,8 +167,9 @@ class MyController(wishful_module.ControllerModule):
 
         # exception handling, clean_per_flow_tx_power_table implementation
         # raises exception
-        try:
-            node.radio.device("phy0").clean_per_flow_tx_power_table()
-        except Exception as e:
-            print("{} !!!Exception!!!: {}".format(
-                datetime.datetime.now(), e))
+        #try:
+        #    node.radio.device("phy0").clean_per_flow_tx_power_table()
+        #except Exception as e:
+        #    print("{} !!!Exception!!!: {}".format(
+        #        datetime.datetime.now(), e))
+
