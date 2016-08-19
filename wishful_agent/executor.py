@@ -61,7 +61,7 @@ class CommandExecutor(wishful_module.AgentModule):
             try:
                 module = handler.__self__
                 mdevice = module.get_device()
-                self.log.info("Execute function: {} in module: {}"
+                self.log.debug("Execute function: {} in module: {}"
                                " handler: {}; mdev: {}, cdev: {}"
                                .format(ctx._upi, module.__class__.__name__,
                                        handler.__name__, mdevice, ctx._device))
@@ -109,11 +109,9 @@ class CommandExecutor(wishful_module.AgentModule):
                     # create and send return value event
                     if ctx._blocking:
                         event.responseQueue.put(returnValue)
-                    else:
-                        pass
 
                 else:
-                    self.log.info("UPI: {} in module: {}"
+                    self.log.debug("UPI: {} in module: {}"
                                   " handler: {} was not executed"
                                   .format(ctx._upi, module.__class__.__name__,
                                           handler.__name__))
