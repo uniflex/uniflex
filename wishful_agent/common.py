@@ -3,6 +3,7 @@ import logging
 import socket
 import fcntl
 import struct
+import datetime
 import wishful_upis as upis
 from wishful_framework import upis_builder
 
@@ -34,19 +35,18 @@ class CallingContext(object):
         # function call context
         self._src = None
         self._dst = None
-        self._callId = "1"
         self._device = None
-        self._scope = None  # rename to node od dest uuid
-        self._iface = None  # rename to device
-        self._exec_time = None
-        self._delay = None
-        self._timeout = None
-        self._blocking = True
-        self._callback = None
         self._upi_type = None
         self._upi = None
         self._args = None
         self._kwargs = None
+        self._callId = "1"
+        self._blocking = True
+        self._exec_time = None
+        self._timeout = None
+        self._callback = None
+        self._scope = None  # todo remove
+        self._iface = None  # todo remove
 
 
 class ControllableUnit(object):
@@ -62,10 +62,6 @@ class ControllableUnit(object):
         self.net = builder.create_upi(upis.net.Network, "net")
         self.mgmt = builder.create_upi(upis.mgmt.Mgmt, "mgmt")
         self.context = builder.create_upi(upis.context.Context, "context")
-
-    def group(self, group):
-        self._callingCtx._scope = group
-        return self
 
     def node(self, node):
         self._callingCtx._scope = node
@@ -85,51 +81,60 @@ class ControllableUnit(object):
         self._callingCtx._device = iface
         return self
 
+    def blocking(self, value=True):
+        self._callingCtx._blocking = value
+        return self
+
     def exec_time(self, exec_time):
         self._callingCtx._exec_time = exec_time
+        self._callingCtx._blocking = False
         return self
 
     def delay(self, delay):
-        self._callingCtx._delay = delay
+        exec_time = datetime.datetime.now() + datetime.timedelta(seconds=delay)
+        self._callingCtx._exec_time = exec_time
+        self._callingCtx._blocking = False
         return self
 
     def timeout(self, value):
         self._callingCtx._timeout = value
         return self
 
-    def blocking(self, value=True):
-        self._callingCtx._blocking = value
-        return self
-
     def callback(self, callback):
         self._callingCtx._callback = callback
+        self._callingCtx._blocking = False
         return self
 
     def _clear_call_context(self, ctx=None):
-        self._callingCtx._scope = None
-        self._callingCtx._iface = None
+        self._callingCtx._src = None
+        self._callingCtx._dst = None
         self._callingCtx._device = None
-        self._callingCtx._exec_time = None
-        self._callingCtx._delay = None
-        self._callingCtx._timeout = None
-        self._callingCtx._blocking = True
-        self._callingCtx._callback = None
+        self._callingCtx._upi_type = None
         self._callingCtx._upi = None
         self._callingCtx._args = None
         self._callingCtx._kwargs = None
-
+        self._callingCtx._callId = "1"
+        self._callingCtx._blocking = True
+        self._callingCtx._exec_time = None
+        self._callingCtx._timeout = None
+        self._callingCtx._callback = None
+        self._callingCtx._scope = None  # todo remove
+        self._callingCtx._iface = None  # todo remove
         if ctx:
-            ctx._scope = None
-            ctx._iface = None
+            ctx._src = None
+            ctx._dst = None
             ctx._device = None
-            ctx._exec_time = None
-            ctx._delay = None
-            ctx._timeout = None
-            ctx._blocking = True
-            ctx._callback = None
+            ctx._upi_type = None
             ctx._upi = None
             ctx._args = None
             ctx._kwargs = None
+            ctx._callId = "1"
+            ctx._blocking = True
+            ctx._exec_time = None
+            ctx._timeout = None
+            ctx._callback = None
+            ctx._scope = None  # todo remove
+            ctx._iface = None  # todo remove
 
     def send_msg(self, ctx):
         self.log.info("{}:{}".format(ctx._upi_type, ctx._upi))
@@ -143,14 +148,16 @@ class ControllableUnit(object):
 
     def enable_event(self, event):
         self._callingCtx._upi_type = "event_enable"
-        self._callingCtx._upi = event.__module__ +'.'+ event.__class__.__name__
+        className = event.__class__.__name__
+        self._callingCtx._upi = event.__module__ + '.' + className
         self._callingCtx._args = ["start"]
         self._callingCtx._kwargs = {}
         return self.send_msg(self._callingCtx)
 
     def disable_event(self, event):
         self._callingCtx._upi_type = "event_disable"
-        self._callingCtx._upi = event.__module__ +'.'+ event.__class__.__name__
+        className = event.__class__.__name__
+        self._callingCtx._upi = event.__module__ + '.' + className
         self._callingCtx._args = ["stop"]
         self._callingCtx._kwargs = {}
         return self.send_msg(self._callingCtx)
@@ -160,14 +167,16 @@ class ControllableUnit(object):
 
     def start_service(self, service):
         self._callingCtx._upi_type = "service_start"
-        self._callingCtx._upi = service.__module__ +'.'+ service.__class__.__name__
+        className = service.__class__.__name__
+        self._callingCtx._upi = service.__module__ + '.' + className
         self._callingCtx._args = ["start"]
         self._callingCtx._kwargs = {}
         return self.send_msg(self._callingCtx)
 
     def stop_service(self, service):
         self._callingCtx._upi_type = "service_stop"
-        self._callingCtx._upi = service.__module__ +'.'+ service.__class__.__name__
+        className = service.__class__.__name__
+        self._callingCtx._upi = service.__module__ + '.' + className
         self._callingCtx._args = ["stop"]
         self._callingCtx._kwargs = {}
         return self.send_msg(self._callingCtx)
