@@ -1,4 +1,5 @@
 import copy
+import time
 import logging
 import inspect
 import threading
@@ -73,6 +74,9 @@ class ModuleManager(object):
         self.register_event_enable_handlers(wishfulModule)
         self.register_event_disable_handlers(wishfulModule)
 
+        self.register_service_start_handlers(wishfulModule)
+        self.register_service_stop_handlers(wishfulModule)
+
         self.modules[moduleId] = wishfulModule
         return wishfulModule
 
@@ -112,9 +116,11 @@ class ModuleManager(object):
     def serve_event_queue(self):
         while True:
             event = self.eventQueue.get()
-            self.log.info("Serving event: {}".format(event.__class__.__name__))
             handlers = self.get_event_handlers(event)
+            self.log.debug("Serving event: {}"
+                           .format(event.__class__.__name__))
             for handler in handlers:
+                module = handler.__self__
                 try:
                     if hasattr(handler, '_run_in_thread_'):
                         if handler._run_in_thread_:
@@ -127,10 +133,14 @@ class ModuleManager(object):
                             t.setDaemon(True)
                             t.start()
                     else:
+                        self.log.debug("Add task: {} to worker"
+                                       .format(handler.__name__))
                         if len(inspect.getargspec(handler)[0]) == 1:
-                            handler()
+                            # handler()
+                            module.worker.add_task(handler, [], {})
                         else:
-                            handler(event)
+                            # handler(event)
+                            module.worker.add_task(handler, [event], {})
                 except:
                     self.log.exception('Exception occurred during handler '
                                        'processing. Backtrace from offending '
@@ -159,8 +169,8 @@ class ModuleManager(object):
             event.responseQueue = Queue()
         self.send_event(event)
         if ctxCopy._blocking:
-            self.log.info("Waiting for return value for {}:{}"
-                          .format(ctx._upi_type, ctx._upi))
+            self.log.debug("Waiting for return value for {}:{}"
+                           .format(ctx._upi_type, ctx._upi))
             return event.responseQueue.get()
 
     def register_event_enable_handlers(self, i):
@@ -191,10 +201,30 @@ class ModuleManager(object):
         handlers = self._event_disable_handlers.get(event, [])
         return handlers
 
+    def register_service_start_handlers(self, i):
+        for _k, handler in inspect.getmembers(i, inspect.ismethod):
+            if hasattr(handler, '_service_start_'):
+                if handler._service_start_:
+                    self._service_start_handlers.setdefault(
+                        handler._service_start_, [])
+                    self._service_start_handlers[handler._service_start_].append(
+                        handler)
+                    # i.events.append(handler.__name__)
+
     def get_service_start_handlers(self, service, state=None):
-        handlers = []
+        handlers = self._service_start_handlers.get(service, [])
         return handlers
 
+    def register_service_stop_handlers(self, i):
+        for _k, handler in inspect.getmembers(i, inspect.ismethod):
+            if hasattr(handler, '_service_stop_'):
+                if handler._service_stop_:
+                    self._service_stop_handlers.setdefault(
+                        handler._service_stop_, [])
+                    self._service_stop_handlers[handler._service_stop_].append(
+                        handler)
+                    # i.events.append(handler.__name__)
+
     def get_service_stop_handlers(self, service, state=None):
-        handlers = []
+        handlers = self._service_stop_handlers.get(service, [])
         return handlers
