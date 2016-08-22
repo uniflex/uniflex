@@ -58,11 +58,12 @@ class MyController(wishful_module.ControllerModule):
 
         device = node.get_device(0)
         device.radio.set_power(15)
+        #device.radio.tx_power = 15
         device.radio.set_channel(random.randint(1, 11))
         # device.radio.add_interface(name="wlan0")
         # device.radio.set_mode(iface="wlan0", mode="STA")
         # device.radio.connect(iface="wlan0", ssid="1234")
-        device.enable_event(upis.radio.PacketLossEvent())
+        device.enable_event(upis.radio.PacketLossEvent)
         self.packetLossEventsEnabled = True
         device.start_service(
             upis.radio.SpectralScanService(rate=1000, f_range=[2200, 2500]))
@@ -70,8 +71,9 @@ class MyController(wishful_module.ControllerModule):
 
         # remote rule
         # self.myRuleId = device.add_rule(
-        #                        dataSource=upis.radio.SpectralScanService(rate=1000, f_range=[2200, 2500]),
-        #                                cb=rule_matched)
+        # dataSource=upis.radio.SpectralScanService(
+        # rate=1000, f_range=[2200, 2500]),
+        #                 cb=rule_matched)
         # local rule
         # self.add_rule()
 
@@ -105,9 +107,9 @@ class MyController(wishful_module.ControllerModule):
                       .format(sample, node, device))
 
     def print_response(self, node, dev, data):
-        print("{} Print response : "
-              "NodeIP:{}, Result:{}"
-              .format(datetime.datetime.now(), node.ip, data))
+        print("Default Callback: "
+              "Node: {}, Dev: {}, Data: {}"
+              .format(node, dev, data))
 
     @wishful_module.on_event(PeriodicEvaluationTimeEvent)
     def periodic_evaluation(self, event):
@@ -130,10 +132,10 @@ class MyController(wishful_module.ControllerModule):
         device = node.get_device(0)
 
         if self.packetLossEventsEnabled:
-            device.disable_event(upis.radio.PacketLossEvent())
+            device.disable_event(upis.radio.PacketLossEvent)
             self.packetLossEventsEnabled = False
         else:
-            device.enable_event(upis.radio.PacketLossEvent())
+            device.enable_event(upis.radio.PacketLossEvent)
             self.packetLossEventsEnabled = True
 
         if self.spectralScanStarted:
@@ -142,7 +144,7 @@ class MyController(wishful_module.ControllerModule):
             self.spectralScanStarted = False
         else:
             device.start_service(
-                upis.radio.SpectralScanService(rate=1000, f_range=[2200, 2500]))
+                upis.radio.SpectralScanService)
             self.spectralScanStarted = True
 
         # execute non-blocking function immediately
@@ -154,7 +156,7 @@ class MyController(wishful_module.ControllerModule):
         node.callback(self.print_response).radio.device("phy0").get_power()
 
         # schedule non-blocking function delay
-        node.delay(3).net.create_packetflow_sink(port=1234)
+        node.delay(3).callback(self.print_response).net.create_packetflow_sink(port=1234)
 
         # schedule non-blocking function exec time
         exec_time = datetime.datetime.now() + datetime.timedelta(seconds=3)
@@ -167,9 +169,8 @@ class MyController(wishful_module.ControllerModule):
 
         # exception handling, clean_per_flow_tx_power_table implementation
         # raises exception
-        #try:
-        #    node.radio.device("phy0").clean_per_flow_tx_power_table()
-        #except Exception as e:
-        #    print("{} !!!Exception!!!: {}".format(
-        #        datetime.datetime.now(), e))
-
+        try:
+            device.radio.clean_per_flow_tx_power_table()
+        except Exception as e:
+            print("{} !!!Exception!!!: {}".format(
+                datetime.datetime.now(), e))

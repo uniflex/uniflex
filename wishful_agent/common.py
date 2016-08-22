@@ -1,4 +1,5 @@
 import sys
+import inspect
 import logging
 import socket
 import fcntl
@@ -146,18 +147,25 @@ class ControllableUnit(object):
         self._callingCtx._kwargs = kwargs
         return self.send_msg(self._callingCtx)
 
+    def get_upi_string(self, event):
+        className = None
+        if inspect.isclass(event):
+            className = event.__name__
+        else:
+            className = event.__class__.__name__
+
+        return event.__module__ + '.' + className
+
     def enable_event(self, event):
         self._callingCtx._upi_type = "event_enable"
-        className = event.__class__.__name__
-        self._callingCtx._upi = event.__module__ + '.' + className
+        self._callingCtx._upi = self.get_upi_string(event)
         self._callingCtx._args = ["start"]
         self._callingCtx._kwargs = {}
         return self.send_msg(self._callingCtx)
 
     def disable_event(self, event):
         self._callingCtx._upi_type = "event_disable"
-        className = event.__class__.__name__
-        self._callingCtx._upi = event.__module__ + '.' + className
+        self._callingCtx._upi = self.get_upi_string(event)
         self._callingCtx._args = ["stop"]
         self._callingCtx._kwargs = {}
         return self.send_msg(self._callingCtx)
@@ -167,16 +175,14 @@ class ControllableUnit(object):
 
     def start_service(self, service):
         self._callingCtx._upi_type = "service_start"
-        className = service.__class__.__name__
-        self._callingCtx._upi = service.__module__ + '.' + className
+        self._callingCtx._upi = self.get_upi_string(service)
         self._callingCtx._args = ["start"]
         self._callingCtx._kwargs = {}
         return self.send_msg(self._callingCtx)
 
     def stop_service(self, service):
         self._callingCtx._upi_type = "service_stop"
-        className = service.__class__.__name__
-        self._callingCtx._upi = service.__module__ + '.' + className
+        self._callingCtx._upi = self.get_upi_string(service)
         self._callingCtx._args = ["stop"]
         self._callingCtx._kwargs = {}
         return self.send_msg(self._callingCtx)
