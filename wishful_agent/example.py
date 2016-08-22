@@ -58,7 +58,7 @@ class MyController(wishful_module.ControllerModule):
 
         device = node.get_device(0)
         device.radio.set_power(15)
-        #device.radio.tx_power = 15
+        # device.radio.tx_power = 15
         device.radio.set_channel(random.randint(1, 11))
         # device.radio.add_interface(name="wlan0")
         # device.radio.set_mode(iface="wlan0", mode="STA")
@@ -140,7 +140,7 @@ class MyController(wishful_module.ControllerModule):
 
         if self.spectralScanStarted:
             device.stop_service(
-                upis.radio.SpectralScanService(rate=1000, f_range=[2200, 2500]))
+                upis.radio.SpectralScanService(rate=100, f_range=[2200, 2500]))
             self.spectralScanStarted = False
         else:
             device.start_service(

@@ -3,7 +3,6 @@ import datetime
 import threading
 from apscheduler.schedulers.background import BackgroundScheduler
 
-import wishful_framework as msgs
 import wishful_framework as wishful_module
 import wishful_upis as upis
 
@@ -112,9 +111,9 @@ class CommandExecutor(wishful_module.AgentModule):
 
                 else:
                     self.log.debug("UPI: {} in module: {}"
-                                  " handler: {} was not executed"
-                                  .format(ctx._upi, module.__class__.__name__,
-                                          handler.__name__))
+                                   " handler: {} was not executed"
+                                   .format(ctx._upi, module.__class__.__name__,
+                                           handler.__name__))
                     # go to check next module
                     continue
 
