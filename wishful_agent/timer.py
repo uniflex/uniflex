@@ -30,7 +30,7 @@ class Timer(object):
 
     def _timer(self, interval):
         # Avoid cancellation during execution of self._callable()
-        cancel = self._event.wait(10)
+        cancel = self._event.wait(interval)
         if cancel:
             return
 
