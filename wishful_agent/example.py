@@ -34,12 +34,12 @@ class MyController(wishful_module.ControllerModule):
 
     @wishful_module.on_start()
     def my_start_function(self):
-        print("start control loop")
+        print("start control app")
         self.running = True
 
     @wishful_module.on_exit()
     def my_stop_function(self):
-        print("stop control loop")
+        print("stop control app")
         self.running = False
 
     @wishful_module.on_event(upis.mgmt.NewNodeEvent)
@@ -103,13 +103,24 @@ class MyController(wishful_module.ControllerModule):
         sample = event.sample
         node = event.node
         device = event.device
-        self.log.info("New Sample:{} from node {}, device: {}"
+        self.log.info("New SpectralScan Sample:{} from node {}, device: {}"
                       .format(sample, node, device))
 
-    def print_response(self, node, dev, data):
+    def default_cb(self, data):
+        node = data.node
+        dev = data.device
+        msg = data.msg
         print("Default Callback: "
               "Node: {}, Dev: {}, Data: {}"
-              .format(node, dev, data))
+              .format(node, dev, msg))
+
+    def get_power_cb(self, data):
+        node = data.node
+        dev = data.device
+        msg = data.msg
+        print("Power in "
+              "Node: {}, Dev: {}, was set to: {}"
+              .format(node, dev, msg))
 
     @wishful_module.on_event(PeriodicEvaluationTimeEvent)
     def periodic_evaluation(self, event):
@@ -149,14 +160,12 @@ class MyController(wishful_module.ControllerModule):
 
         # execute non-blocking function immediately
         node.blocking(False).device("phy0").radio.set_power(12)
-        response = device.radio.set_power(8)
-        print(response)
 
         # execute non-blocking function immediately, with specific callback
-        node.callback(self.print_response).radio.device("phy0").get_power()
+        node.callback(self.get_power_cb).radio.device("phy0").get_power()
 
         # schedule non-blocking function delay
-        node.delay(3).callback(self.print_response).net.create_packetflow_sink(port=1234)
+        node.delay(3).callback(self.default_cb).net.create_packetflow_sink(port=1234)
 
         # schedule non-blocking function exec time
         exec_time = datetime.datetime.now() + datetime.timedelta(seconds=3)

@@ -161,8 +161,13 @@ class ModuleManager(object):
 
     def send_cmd(self, ctx):
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
+        if ctx._callback:
+            module = ctx._callback.__self__
+            module._register_callback(ctx)
+
         ctxCopy = copy.copy(ctx)
         event = upis.mgmt.CtxCommandEvent(ctx=ctxCopy)
+
         if ctxCopy._blocking:
             event.responseQueue = Queue()
         self.send_event(event)

@@ -114,7 +114,7 @@ class ControllableUnit(object):
         self._callingCtx._upi = None
         self._callingCtx._args = None
         self._callingCtx._kwargs = None
-        self._callingCtx._callId = "1"
+        self._callingCtx._callId = None
         self._callingCtx._blocking = True
         self._callingCtx._exec_time = None
         self._callingCtx._timeout = None

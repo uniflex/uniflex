@@ -107,7 +107,14 @@ class CommandExecutor(wishful_module.AgentModule):
 
                     # create and send return value event
                     if ctx._blocking:
+                        self.log.debug("synchronous call")
                         event.responseQueue.put(returnValue)
+                    else:
+                        self.log.debug("asynchronous call device: {}"
+                                       .format(module.device))
+                        event = upis.mgmt.CtxReturnValueEvent(ctx, returnValue)
+                        event.device = module.device
+                        self.send_event(event)
 
                 else:
                     self.log.debug("UPI: {} in module: {}"
