@@ -1,8 +1,8 @@
 import copy
-import time
 import logging
 import inspect
 import threading
+from importlib import import_module
 from queue import Queue
 from .node import Node
 from .node import Device
@@ -35,7 +35,7 @@ class ModuleManager(object):
         self._service_stop_handlers = {}
 
     def my_import(self, module_name):
-        pyModule = __import__(module_name)
+        pyModule = import_module(module_name)
         globals()[module_name] = pyModule
         return pyModule
 
