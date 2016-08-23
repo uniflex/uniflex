@@ -3,8 +3,7 @@ import datetime
 import random
 import wishful_upis as upis
 import wishful_framework as wishful_module
-from .node import NodeGroup
-from .timer import TimerEventSender
+from wishful_agent.timer import TimerEventSender
 
 
 __author__ = "Piotr Gawlowicz"
@@ -26,7 +25,6 @@ class MyController(wishful_module.ControllerModule):
         self.arg = arg
         self.running = False
         self.nodes = []
-        self.apNodeGroup = NodeGroup()
 
         self.timeInterval = 10
         self.timer = TimerEventSender(self, PeriodicEvaluationTimeEvent)
