@@ -84,7 +84,6 @@ class ModuleManager(object):
         self.log.debug("Notify START to modules".format())
         self.send_event(upis.mgmt.AgentStartEvent())
         # send new node event to interested control programs
-        self.send_event(upis.mgmt.NewNodeEvent())
         self.serve_event_queue()
 
     def exit(self):

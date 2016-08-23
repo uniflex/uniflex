@@ -5,7 +5,9 @@ from .common import get_ip_address  # TODO: remove ip or iface
 from .module_manager import ModuleManager
 from .transport_channel import SlaveTransportChannel
 from .transport_channel import MasterTransportChannel
+from .node_manager import NodeManager
 from .executor import CommandExecutor
+import wishful_upis as upis
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -33,6 +35,7 @@ class Agent(object):
 
         # extention of event bus
         self.transport = None
+        self.nodeManager = None
 
     def set_agent_info(self, name=None, info=None, iface=None, ip=None):
         self.name = name
@@ -52,31 +55,31 @@ class Agent(object):
     def load_config(self, config):
         self.log.debug("Config: {0}".format(config))
 
-        agent_info = config['agent_config']
+        agent_config = config['agent_config']
 
-        if 'name' in agent_info:
-            self.name = agent_info['name']
+        if 'name' in agent_config:
+            self.name = agent_config['name']
 
-        if 'info' in agent_info:
-            self.info = agent_info['info']
+        if 'info' in agent_config:
+            self.info = agent_config['info']
 
-        if 'iface' in agent_info:
-            self.iface = agent_info['iface']
+        if 'iface' in agent_config:
+            self.iface = agent_config['iface']
             self.ip = get_ip_address(self.iface)
 
-        if 'type' in agent_info:
-            self.agentType = agent_info['type']
+        if 'type' in agent_config:
+            self.agentType = agent_config['type']
 
         dl = None
         ul = None
-        if "dl" in agent_info:
-            dl = agent_info["dl"]
-        if "downlink" in agent_info:
-            dl = agent_info["downlink"]
-        if "ul" in agent_info:
-            ul = agent_info["ul"]
-        if "uplink" in agent_info:
-            ul = agent_info["uplink"]
+        if "dl" in agent_config:
+            dl = agent_config["dl"]
+        if "downlink" in agent_config:
+            dl = agent_config["downlink"]
+        if "ul" in agent_config:
+            ul = agent_config["ul"]
+        if "uplink" in agent_config:
+            ul = agent_config["uplink"]
 
         if self.agentType == 'master':
             self.transport = MasterTransportChannel(self)
@@ -85,12 +88,21 @@ class Agent(object):
             self.transport.set_downlink(dl)
             self.transport.set_uplink(ul)
 
+            self.nodeManager = NodeManager(self)
+            self.nodeManager._transportChannel = self.transport
+            self.transport._nodeManager = self.nodeManager
+            self.moduleManager.add_module_obj(
+                "node_manager", self.nodeManager)
+
         elif self.agentType == 'slave':
             self.transport = SlaveTransportChannel(self)
             self.moduleManager.add_module_obj(
                 "transport_channel", self.transport)
         else:
             self.transport = None
+            # TODO. move it in better place
+            # like, nodeManager.add_local_node()
+            self.moduleManager.send_event(upis.mgmt.NewNodeEvent())
 
         # load control programs
         controllers = config['controllers']

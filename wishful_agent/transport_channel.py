@@ -41,8 +41,8 @@ class SlaveTransportChannel(wishful_module.AgentModule):
         self.forceStop = False
 
         self.connectedToController = False
-        self.echoMsgInterval = 3
-        self.echoTimeOut = 10
+        self.helloMsgInterval = 3
+        self.helloTimeOut = 10
         self.helloMsgTimer = TimerEventSender(self, SendHelloMsgTimeEvent)
         self.helloMsgTimeoutTimer = TimerEventSender(self,
                                                      HelloMsgTimeoutEvent)
@@ -180,8 +180,8 @@ class SlaveTransportChannel(wishful_module.AgentModule):
         self.send_event(event)
 
         # start sending hello msgs
-        self.helloMsgTimer.start(self.echoMsgInterval)
-        self.helloMsgTimeoutTimer.start(self.echoTimeOut)
+        self.helloMsgTimer.start(self.helloMsgInterval)
+        self.helloMsgTimeoutTimer.start(self.helloTimeOut)
 
     def disconnect(self):
         if self.controllerDL and self.controllerUL:
@@ -251,7 +251,7 @@ class SlaveTransportChannel(wishful_module.AgentModule):
 
     @wishful_module.on_event(SendHelloMsgTimeEvent)
     def send_hello_msg_to_controller(self, event):
-        self.log.debug("Agent sends HelloMsg to controller")
+        self.log.info("Agent sends HelloMsg to controller")
         topic = self.agent.uuid
         cmdDesc = msgs.CmdDesc()
         cmdDesc.type = msgs.get_msg_type(msgs.HelloMsg)
@@ -260,34 +260,35 @@ class SlaveTransportChannel(wishful_module.AgentModule):
 
         msg = msgs.HelloMsg()
         msg.uuid = str(self.agent.uuid)
-        msg.timeout = 3 * self.echoMsgInterval
+        msg.timeout = self.helloTimeOut
         msgContainer = [topic, cmdDesc, msg]
         self.send_to_controller(msgContainer)
 
         # reschedule hello msg
-        self.helloMsgTimer.start(self.echoMsgInterval)
+        self.helloMsgTimer.start(self.helloMsgInterval)
 
     @wishful_module.on_event(HelloMsgTimeoutEvent)
     def connection_to_controller_lost(self, event):
-        self.log.debug(
+        self.log.info(
             "Agent lost connection with controller,"
             " stop sending EchoMsg".format())
         self.helloMsgTimer.cancel()
 
         self.connectedToController = False
+        ctrUUID = self.controllerUuid
         self.controllerUuid = None
         # notify Connection Lost
         event = upis.mgmt.ControllerLostEvent(0)
         self.send_event(event)
         # notify DISCONNECTED
         self.disconnect()
-        event = upis.mgmt.DisconnectControllerEvent()
+        event = upis.mgmt.ControllerDisconnectedEvent(ctrUUID)
         self.send_event(event)
 
     def serve_hello_msg(self, event):
-        self.log.debug("Agent received HELLO MESSAGE from controller".format())
+        self.log.info("Agent received HELLO MESSAGE from controller".format())
         self.helloMsgTimeoutTimer.cancel()
-        self.helloMsgTimeoutTimer.start(self.echoTimeOut)
+        self.helloMsgTimeoutTimer.start(self.helloTimeOut)
 
     def terminate_connection_to_controller(self):
         self.log.debug("Agend sends NodeExitMsg to Controller".format())
@@ -317,9 +318,9 @@ class SlaveTransportChannel(wishful_module.AgentModule):
             self.serve_hello_msg(upis.mgmt.HelloMsgEvent())
 
         else:
-            event = upis.mgmt.CommandEvent(msgContainer[0],
-                                           msgContainer[1], msgContainer[2])
-            # self.send_event(event)
+            # event = upis.mgmt.CommandEvent(msgContainer[0],
+            #                               msgContainer[1], msgContainer[2])
+            pass
             # TODO: perform translation/serialization
 
     def recv_msgs(self):
@@ -350,6 +351,7 @@ class MasterTransportChannel(wishful_module.AgentModule):
             module=self.__class__.__module__, name=self.__class__.__name__))
 
         self.agent = agent
+        self._nodeManager = None
         self.forceStop = False
         self.downlink = None
         self.uplink = None
@@ -401,8 +403,7 @@ class MasterTransportChannel(wishful_module.AgentModule):
         self.log.debug("Set Uplink: {}".format(uplink))
         self.uplink = uplink
 
-    def subscribe_to(self, event):
-        topic = event.topic
+    def subscribe_to(self, topic):
         self.log.info("Transport Channel subscribes to topic: {}"
                       .format(topic))
         if sys.version_info.major >= 3:
@@ -410,8 +411,7 @@ class MasterTransportChannel(wishful_module.AgentModule):
         else:
             self.ul_socket.setsockopt(zmq.SUBSCRIBE, str(topic))
 
-    def send_downlink_msg(self, event):
-        msgContainer = event.msg
+    def send_downlink_msg(self, msgContainer):
         msgContainer[0] = msgContainer[0].encode('utf-8')
         cmdDesc = msgContainer[1]
         msg = msgContainer[2]
@@ -435,25 +435,23 @@ class MasterTransportChannel(wishful_module.AgentModule):
 
     def process_msgs(self, msgContainer):
         cmdDesc = msgContainer[1]
-        msg = msgContainer[2]
         self.log.info(
             "Transport Channel received message: {} "
             "from node".format(cmdDesc.type))
 
         if cmdDesc.type == msgs.get_msg_type(msgs.NewNodeMsg):
-            event = upis.mgmt.NewNodeDiscoveredEvent(cmdDesc, msg)
-            self.send_event(event)
+            self._nodeManager.serve_new_node_msg(msgContainer)
 
         elif cmdDesc.type == msgs.get_msg_type(msgs.HelloMsg):
-            self.send_event(upis.mgmt.HelloMsgEvent())
+            self._nodeManager.serve_hello_msg(msgContainer)
 
         elif cmdDesc.type == msgs.get_msg_type(msgs.NodeExitMsg):
-            self.send_event(upis.mgmt.NodeExitEvent())
+            self._nodeManager.serve_node_exit_msg(msgContainer)
 
         else:
-            event = upis.mgmt.CommandEvent(msgContainer[0],
-                                           msgContainer[1], msgContainer[2])
-            # self.send_event(event)
+            # event = upis.mgmt.CommandEvent(msgContainer[0],
+            #                                msgContainer[1], msgContainer[2])
+            pass
             # perform translation to event
 
     def recv_msgs(self):

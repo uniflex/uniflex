@@ -7,7 +7,6 @@ import wishful_framework as msgs
 import wishful_framework as wishful_module
 import wishful_upis as upis
 from .common import ControllableUnit
-from .interface import Device
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -15,17 +14,20 @@ __version__ = "0.1.0"
 __email__ = "gawlowicz@tkn.tu-berlin.de"
 
 
-class Group(object):
-    def __init__(self, name):
-        self.name = name
-        self.uuid = str(uuid.uuid4())
-        self.nodes = []
+class Device(ControllableUnit):
+    def __init__(self, devName, devId, node):
+        super().__init__()
+        self._log = logging.getLogger("{module}.{name}".format(
+            module=self.__class__.__module__, name=self.__class__.__name__))
+        self._id = devId
+        self._name = devName
+        self._node = node
 
-    def add_node(self, node):
-        self.nodes.append(node)
-
-    def remove_node(self, node):
-        self.nodes.remove(node)
+    def send_msg(self, ctx):
+        ctx._iface = self._name
+        response = self._node.send_msg(ctx)
+        self._clear_call_context()
+        return response
 
 
 class ModuleDescriptor(object):
@@ -71,7 +73,7 @@ class Node(ControllableUnit):
         super().__init__()
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
-        self.id = str(msg.agent_uuid)
+        self.uuid = str(msg.agent_uuid)
         self.ip = str(msg.ip)
         self.name = str(msg.name)
         self.info = str(msg.info)
@@ -107,11 +109,11 @@ class Node(ControllableUnit):
             self.modules[moduleDesc.name] = moduleDesc
 
     def __str__(self):
-        string = ("Node Description:\n" +
-                  " ID:{}\n"
+        string = ("\nNode Description:\n" +
+                  " UUID:{}\n"
                   " Name:{}\n"
                   " IP:{}\n"
-                  .format(self.id, self.name, self.ip))
+                  .format(self.uuid, self.name, self.ip))
 
         string = string + " Devices:\n"
         for devId, device in self.devices.items():
@@ -124,6 +126,9 @@ class Node(ControllableUnit):
 
         return string
 
+    def get_devices(self):
+        return self.devices
+
     def get_device(self, devId):
         return self.devices[devId]
 
@@ -132,11 +137,9 @@ class Node(ControllableUnit):
 
     def hello_timer(self):
         while not self._stop and self._helloTimeout:
-            print("runnig")
             time.sleep(1)
             self._helloTimeout = self._helloTimeout - 1
         # remove node
-        print("remove node")
         self._timerCallback(self)
 
     def refresh_hello_timer(self):
@@ -178,8 +181,8 @@ class NodeManager(wishful_module.AgentModule):
             module=self.__class__.__module__, name=self.__class__.__name__))
 
         self.agent = agent
+        self._transportChannel = None
         self.nodes = []
-        self.groups = []
 
         self.helloMsgInterval = 3
         self.helloTimeout = 3 * self.helloMsgInterval
@@ -187,7 +190,7 @@ class NodeManager(wishful_module.AgentModule):
     def get_node_by_id(self, nid):
         node = None
         for n in self.nodes:
-            if n.id == nid:
+            if n.uuid == nid:
                 node = n
                 break
         return node
@@ -212,27 +215,25 @@ class NodeManager(wishful_module.AgentModule):
         node = self.get_node_by_id(string)
         return node
 
-    @wishful_module.on_event(upis.mgmt.NewNodeDiscoveredEvent)
-    def add_node(self, event):
-        cmdDesc = event.cmdDesc
+    def serve_new_node_msg(self, msgContainer):
         msg = msgs.NewNodeMsg()
-        msg.ParseFromString(event.msg)
-        agentId = str(msg.agent_uuid)
+        msg.ParseFromString(msgContainer[2])
+        agentUuid = str(msg.agent_uuid)
         agentName = msg.name
         agentInfo = msg.info
 
         for n in self.nodes:
-            if agentId == n.id:
+            if agentUuid == n.uuid:
                 self.log.debug("Already known Node UUID: {},"
                                " Name: {}, Info: {}"
-                               .format(agentId, agentName, agentInfo))
+                               .format(agentUuid, agentName, agentInfo))
                 return
 
         node = Node(msg)
         self.nodes.append(node)
         self.log.debug("New node with UUID: {}, Name: {},"
-                       " Info: {}".format(agentId, agentName, agentInfo))
-        self.send_event(upis.mgmt.SubscribeTopicEvent(agentId))
+                       " Info: {}".format(agentUuid, agentName, agentInfo))
+        self._transportChannel.subscribe_to(agentUuid)
 
         # start hello timeout timer
         node.set_timer_callback(self.remove_node_hello_timer)
@@ -240,10 +241,12 @@ class NodeManager(wishful_module.AgentModule):
         d.setDaemon(True)
         d.start()
 
-        event = upis.mgmt.NewNodeEvent(node)
+        event = upis.mgmt.NewNodeEvent()
+        event.node = node
+        self.send_event(event)
 
-        dest = agentId
-        cmdDesc.Clear()
+        dest = agentUuid
+        cmdDesc = msgs.CmdDesc()
         cmdDesc.type = msgs.get_msg_type(msgs.NewNodeAck)
         cmdDesc.func_name = msgs.get_msg_type(msgs.NewNodeAck)
         cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
@@ -251,31 +254,28 @@ class NodeManager(wishful_module.AgentModule):
         msg = msgs.NewNodeAck()
         msg.status = True
         msg.controller_uuid = self.agent.uuid
-        msg.agent_uuid = agentId
+        msg.agent_uuid = agentUuid
         msg.topics.append("ALL")
 
         msgContainer = [dest, cmdDesc, msg]
 
         time.sleep(1)  # wait until zmq agrees on topics
-        event = upis.mgmt.SendMgsEvent(msgContainer)
-        self.send_event(event)
+        self._transportChannel.send_downlink_msg(msgContainer)
         return node
 
     def remove_node_hello_timer(self, node):
         reason = "HelloTimeout"
         self.log.debug("Controller removes node with UUID: {},"
-                       " Reason: {}".format(node.id, reason))
+                       " Reason: {}".format(node.uuid, reason))
 
         if node and node in self.nodes:
             self.nodes.remove(node)
 
-            event = upis.mgmt.NodeLostEvent(node, reason)
+            event = upis.mgmt.NodeLostEvent(reason)
+            event.node = node
             self.send_event(event)
 
-    @wishful_module.on_event(upis.mgmt.NodeExitEvent)
-    def remove_node(self, msgContainer):
-        topic = msgContainer[0]
-        cmdDesc = msgContainer[1]
+    def serve_node_exit_msg(self, msgContainer):
         msg = msgs.NodeExitMsg()
         msg.ParseFromString(msgContainer[2])
         agentId = str(msg.agent_uuid)
@@ -292,7 +292,8 @@ class NodeManager(wishful_module.AgentModule):
         if node and node in self.nodes:
             self.nodes.remove(node)
 
-            event = upis.mgmt.NodeExitEvent(node, reason)
+            event = upis.mgmt.NodeExitEvent(reason)
+            event.node = node
             self.send_event(event)
 
     def send_hello_msg_to_node(self, nodeId):
@@ -307,12 +308,9 @@ class NodeManager(wishful_module.AgentModule):
         msg.uuid = str(self.agent.uuid)
         msg.timeout = self.helloTimeout
         msgContainer = [dest, cmdDesc, msg]
-        event = upis.mgmt.SendMgsEvent(msgContainer)
-        self.send_event(event)
+        self._transportChannel.send_downlink_msg(msgContainer)
 
-    @wishful_module.on_event(upis.mgmt.HelloMsgEvent)
-    def serve_hello_msg(self, event):
-        msgContainer = event
+    def serve_hello_msg(self, msgContainer):
         self.log.debug("Controller received HELLO MESSAGE from agent".format())
         msg = msgs.HelloMsg()
         msg.ParseFromString(msgContainer[2])

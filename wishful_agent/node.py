@@ -32,6 +32,7 @@ class Node(ControllableUnit):
         self.uuid = uuid
         self.moduleManager = None
         self.devices = []
+        self.local = True  # Local or remote
 
     def get_devices(self):
         return self.devices
