@@ -1,17 +1,16 @@
 import uuid
 import logging
 
-from .common import get_ip_address
+from .common import get_ip_address  # TODO: remove ip or iface
 from .module_manager import ModuleManager
-from .transport_channel import TransportChannel
-from .controller_monitor import ControllerMonitor
-from .local_control_module import LocalControlModule
+from .transport_channel import SlaveTransportChannel
+from .transport_channel import MasterTransportChannel
 from .executor import CommandExecutor
 
-__author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
+__author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
 __version__ = "0.1.0"
-__email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
+__email__ = "gawlowicz@tkn.tu-berlin.de"
 
 
 class Agent(object):
@@ -28,24 +27,12 @@ class Agent(object):
 
         self.moduleManager = ModuleManager(self)
 
-        # transport channel has to be started manually
-        # after discovery module thread is started by manager
-        # otherwise agent is blocked
-        self.transport = TransportChannel(self)
-        self.moduleManager.add_module_obj(
-            "transport_channel", self.transport)
-
-        # monitoring of connection with discovered controller using HelloMsgs
-        self.moduleManager.add_module_obj(
-            "controller_monitor", ControllerMonitor(self))
-
-        # on-the-fly functions manager
-        self.moduleManager.add_module_obj(
-            "on_the_fly_function_manager", LocalControlModule(self))
-
         # command executor with scheduler
         self.moduleManager.add_module_obj(
             "command_executor", CommandExecutor(self))
+
+        # extention of event bus
+        self.transport = None
 
     def set_agent_info(self, name=None, info=None, iface=None, ip=None):
         self.name = name
@@ -65,7 +52,7 @@ class Agent(object):
     def load_config(self, config):
         self.log.debug("Config: {0}".format(config))
 
-        agent_info = config['agent_info']
+        agent_info = config['agent_config']
 
         if 'name' in agent_info:
             self.name = agent_info['name']
@@ -76,6 +63,34 @@ class Agent(object):
         if 'iface' in agent_info:
             self.iface = agent_info['iface']
             self.ip = get_ip_address(self.iface)
+
+        if 'type' in agent_info:
+            self.agentType = agent_info['type']
+
+        dl = None
+        ul = None
+        if "dl" in agent_info:
+            dl = agent_info["dl"]
+        if "downlink" in agent_info:
+            dl = agent_info["downlink"]
+        if "ul" in agent_info:
+            ul = agent_info["ul"]
+        if "uplink" in agent_info:
+            ul = agent_info["uplink"]
+
+        if self.agentType == 'master':
+            self.transport = MasterTransportChannel(self)
+            self.moduleManager.add_module_obj(
+                "transport_channel", self.transport)
+            self.transport.set_downlink(dl)
+            self.transport.set_uplink(ul)
+
+        elif self.agentType == 'slave':
+            self.transport = SlaveTransportChannel(self)
+            self.moduleManager.add_module_obj(
+                "transport_channel", self.transport)
+        else:
+            self.transport = None
 
         # load control programs
         controllers = config['controllers']
@@ -95,9 +110,6 @@ class Agent(object):
         for moduleName, m_params in moduleDesc.items():
 
             controlled_devices = []
-            if 'interfaces' in m_params:
-                controlled_devices = m_params['interfaces']
-
             if 'devices' in m_params:
                 controlled_devices = m_params['devices']
 
@@ -122,10 +134,8 @@ class Agent(object):
         self.log.debug("Agent starts all modules".format())
         # nofity START to modules
         self.moduleManager.start()
-        self.transport.my_start()
 
     def stop(self):
         self.log.debug("Stop all modules")
         # nofity EXIT to modules
         self.moduleManager.exit()
-        self.transport.my_stop()
