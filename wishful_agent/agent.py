@@ -7,7 +7,6 @@ from .transport_channel import SlaveTransportChannel
 from .transport_channel import MasterTransportChannel
 from .node_manager import NodeManager
 from .executor import CommandExecutor
-import wishful_upis as upis
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -100,7 +99,6 @@ class Agent(object):
                 "transport_channel", self.transport)
             self.transport._nodeManager = self.nodeManager
             self.nodeManager._transportChannel = self.transport
-
             self.nodeManager.create_local_node(self)
 
         else:

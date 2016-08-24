@@ -1,8 +1,6 @@
-import copy
 import time
 import logging
 import threading
-from queue import Queue
 
 import wishful_framework as msgs
 import wishful_framework as wishful_module
@@ -82,6 +80,7 @@ class NodeManager(wishful_module.AgentModule):
                 return
 
         node = Node.create_node_from_msg(msg)
+        node.nodeManager = self
         self.nodes.append(node)
         self.log.debug("New node with UUID: {}, Name: {},"
                        " Info: {}".format(agentUuid, agentName, agentInfo))
@@ -172,23 +171,10 @@ class NodeManager(wishful_module.AgentModule):
         node = self.get_node_by_id(str(msg.uuid))
         node.refresh_hello_timer()
 
-    def send_cmd(self, ctx):
-        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
-        if ctx._callback:
-            app = ctx._callback.__self__
-            app._register_callback(ctx)
+    def send_event_cmd(self, event, dstNode):
+        self.log.debug("{}:{}".format(event.ctx._upi_type, event.ctx._upi))
 
-        ctxCopy = copy.copy(ctx)
-        event = upis.mgmt.CtxCommandEvent(ctx=ctxCopy)
-
-        if ctxCopy._blocking:
-            event.responseQueue = Queue()
-        self.send_event(event)
-        if ctxCopy._blocking:
-            self.log.debug("Waiting for return value for {}:{}"
-                           .format(ctx._upi_type, ctx._upi))
-            returnValue = event.responseQueue.get()
-            if issubclass(returnValue.__class__, Exception):
-                raise returnValue
-            else:
-                return returnValue
+        if dstNode.local:
+            self.send_event(event)
+        else:
+            self._transportChannel.send_event(event)

@@ -1,6 +1,9 @@
+import copy
 import time
 import logging
+from queue import Queue
 from .common import ControllableUnit
+import wishful_upis as upis
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
@@ -180,8 +183,28 @@ class Node(ControllableUnit):
     def send_msg(self, ctx):
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
         ctx._scope = self
-        response = self.nodeManager.send_cmd(ctx)
+        if ctx._callback:
+            app = ctx._callback.__self__
+            app._register_callback(ctx)
+
+        ctxCopy = copy.copy(ctx)
         self._clear_call_context()
+
+        event = upis.mgmt.CtxCommandEvent(ctx=ctxCopy)
+        if ctxCopy._blocking:
+            event.responseQueue = Queue()
+
+        response = self.nodeManager.send_event_cmd(event, self)
+
+        if ctxCopy._blocking:
+            self.log.debug("Waiting for return value for {}:{}"
+                           .format(ctx._upi_type, ctx._upi))
+            returnValue = event.responseQueue.get()
+            if issubclass(returnValue.__class__, Exception):
+                raise returnValue
+            else:
+                return returnValue
+
         return response
 
 

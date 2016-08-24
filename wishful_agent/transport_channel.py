@@ -339,6 +339,9 @@ class SlaveTransportChannel(wishful_module.AgentModule):
                 msgContainer[2] = msg
                 self.process_msgs(msgContainer)
 
+    def send_event(self, event):
+        pass
+
 
 @wishful_module.build_module
 class MasterTransportChannel(wishful_module.AgentModule):
@@ -426,6 +429,9 @@ class MasterTransportChannel(wishful_module.AgentModule):
             self.dl_socket.send_multipart(msgContainer)
         finally:
             self.downlinkSocketLock.release()
+
+    def send_event(self, event):
+        pass
 
     def process_msgs(self, msgContainer):
         cmdDesc = msgContainer[1]
