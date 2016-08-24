@@ -1,6 +1,7 @@
 import time
 import logging
 import threading
+from queue import Queue
 
 import wishful_framework as msgs
 import wishful_framework as wishful_module
@@ -24,8 +25,28 @@ class NodeManager(wishful_module.AgentModule):
         self.local_node = None
         self.nodes = []
 
+        self._callIdGen = 0
+        self.synchronousCalls = {}
+        self.callCallbacks = {}
+
         self.helloMsgInterval = 3
         self.helloTimeout = 3 * self.helloMsgInterval
+
+    def generate_call_id(self):
+        self._callIdGen = self._callIdGen + 1
+        return self._callIdGen
+
+    def get_node_by_uuid(self, uuid):
+        if self.local_node:
+            if self.local_node.uuid == uuid:
+                return self.local_node
+
+        node = None
+        for n in self.nodes:
+            if n.uuid == uuid:
+                node = n
+                break
+        return node
 
     def get_node_by_id(self, nid):
         node = None
@@ -92,10 +113,6 @@ class NodeManager(wishful_module.AgentModule):
         d.setDaemon(True)
         d.start()
 
-        event = upis.mgmt.NewNodeEvent()
-        event.node = node
-        self.send_event(event)
-
         dest = agentUuid
         cmdDesc = msgs.CmdDesc()
         cmdDesc.type = msgs.get_msg_type(msgs.NewNodeAck)
@@ -112,6 +129,11 @@ class NodeManager(wishful_module.AgentModule):
 
         time.sleep(1)  # wait until zmq agrees on topics
         self._transportChannel.send_downlink_msg(msgContainer)
+
+        event = upis.mgmt.NewNodeEvent()
+        event.node = node
+        self.send_event(event)
+
         return node
 
     def remove_node_hello_timer(self, node):
@@ -174,7 +196,66 @@ class NodeManager(wishful_module.AgentModule):
     def send_event_cmd(self, event, dstNode):
         self.log.debug("{}:{}".format(event.ctx._upi_type, event.ctx._upi))
 
+        responseQueue = None
+        callback = None
         if dstNode.local:
             self.send_event(event)
         else:
-            self._transportChannel.send_event(event)
+            if event.ctx._blocking:
+                # save reference to response queue
+                callId = self.generate_call_id()
+                event.ctx._callId = callId
+                responseQueue = event.responseQueue
+                self.synchronousCalls[callId] = responseQueue
+                event.responseQueue = None
+            elif event.ctx._callback:
+                # save reference to callback
+                callId = self.generate_call_id()
+                event.ctx._callId = callId
+                callback = event.ctx._callback
+                self.callCallbacks[callId] = callback
+                event.ctx._callback = None
+
+            # flatten event
+            if event.node and not isinstance(event.node, str):
+                event.node = event.node.uuid
+            if event.device and not isinstance(event.device, str):
+                event.device = event.device._id
+
+            self._transportChannel.send_event_outside(event, dstNode)
+            if event.ctx._blocking:
+                event.responseQueue = responseQueue
+            elif event.ctx._callback:
+                event.ctx._callback = callback
+
+    def serve_event_msg(self, msgContainer):
+        event = msgContainer[2]
+        # TODO: check if event for me
+        event.node = self.get_node_by_uuid(event.node)
+        event.device = None
+
+        if isinstance(event, upis.mgmt.CtxCommandEvent):
+            if event.ctx._blocking:
+                event.responseQueue = Queue()
+                self.moduleManager.send_event_locally(event)
+                response = event.responseQueue.get()
+                retEvent = upis.mgmt.CtxReturnValueEvent(event.ctx, response)
+                self.log.debug("send response for blocking call")
+                self._transportChannel.send_event_outside(retEvent)
+            else:
+                self.moduleManager.send_event_locally(event)
+
+        elif isinstance(event, upis.mgmt.CtxReturnValueEvent):
+            if event.ctx._callId in self.synchronousCalls:
+                queue = self.synchronousCalls[event.ctx._callId]
+                queue.put(event.msg)
+            elif event.ctx._callId in self.callCallbacks:
+                pass
+            else:
+                self.moduleManager.send_event_locally(event)
+        else:
+            self.moduleManager.send_event_locally(event)
+
+        # returnValue = event.responseQueue.get()
+        # event.responseQueue.put(returnValue)
+        pass

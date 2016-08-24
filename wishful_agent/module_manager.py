@@ -101,12 +101,23 @@ class ModuleManager(object):
         handlers = self._event_handlers.get(ev_cls, [])
         return handlers
 
+    def send_event_locally(self, event):
+        # stamp event with node if not present
+        # if event from transport channel, then node is present
+        if not event.node:
+            event.node = self.agent.nodeManager.get_local_node()
+        self.eventQueue.put(event)
+
     def send_event(self, event):
         # stamp event with node if not present
         # if event from transport channel, then node is present
         if not event.node:
             event.node = self.agent.nodeManager.get_local_node()
         self.eventQueue.put(event)
+        # quick hack to sent events also through transport channel
+        # TODO: improve it
+        if self.agent.transport:
+            self.agent.transport.send_event_outside(event)
 
     def serve_event_queue(self):
         while True:

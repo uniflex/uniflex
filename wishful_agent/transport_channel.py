@@ -165,6 +165,7 @@ class SlaveTransportChannel(wishful_module.AgentModule):
         self.log.debug(
             "Agent connects to controller and subscribes to received topics")
         self.subscribe_to(self.agent.uuid)
+        self.subscribe_to("ALL")  # TODO: remove it, need optimization
 
         for topic in msg.topics:
             self.subscribe_to(topic)
@@ -173,6 +174,7 @@ class SlaveTransportChannel(wishful_module.AgentModule):
         self.controllerUuid = msg.controller_uuid
         # stop discovery module
         # and notify CONNECTED to modules
+        self.log.debug("Notify controller connected")
         event = upis.mgmt.ControllerConnectedEvent(msg.controller_uuid)
         self.send_event(event)
 
@@ -227,7 +229,6 @@ class SlaveTransportChannel(wishful_module.AgentModule):
     def send_to_controller(self, msgContainer):
         msgContainer[0] = str(self.controllerUuid)
         msgContainer[0] = msgContainer[0].encode('utf-8')
-        # stamp with my uuid
         cmdDesc = msgContainer[1]
         msg = msgContainer[2]
 
@@ -315,10 +316,7 @@ class SlaveTransportChannel(wishful_module.AgentModule):
             self.serve_hello_msg(upis.mgmt.HelloMsgEvent())
 
         else:
-            # event = upis.mgmt.CommandEvent(msgContainer[0],
-            #                               msgContainer[1], msgContainer[2])
-            pass
-            # TODO: perform translation/serialization
+            self._nodeManager.serve_event_msg(msgContainer)
 
     def recv_msgs(self):
         while not self.forceStop:
@@ -332,15 +330,41 @@ class SlaveTransportChannel(wishful_module.AgentModule):
                 msg = msgContainer[2]
 
                 if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
-                    msg = pickle.loads(msg)
+                    try:
+                        msg = pickle.loads(msg)
+                    except:
+                        msg = dill.loads(msg)
 
                 msgContainer[0] = dest.decode('utf-8')
                 msgContainer[1] = cmdDesc
                 msgContainer[2] = msg
                 self.process_msgs(msgContainer)
 
-    def send_event(self, event):
-        pass
+    def send_event_outside(self, event, dstNode=None):
+        filterEvents = ["NewNodeEvent", "AgentStartEvent",
+                        "ControllerDiscoveredEvent", "AgentExitEvent",
+                        "NodeExitEvent", "NodeLostEvent",
+                        "SendHelloMsgTimeEvent", "HelloMsgTimeoutEvent",
+                        "ControllerConnectedEvent"]
+        if event.__class__.__name__ in filterEvents:
+            return
+
+        # flatten event
+        if event.node and not isinstance(event.node, str):
+            event.node = event.node.uuid
+        if event.device and not isinstance(event.device, str):
+            event.device = event.device._id
+
+        self.log.debug("sends cmd event : {}".format(event.__class__.__name__))
+        topic = self.agent.uuid
+        cmdDesc = msgs.CmdDesc()
+        cmdDesc.type = "event"
+        cmdDesc.func_name = "event"
+        cmdDesc.serialization_type = msgs.CmdDesc.PICKLE
+
+        data = event
+        msgContainer = [topic, cmdDesc, data]
+        self.send_to_controller(msgContainer)
 
 
 @wishful_module.build_module
@@ -402,7 +426,7 @@ class MasterTransportChannel(wishful_module.AgentModule):
 
     def subscribe_to(self, topic):
         self.log.debug("Transport Channel subscribes to topic: {}"
-                      .format(topic))
+                       .format(topic))
         if sys.version_info.major >= 3:
             self.ul_socket.setsockopt_string(zmq.SUBSCRIBE, str(topic))
         else:
@@ -430,8 +454,33 @@ class MasterTransportChannel(wishful_module.AgentModule):
         finally:
             self.downlinkSocketLock.release()
 
-    def send_event(self, event):
-        pass
+    def send_event_outside(self, event, dstNode=None):
+        filterEvents = ["NewNodeEvent", "AgentStartEvent",
+                        "ControllerDiscoveredEvent", "AgentExitEvent",
+                        "NodeExitEvent", "NodeLostEvent",
+                        "SendHelloMsgTimeEvent", "HelloMsgTimeoutEvent",
+                        "ControllerConnectedEvent"]
+        if event.__class__.__name__ in filterEvents:
+            return
+
+        # flatten event
+        if event.node and not isinstance(event.node, str):
+            event.node = event.node.uuid
+        if event.device and not isinstance(event.device, str):
+            event.device = event.device._id
+
+        self.log.debug("sends cmd event : {}".format(event.__class__.__name__))
+        dest = "ALL"
+        if dstNode:
+            dest = dstNode.uuid
+        cmdDesc = msgs.CmdDesc()
+        cmdDesc.type = "event"
+        cmdDesc.func_name = "event"
+        cmdDesc.serialization_type = msgs.CmdDesc.PICKLE
+
+        data = event
+        msgContainer = [dest, cmdDesc, data]
+        self.send_downlink_msg(msgContainer)
 
     def process_msgs(self, msgContainer):
         cmdDesc = msgContainer[1]
@@ -449,10 +498,7 @@ class MasterTransportChannel(wishful_module.AgentModule):
             self._nodeManager.serve_node_exit_msg(msgContainer)
 
         else:
-            # event = upis.mgmt.CommandEvent(msgContainer[0],
-            #                                msgContainer[1], msgContainer[2])
-            pass
-            # perform translation to event
+            self._nodeManager.serve_event_msg(msgContainer)
 
     def recv_msgs(self):
         while not self.forceStop:

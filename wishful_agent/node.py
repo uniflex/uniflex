@@ -101,7 +101,7 @@ class Node(ControllableUnit):
             if module.HasField('device'):
                 deviceDesc = Device(module.device.id, module.device.name, node)
                 moduleDesc.device = deviceDesc
-                node.devices[deviceDesc._id] = deviceDesc.name
+                node.devices[deviceDesc._id] = deviceDesc
 
             for attr in module.attributes:
                 moduleDesc.attributes.append(str(attr.name))
@@ -153,7 +153,7 @@ class Node(ControllableUnit):
                 return False
 
     def get_devices(self):
-        return self.devices
+        return self.devices.values()
 
     def get_device(self, devId):
         if self.devices:
@@ -182,7 +182,6 @@ class Node(ControllableUnit):
 
     def send_msg(self, ctx):
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
-        ctx._scope = self
         if ctx._callback:
             app = ctx._callback.__self__
             app._register_callback(ctx)
@@ -198,7 +197,7 @@ class Node(ControllableUnit):
 
         if ctxCopy._blocking:
             self.log.debug("Waiting for return value for {}:{}"
-                           .format(ctx._upi_type, ctx._upi))
+                           .format(ctxCopy._upi_type, ctxCopy._upi))
             returnValue = event.responseQueue.get()
             if issubclass(returnValue.__class__, Exception):
                 raise returnValue
