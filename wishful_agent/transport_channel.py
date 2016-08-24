@@ -57,10 +57,7 @@ class SlaveTransportChannel(wishful_module.AgentModule):
 
         # for downlink communication with controller
         self.dl_socket = self.context.socket(zmq.SUB)
-        if sys.version_info.major >= 3:
-            self.dl_socket.setsockopt_string(zmq.SUBSCRIBE, self.agent.uuid)
-        else:
-            self.dl_socket.setsockopt(zmq.SUBSCRIBE, self.agent.uuid)
+        self.subscribe_to(self.agent.uuid)
         self.dl_socket.setsockopt(zmq.LINGER, 100)
 
         # for uplink communication with controller
@@ -251,7 +248,7 @@ class SlaveTransportChannel(wishful_module.AgentModule):
 
     @wishful_module.on_event(SendHelloMsgTimeEvent)
     def send_hello_msg_to_controller(self, event):
-        self.log.info("Agent sends HelloMsg to controller")
+        self.log.debug("Agent sends HelloMsg to controller")
         topic = self.agent.uuid
         cmdDesc = msgs.CmdDesc()
         cmdDesc.type = msgs.get_msg_type(msgs.HelloMsg)
@@ -269,7 +266,7 @@ class SlaveTransportChannel(wishful_module.AgentModule):
 
     @wishful_module.on_event(HelloMsgTimeoutEvent)
     def connection_to_controller_lost(self, event):
-        self.log.info(
+        self.log.debug(
             "Agent lost connection with controller,"
             " stop sending EchoMsg".format())
         self.helloMsgTimer.cancel()
@@ -286,7 +283,7 @@ class SlaveTransportChannel(wishful_module.AgentModule):
         self.send_event(event)
 
     def serve_hello_msg(self, event):
-        self.log.info("Agent received HELLO MESSAGE from controller".format())
+        self.log.debug("Agent received HELLO MESSAGE from controller".format())
         self.helloMsgTimeoutTimer.cancel()
         self.helloMsgTimeoutTimer.start(self.helloTimeOut)
 
@@ -361,12 +358,9 @@ class MasterTransportChannel(wishful_module.AgentModule):
 
         # one SUB socket for uplink communication over topics
         self.ul_socket = self.context.socket(zmq.SUB)
-        if sys.version_info.major >= 3:
-            self.ul_socket.setsockopt_string(zmq.SUBSCRIBE, "NEW_NODE")
-            self.ul_socket.setsockopt_string(zmq.SUBSCRIBE, "NODE_EXIT")
-        else:
-            self.ul_socket.setsockopt(zmq.SUBSCRIBE, "NEW_NODE")
-            self.ul_socket.setsockopt(zmq.SUBSCRIBE, "NODE_EXIT")
+        self.subscribe_to(self.agent.uuid)
+        self.subscribe_to("NEW_NODE")
+        self.subscribe_to("NODE_EXIT")
 
         self.downlinkSocketLock = threading.Lock()
         # one PUB socket for downlink communication over topics
@@ -404,7 +398,7 @@ class MasterTransportChannel(wishful_module.AgentModule):
         self.uplink = uplink
 
     def subscribe_to(self, topic):
-        self.log.info("Transport Channel subscribes to topic: {}"
+        self.log.debug("Transport Channel subscribes to topic: {}"
                       .format(topic))
         if sys.version_info.major >= 3:
             self.ul_socket.setsockopt_string(zmq.SUBSCRIBE, str(topic))
@@ -435,7 +429,7 @@ class MasterTransportChannel(wishful_module.AgentModule):
 
     def process_msgs(self, msgContainer):
         cmdDesc = msgContainer[1]
-        self.log.info(
+        self.log.debug(
             "Transport Channel received message: {} "
             "from node".format(cmdDesc.type))
 
