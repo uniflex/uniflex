@@ -1,10 +1,8 @@
-import copy
 import logging
 import inspect
 import threading
 from importlib import import_module
 from queue import Queue
-from .node import Node
 from .node import Device
 import wishful_upis as upis
 
@@ -21,9 +19,6 @@ class ModuleManager(object):
 
         self.agent = agent
         self.moduleIdGen = 0
-        self.node = Node(agent.uuid)
-        self.node.moduleManager = self
-
         self.eventQueue = Queue()
 
         self.modules = {}
@@ -55,9 +50,10 @@ class ModuleManager(object):
         wishfulModule.set_device(device)
 
         wishfulModule = self.add_module_obj(moduleName, wishfulModule)
+        node = self.agent.nodeManager.get_local_node()
         if device:
-            dev = Device(device, self.node)
-            self.node.devices.append(dev)
+            dev = Device(0, device, node)  # TODO; fix bug with devID
+            node.devices[0] = dev
         return wishfulModule
 
     def add_module_obj(self, moduleName, wishfulModule):
@@ -109,7 +105,7 @@ class ModuleManager(object):
         # stamp event with node if not present
         # if event from transport channel, then node is present
         if not event.node:
-            event.node = self.node
+            event.node = self.agent.nodeManager.get_local_node()
         self.eventQueue.put(event)
 
     def serve_event_queue(self):
@@ -157,27 +153,6 @@ class ModuleManager(object):
     def get_function_handlers(self, upiFunc, state=None):
         handlers = self._function_handlers.get(upiFunc, [])
         return handlers
-
-    def send_cmd(self, ctx):
-        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
-        if ctx._callback:
-            module = ctx._callback.__self__
-            module._register_callback(ctx)
-
-        ctxCopy = copy.copy(ctx)
-        event = upis.mgmt.CtxCommandEvent(ctx=ctxCopy)
-
-        if ctxCopy._blocking:
-            event.responseQueue = Queue()
-        self.send_event(event)
-        if ctxCopy._blocking:
-            self.log.debug("Waiting for return value for {}:{}"
-                           .format(ctx._upi_type, ctx._upi))
-            returnValue = event.responseQueue.get()
-            if issubclass(returnValue.__class__, Exception):
-                raise returnValue
-            else:
-                return returnValue
 
     def register_event_enable_handlers(self, i):
         for _k, handler in inspect.getmembers(i, inspect.ismethod):

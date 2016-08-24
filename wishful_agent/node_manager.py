@@ -1,177 +1,18 @@
-import logging
+import copy
 import time
-import uuid
+import logging
 import threading
+from queue import Queue
 
 import wishful_framework as msgs
 import wishful_framework as wishful_module
 import wishful_upis as upis
-from .common import ControllableUnit
+from .node import Node
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
 __version__ = "0.1.0"
 __email__ = "gawlowicz@tkn.tu-berlin.de"
-
-
-class Device(ControllableUnit):
-    def __init__(self, devName, devId, node):
-        super().__init__()
-        self._log = logging.getLogger("{module}.{name}".format(
-            module=self.__class__.__module__, name=self.__class__.__name__))
-        self._id = devId
-        self._name = devName
-        self._node = node
-
-    def send_msg(self, ctx):
-        ctx._iface = self._name
-        response = self._node.send_msg(ctx)
-        self._clear_call_context()
-        return response
-
-
-class ModuleDescriptor(object):
-    """docstring for ModuleDescriptor"""
-
-    def __init__(self):
-        super(ModuleDescriptor, self).__init__()
-        self.id = None
-        self.name = None
-        self.device = None
-        self.attributes = []
-        self.functions = []
-        self.events = []
-        self.services = []
-
-    def __str__(self):
-        string = ("  Module: {}\n"
-                  "    ID: {} \n"
-                  .format(self.name, self.id))
-
-        if self.device:
-            desc = ("    Device: {}:{} \n"
-                    .format(self.device._id, self.device._name))
-            string = string + desc
-
-        string = string + "    Attributes:\n"
-        for k in self.attributes:
-            string = string + "      {}\n".format(k)
-        string = string + "    Functions:\n"
-        for k in self.functions:
-            string = string + "      {}\n".format(k)
-        string = string + "    Events:\n"
-        for k in self.events:
-            string = string + "      {}\n".format(k)
-        string = string + "    Services:\n"
-        for k in self.services:
-            string = string + "      {}\n".format(k)
-        return string
-
-
-class Node(ControllableUnit):
-    def __init__(self, msg):
-        super().__init__()
-        self.log = logging.getLogger("{module}.{name}".format(
-            module=self.__class__.__module__, name=self.__class__.__name__))
-        self.uuid = str(msg.agent_uuid)
-        self.ip = str(msg.ip)
-        self.name = str(msg.name)
-        self.info = str(msg.info)
-        self.devices = {}
-        self.modules = {}
-
-        self._stop = False
-        self._helloTimeout = 9
-        self._timerCallback = None
-
-        for module in msg.modules:
-            moduleDesc = ModuleDescriptor()
-            moduleDesc.id = module.id
-            moduleDesc.name = str(module.name)
-
-            if module.HasField('device'):
-                deviceDesc = Device(module.device.id, module.device.name, self)
-                moduleDesc.device = deviceDesc
-                self.devices[deviceDesc._id] = deviceDesc._name
-
-            for attr in module.attributes:
-                moduleDesc.attributes.append(str(attr.name))
-
-            for func in module.functions:
-                moduleDesc.functions.append(str(func.name))
-
-            for event in module.events:
-                moduleDesc.events.append(str(event.name))
-
-            for service in module.services:
-                moduleDesc.services.append(str(service.name))
-
-            self.modules[moduleDesc.name] = moduleDesc
-
-    def __str__(self):
-        string = ("\nNode Description:\n" +
-                  " UUID:{}\n"
-                  " Name:{}\n"
-                  " IP:{}\n"
-                  .format(self.uuid, self.name, self.ip))
-
-        string = string + " Devices:\n"
-        for devId, device in self.devices.items():
-            string = string + "  {}:{}\n".format(devId, device)
-
-        string = string + " Modules:\n"
-        for name, module in self.modules.items():
-            moduleString = module.__str__()
-            string = string + moduleString
-
-        return string
-
-    def get_devices(self):
-        return self.devices
-
-    def get_device(self, devId):
-        return self.devices[devId]
-
-    def set_timer_callback(self, cb):
-        self._timerCallback = cb
-
-    def hello_timer(self):
-        while not self._stop and self._helloTimeout:
-            time.sleep(1)
-            self._helloTimeout = self._helloTimeout - 1
-        # remove node
-        self._timerCallback(self)
-
-    def refresh_hello_timer(self):
-        self._helloTimeout = 9
-
-    def get_device_id(self, name):
-        for k, v in self.device.items():
-            if v == name:
-                return k
-        return None
-
-    def send_msg(self, ctx):
-        #ctx._scope = self
-        #response = self._controller.send_msg(ctx)
-        #self._clear_call_context()
-        #return response
-        pass
-
-    def is_upi_supported(self, device, upiType, upiName):
-        self.log.debug("Checking call: {}.{} for device {} in node {}"
-                       .format(upiType, upiName, device, self.name))
-
-        for module in self.modules.items():
-            mdevice = module._deviceName
-            if mdevice == device:
-                if upiName in module._functions:
-                    return True
-            elif mdevice is None and device is None:
-                if upiName in module._functions:
-                    return True
-            else:
-                return False
 
 
 class NodeManager(wishful_module.AgentModule):
@@ -182,6 +23,7 @@ class NodeManager(wishful_module.AgentModule):
 
         self.agent = agent
         self._transportChannel = None
+        self.local_node = None
         self.nodes = []
 
         self.helloMsgInterval = 3
@@ -215,6 +57,16 @@ class NodeManager(wishful_module.AgentModule):
         node = self.get_node_by_id(string)
         return node
 
+    def create_local_node(self, agent):
+        self.local_node = Node(agent.uuid)
+        self.local_node.nodeManager = self
+        event = upis.mgmt.NewNodeEvent()
+        event.node = self.local_node
+        self.moduleManager.send_event(event)
+
+    def get_local_node(self):
+        return self.local_node
+
     def serve_new_node_msg(self, msgContainer):
         msg = msgs.NewNodeMsg()
         msg.ParseFromString(msgContainer[2])
@@ -229,7 +81,7 @@ class NodeManager(wishful_module.AgentModule):
                                .format(agentUuid, agentName, agentInfo))
                 return
 
-        node = Node(msg)
+        node = Node.create_node_from_msg(msg)
         self.nodes.append(node)
         self.log.debug("New node with UUID: {}, Name: {},"
                        " Info: {}".format(agentUuid, agentName, agentInfo))
@@ -319,3 +171,24 @@ class NodeManager(wishful_module.AgentModule):
 
         node = self.get_node_by_id(str(msg.uuid))
         node.refresh_hello_timer()
+
+    def send_cmd(self, ctx):
+        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
+        if ctx._callback:
+            app = ctx._callback.__self__
+            app._register_callback(ctx)
+
+        ctxCopy = copy.copy(ctx)
+        event = upis.mgmt.CtxCommandEvent(ctx=ctxCopy)
+
+        if ctxCopy._blocking:
+            event.responseQueue = Queue()
+        self.send_event(event)
+        if ctxCopy._blocking:
+            self.log.debug("Waiting for return value for {}:{}"
+                           .format(ctx._upi_type, ctx._upi))
+            returnValue = event.responseQueue.get()
+            if issubclass(returnValue.__class__, Exception):
+                raise returnValue
+            else:
+                return returnValue

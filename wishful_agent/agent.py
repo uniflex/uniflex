@@ -29,13 +29,17 @@ class Agent(object):
 
         self.moduleManager = ModuleManager(self)
 
+        # node manager
+        self.nodeManager = NodeManager(self)
+        self.moduleManager.add_module_obj(
+            "node_manager", self.nodeManager)
+
         # command executor with scheduler
         self.moduleManager.add_module_obj(
             "command_executor", CommandExecutor(self))
 
         # extention of event bus
         self.transport = None
-        self.nodeManager = None
 
     def set_agent_info(self, name=None, info=None, iface=None, ip=None):
         self.name = name
@@ -87,22 +91,21 @@ class Agent(object):
                 "transport_channel", self.transport)
             self.transport.set_downlink(dl)
             self.transport.set_uplink(ul)
-
-            self.nodeManager = NodeManager(self)
             self.nodeManager._transportChannel = self.transport
             self.transport._nodeManager = self.nodeManager
-            self.moduleManager.add_module_obj(
-                "node_manager", self.nodeManager)
 
         elif self.agentType == 'slave':
             self.transport = SlaveTransportChannel(self)
             self.moduleManager.add_module_obj(
                 "transport_channel", self.transport)
+            self.transport._nodeManager = self.nodeManager
+            self.nodeManager._transportChannel = self.transport
+
+            self.nodeManager.create_local_node(self)
+
         else:
             self.transport = None
-            # TODO. move it in better place
-            # like, nodeManager.add_local_node()
-            self.moduleManager.send_event(upis.mgmt.NewNodeEvent())
+            self.nodeManager.create_local_node(self)
 
         # load control programs
         controllers = config['controllers']
