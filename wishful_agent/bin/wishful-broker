@@ -2,17 +2,17 @@
 # -*- coding: utf-8 -*-
 
 """
-wishful-agent: First implementation of WiSHFUL agent
+wishful-broker: First implementation of WiSHFUL agent
 
 Usage:
-   wishful-agent [options] [-q | -v]
+   wishful-broker [options] [-q | -v]
 
 Options:
    --logfile name      Name of the logfile
    --config configFile Config file path
 
 Example:
-   wishful-agent -v --config ./config.yaml
+   wishful-broker -v --config ./config.yaml
 
 Other options:
    -h, --help          show this help message and exit
@@ -22,7 +22,6 @@ Other options:
 """
 
 import logging
-import yaml
 import wishful_agent
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
@@ -30,21 +29,12 @@ __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
 __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
-log = logging.getLogger('wishful_agent.main')
+log = logging.getLogger('wishful-broker')
 agent = wishful_agent.Agent()
 
-
-def main(args):
-    log.debug(args)
-
-    config_file_path = args['--config']
-
-    config = None
-    with open(config_file_path, 'r') as f:
-        config = yaml.load(f)
-
-    agent.load_config(config)
-    agent.run()
+xpub = "tcp://127.0.0.1:5555"
+xsub = "tcp://127.0.0.1:5556"
+broker = wishful_agent.Broker(xpub, xsub)
 
 
 if __name__ == "__main__":
@@ -72,12 +62,14 @@ if __name__ == "__main__":
         logfile = args['--logfile']
 
     logging.basicConfig(filename=logfile, level=log_level,
-        format='%(asctime)s - %(name)s.%(funcName)s() - %(levelname)s - %(message)s')
+                        format='%(asctime)s - %(name)s.%(funcName)s() - %(levelname)s - %(message)s')
 
     try:
-        main(args)
+        log.debug(args)
+        broker.start()
+        broker.join()
     except KeyboardInterrupt:
-        log.debug("Agent exits")
+        log.debug("Broker exits")
+        broker.stop()
     finally:
         log.debug("Exit")
-        agent.stop()
