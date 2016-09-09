@@ -3,8 +3,7 @@ import logging
 
 from .common import get_ip_address  # TODO: remove ip or iface
 from .module_manager import ModuleManager
-from .transport_channel import SlaveTransportChannel
-from .transport_channel import MasterTransportChannel
+from .transport_channel import TransportChannel
 from .node_manager import NodeManager
 from .executor import CommandExecutor
 
@@ -84,19 +83,12 @@ class Agent(object):
         if "uplink" in agent_config:
             ul = agent_config["uplink"]
 
-        if self.agentType == 'master':
-            self.transport = MasterTransportChannel(self)
+        if self.agentType == 'master' or self.agentType == 'slave':
+            self.transport = TransportChannel(self)
             self.moduleManager.add_module_obj(
                 "transport_channel", self.transport)
             self.transport.set_downlink(dl)
             self.transport.set_uplink(ul)
-            self.nodeManager._transportChannel = self.transport
-            self.transport._nodeManager = self.nodeManager
-
-        elif self.agentType == 'slave':
-            self.transport = SlaveTransportChannel(self)
-            self.moduleManager.add_module_obj(
-                "transport_channel", self.transport)
             self.transport._nodeManager = self.nodeManager
             self.nodeManager._transportChannel = self.transport
             self.nodeManager.create_local_node(self)

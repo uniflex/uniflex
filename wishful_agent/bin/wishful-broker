@@ -32,8 +32,8 @@ __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 log = logging.getLogger('wishful-broker')
 agent = wishful_agent.Agent()
 
-xpub = "tcp://127.0.0.1:5555"
-xsub = "tcp://127.0.0.1:5556"
+xpub = "tcp://127.0.0.1:8990"
+xsub = "tcp://127.0.0.1:8989"
 broker = wishful_agent.Broker(xpub, xsub)
 
 

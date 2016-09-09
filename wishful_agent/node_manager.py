@@ -1,4 +1,3 @@
-import time
 import logging
 import threading
 from queue import Queue
@@ -79,6 +78,7 @@ class NodeManager(wishful_module.AgentModule):
     def create_local_node(self, agent):
         self.local_node = Node(agent.uuid)
         self.local_node.nodeManager = self
+        self.nodes.append(self.local_node)
         event = upis.mgmt.NewNodeEvent()
         event.node = self.local_node
         self.moduleManager.send_event(event)
@@ -86,8 +86,8 @@ class NodeManager(wishful_module.AgentModule):
     def get_local_node(self):
         return self.local_node
 
-    def serve_new_node_msg(self, msgContainer):
-        msg = msgs.NewNodeMsg()
+    def serve_node_info_msg(self, msgContainer):
+        msg = msgs.NodeInfoMsg()
         msg.ParseFromString(msgContainer[2])
         agentUuid = str(msg.agent_uuid)
         agentName = msg.name
@@ -105,30 +105,11 @@ class NodeManager(wishful_module.AgentModule):
         self.nodes.append(node)
         self.log.debug("New node with UUID: {}, Name: {},"
                        " Info: {}".format(agentUuid, agentName, agentInfo))
-        self._transportChannel.subscribe_to(agentUuid)
-
         # start hello timeout timer
         node.set_timer_callback(self.remove_node_hello_timer)
         d = threading.Thread(target=node.hello_timer)
         d.setDaemon(True)
         d.start()
-
-        dest = agentUuid
-        cmdDesc = msgs.CmdDesc()
-        cmdDesc.type = msgs.get_msg_type(msgs.NewNodeAck)
-        cmdDesc.func_name = msgs.get_msg_type(msgs.NewNodeAck)
-        cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
-
-        msg = msgs.NewNodeAck()
-        msg.status = True
-        msg.controller_uuid = self.agent.uuid
-        msg.agent_uuid = agentUuid
-        msg.topics.append("ALL")
-
-        msgContainer = [dest, cmdDesc, msg]
-
-        time.sleep(1)  # wait until zmq agrees on topics
-        self._transportChannel.send_downlink_msg(msgContainer)
 
         event = upis.mgmt.NewNodeEvent()
         event.node = node
@@ -138,7 +119,7 @@ class NodeManager(wishful_module.AgentModule):
 
     def remove_node_hello_timer(self, node):
         reason = "HelloTimeout"
-        self.log.debug("Controller removes node with UUID: {},"
+        self.log.debug("Remove node with UUID: {},"
                        " Reason: {}".format(node.uuid, reason))
 
         if node and node in self.nodes:
@@ -159,7 +140,7 @@ class NodeManager(wishful_module.AgentModule):
         if not node:
             return
 
-        self.log.debug("Controller removes node with UUID: {},"
+        self.log.debug("Remove node with UUID: {},"
                        " Reason: {}".format(agentId, reason))
 
         if node and node in self.nodes:
@@ -169,28 +150,25 @@ class NodeManager(wishful_module.AgentModule):
             event.node = node
             self.send_event(event)
 
-    def send_hello_msg_to_node(self, nodeId):
-        self.log.debug("Controller sends HelloMsg to agent")
-        dest = nodeId
-        cmdDesc = msgs.CmdDesc()
-        cmdDesc.type = msgs.get_msg_type(msgs.HelloMsg)
-        cmdDesc.func_name = msgs.get_msg_type(msgs.HelloMsg)
-        cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
-
-        msg = msgs.HelloMsg()
-        msg.uuid = str(self.agent.uuid)
-        msg.timeout = self.helloTimeout
-        msgContainer = [dest, cmdDesc, msg]
-        self._transportChannel.send_downlink_msg(msgContainer)
-
     def serve_hello_msg(self, msgContainer):
-        self.log.debug("Controller received HELLO MESSAGE from agent".format())
+        cmd = msgContainer[1]
+        sourceUuid = cmd.caller_id
+        if sourceUuid == self.agent.uuid:
+            self.log.debug("Received own HELLO MESSAGE; discard"
+                           .format())
+            return
+        else:
+            self.log.debug("Received HELLO MESSAGE from node: {}"
+                           .format(sourceUuid))
         msg = msgs.HelloMsg()
         msg.ParseFromString(msgContainer[2])
 
-        self.send_hello_msg_to_node(str(msg.uuid))
-
         node = self.get_node_by_id(str(msg.uuid))
+        if node is None:
+            self.log.debug("Unknown node: {}"
+                           .format(sourceUuid))
+            self._transportChannel.send_node_info_request(sourceUuid)
+            return
         node.refresh_hello_timer()
 
     def send_event_cmd(self, event, dstNode):
