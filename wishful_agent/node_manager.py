@@ -5,7 +5,7 @@ from queue import Queue
 import wishful_framework as msgs
 import wishful_framework as wishful_module
 import wishful_upis as upis
-from .node import Node
+from .node import Node, Device
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -23,6 +23,7 @@ class NodeManager(wishful_module.AgentModule):
         self._transportChannel = None
         self.local_node = None
         self.nodes = []
+        self.receivedAddNotifications = []
 
         self._callIdGen = 0
         self.synchronousCalls = {}
@@ -47,14 +48,6 @@ class NodeManager(wishful_module.AgentModule):
                 break
         return node
 
-    def get_node_by_id(self, nid):
-        node = None
-        for n in self.nodes:
-            if n.uuid == nid:
-                node = n
-                break
-        return node
-
     def get_node_by_ip(self, ip):
         node = None
         for n in self.nodes:
@@ -72,7 +65,7 @@ class NodeManager(wishful_module.AgentModule):
         if node:
             return node
 
-        node = self.get_node_by_id(string)
+        node = self.get_node_by_uuid(string)
         return node
 
     def create_local_node(self, agent):
@@ -111,11 +104,32 @@ class NodeManager(wishful_module.AgentModule):
         d.setDaemon(True)
         d.start()
 
+        # if he already knows me
+        if node.uuid in self.receivedAddNotifications:
+            self.notify_new_node_event(node)
+
+        # tell node that I know him
+        self._transportChannel.send_node_add_notification(node.uuid)
+        return node
+
+    def serve_node_add_notification(self, msgContainer):
+        self.log.debug("add node notification")
+        msg = msgs.NodeAddNotification()
+        msg.ParseFromString(msgContainer[2])
+        srcUuid = str(msg.agent_uuid)
+
+        self.receivedAddNotifications.append(srcUuid)
+        node = self.get_node_by_uuid(srcUuid)
+
+        if not node:
+            return
+        self.notify_new_node_event(node)
+
+    def notify_new_node_event(self, node):
         event = upis.mgmt.NewNodeEvent()
         event.node = node
         self.send_event(event)
-
-        return node
+        self.log.info("New node event sent")
 
     def remove_node_hello_timer(self, node):
         reason = "HelloTimeout"
@@ -135,7 +149,7 @@ class NodeManager(wishful_module.AgentModule):
         agentId = str(msg.agent_uuid)
         reason = msg.reason
 
-        node = self.get_node_by_id(agentId)
+        node = self.get_node_by_uuid(agentId)
 
         if not node:
             return
@@ -163,7 +177,7 @@ class NodeManager(wishful_module.AgentModule):
         msg = msgs.HelloMsg()
         msg.ParseFromString(msgContainer[2])
 
-        node = self.get_node_by_id(str(msg.uuid))
+        node = self.get_node_by_uuid(str(msg.uuid))
         if node is None:
             self.log.debug("Unknown node: {}"
                            .format(sourceUuid))
@@ -195,9 +209,9 @@ class NodeManager(wishful_module.AgentModule):
                 event.ctx._callback = None
 
             # flatten event
-            if event.node and not isinstance(event.node, str):
+            if event.node and isinstance(event.node, Node):
                 event.node = event.node.uuid
-            if event.device and not isinstance(event.device, str):
+            if event.device and isinstance(event.device, Device):
                 event.device = event.device._id
 
             self._transportChannel.send_event_outside(event, dstNode)
@@ -208,9 +222,12 @@ class NodeManager(wishful_module.AgentModule):
 
     def serve_event_msg(self, msgContainer):
         event = msgContainer[2]
-        # TODO: check if event for me
-        event.node = self.get_node_by_uuid(event.node)
-        event.device = None
+        node = self.get_node_by_uuid(event.node)
+        self.log.debug("received event from node: {}".format(event.node))
+        event.node = node
+        if not event.node:
+            return
+        event.device = event.node.get_device(event.device)
 
         if isinstance(event, upis.mgmt.CtxCommandEvent):
             if event.ctx._blocking:
@@ -218,6 +235,8 @@ class NodeManager(wishful_module.AgentModule):
                 self.moduleManager.send_event_locally(event)
                 response = event.responseQueue.get()
                 retEvent = upis.mgmt.CtxReturnValueEvent(event.ctx, response)
+                retEvent.node = self.agent.nodeManager.get_local_node()
+                retEvent.device = event.ctx._device
                 self.log.debug("send response for blocking call")
                 self._transportChannel.send_event_outside(retEvent)
             else:

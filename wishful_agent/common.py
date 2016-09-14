@@ -138,7 +138,7 @@ class ControllableUnit(object):
             ctx._iface = None  # todo remove
 
     def send_msg(self, ctx):
-        self.log.info("{}:{}".format(ctx._upi_type, ctx._upi))
+        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
 
     def cmd_wrapper(self, upi_type, fname, *args, **kwargs):
         self._callingCtx._upi_type = "function"

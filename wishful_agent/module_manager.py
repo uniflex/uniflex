@@ -19,6 +19,7 @@ class ModuleManager(object):
 
         self.agent = agent
         self.moduleIdGen = 0
+        self.deviceIdGen = 0
         self.eventQueue = Queue()
 
         self.modules = {}
@@ -39,6 +40,11 @@ class ModuleManager(object):
         self.moduleIdGen = self.moduleIdGen + 1
         return newId
 
+    def generate_new_device_id(self):
+        newId = self.deviceIdGen
+        self.deviceIdGen = self.deviceIdGen + 1
+        return newId
+
     def register_module(self, moduleName, pyModuleName,
                         className, device=None, kwargs={}):
         self.log.debug("Add new module: {}:{}:{}:{}".format(
@@ -47,13 +53,14 @@ class ModuleManager(object):
         pyModule = self.my_import(pyModuleName)
         wishful_module_class = getattr(pyModule, className)
         wishfulModule = wishful_module_class(**kwargs)
-        wishfulModule.set_device(device)
 
         wishfulModule = self.add_module_obj(moduleName, wishfulModule)
         node = self.agent.nodeManager.get_local_node()
         if device:
-            dev = Device(0, device, node)  # TODO; fix bug with devID
-            node.devices[0] = dev
+            devId = self.generate_new_device_id()
+            dev = Device(devId, device, node)
+            wishfulModule.set_device(devId, dev)
+            node.devices[devId] = dev
         return wishfulModule
 
     def add_module_obj(self, moduleName, wishfulModule):

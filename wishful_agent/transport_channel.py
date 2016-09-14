@@ -90,7 +90,6 @@ class TransportChannel(wishful_module.AgentModule):
     def start_module(self):
         if self.xpub_url and self.xsub_url:
             self.connect(self.xpub_url, self.xsub_url)
-            self.send_node_info()
 
         thread = threading.Thread(target=self.recv_msgs)
         thread.setDaemon(True)
@@ -121,7 +120,6 @@ class TransportChannel(wishful_module.AgentModule):
         dlink = event.dlink
         uplink = event.ulink
         self.connect(dlink, uplink)
-        self.send_node_info()
 
     def disconnect(self):
         if self.xpub_url and self.xsub_url:
@@ -176,7 +174,7 @@ class TransportChannel(wishful_module.AgentModule):
 
             if module.device:
                 deviceDesc = msgs.Device()
-                deviceDesc.id = 0  # TODO: set it properly
+                deviceDesc.id = module.deviceId
                 deviceDesc.name = module.device
                 moduleMsg.device.CopyFrom(deviceDesc)
 
@@ -210,6 +208,19 @@ class TransportChannel(wishful_module.AgentModule):
         msg.agent_uuid = self.agent.uuid
         msgContainer = [topic, cmdDesc, msg]
         self.log.debug("Agent sends node info request")
+        self.send(msgContainer)
+
+    def send_node_add_notification(self, dest):
+        topic = dest
+        cmdDesc = msgs.CmdDesc()
+        cmdDesc.type = msgs.get_msg_type(msgs.NodeAddNotification)
+        cmdDesc.func_name = msgs.get_msg_type(msgs.NodeAddNotification)
+        cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
+
+        msg = msgs.NodeAddNotification()
+        msg.agent_uuid = self.agent.uuid
+        msgContainer = [topic, cmdDesc, msg]
+        self.log.debug("Agent sends node add notification")
         self.send(msgContainer)
 
     def send(self, msgContainer):
@@ -301,6 +312,9 @@ class TransportChannel(wishful_module.AgentModule):
         elif cmdDesc.type == msgs.get_msg_type(msgs.NodeInfoRequest):
             self.send_node_info(src)
 
+        elif cmdDesc.type == msgs.get_msg_type(msgs.NodeAddNotification):
+            self._nodeManager.serve_node_add_notification(msgContainer)
+
         elif cmdDesc.type == msgs.get_msg_type(msgs.NodeExitMsg):
             self._nodeManager.serve_node_exit_msg(msgContainer)
 
@@ -343,10 +357,13 @@ class TransportChannel(wishful_module.AgentModule):
             return
 
         # flatten event
+        self.log.debug("Event name: {}".format(event.__class__.__name__))
+        #print("Before:",event.node, event.device)
         if event.node and not isinstance(event.node, str):
             event.node = event.node.uuid
         if event.device and not isinstance(event.device, str):
             event.device = event.device._id
+        #print("After:",event.node, event.device)
 
         self.log.debug("sends cmd event : {}".format(event.__class__.__name__))
         topic = "ALL"

@@ -49,7 +49,7 @@ class ModuleDescriptor(object):
 
         if self.device:
             desc = ("    Device: {}:{} \n"
-                    .format(self.device._id, self.device._name))
+                    .format(self.device._id, self.device.name))
             string = string + desc
 
         string = string + "    Attributes:\n"
@@ -156,10 +156,13 @@ class Node(ControllableUnit):
         return self.devices.values()
 
     def get_device(self, devId):
-        if self.devices:
-            return self.devices[devId]
-        else:
-            return None
+        return self.devices.get(devId, None)
+
+    def get_device_by_name(self, name):
+        for dev in self.devices:
+            if dev.name == name:
+                return dev
+        return None
 
     def get_device_id(self, name):
         for k, v in self.device.items():
@@ -190,6 +193,7 @@ class Node(ControllableUnit):
         self._clear_call_context()
 
         event = upis.mgmt.CtxCommandEvent(ctx=ctxCopy)
+        event.node = self
         if ctxCopy._blocking:
             event.responseQueue = Queue()
 
