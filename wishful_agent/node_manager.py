@@ -247,7 +247,9 @@ class NodeManager(wishful_module.AgentModule):
                 queue = self.synchronousCalls[event.ctx._callId]
                 queue.put(event.msg)
             elif event.ctx._callId in self.callCallbacks:
-                pass
+                self.log.debug("received cmd: {}".format(event.ctx._upi))
+                callback = self.callCallbacks[event.ctx._callId]
+                callback(event)
             else:
                 self.moduleManager.send_event_locally(event)
         else:
