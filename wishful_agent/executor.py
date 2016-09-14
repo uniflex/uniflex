@@ -3,7 +3,7 @@ import datetime
 import threading
 from apscheduler.schedulers.background import BackgroundScheduler
 
-import wishful_framework as wishful_module
+from .core import wishful_module
 import wishful_upis as upis
 
 __author__ = "Piotr Gawlowicz"

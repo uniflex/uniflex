@@ -1,0 +1,116 @@
+package wishful_controller.framework;
+
+message CmdDesc {
+    required string type = 1;
+    optional string family = 2;
+    required string func_name = 3;
+    optional string exec_time = 4;
+    optional string call_id = 5;
+    optional string caller_id = 6;
+    optional string transaction_id = 7;
+    optional string interface = 8;
+
+    enum Serialization {
+      NONE = 0;
+      PICKLE = 1;
+      PROTOBUF = 2;
+    }
+    optional Serialization serialization_type = 9 [default = NONE];
+
+    optional string repeat_interval = 10;
+    optional uint32 repeat_number = 11;
+}
+
+message Device {
+    required uint32 id = 1;
+    required string name = 2;
+}
+
+message Module {
+    message Attribute {
+        required string name = 1;
+    }
+    message Function {
+        required string name = 1;
+    }
+    message Event {
+        required string name = 1;
+    }
+    message Service {
+        required string name = 1;
+    }
+    required uint32 id = 1;
+    required string name = 2;
+    optional Device device = 3;
+    repeated Attribute attributes = 4;
+    repeated Function functions = 5;
+    repeated Event events = 6;
+    repeated Service services = 7;
+}
+
+message NodeInfoMsg {
+    required string agent_uuid = 1;
+    required string ip = 2;
+    optional string name = 3;
+    optional string info = 4;
+    repeated Module modules = 5;
+}
+
+message NodeInfoRequest {
+    required string agent_uuid = 1;
+}
+
+message NodeAddNotification {
+    required string agent_uuid = 1;
+}
+
+message NewNodeAck {
+    required bool status = 1;
+    optional string controller_uuid = 2;
+    optional string agent_uuid = 3;
+    repeated string topics = 4;
+}
+
+message NodeExitMsg {
+    required string agent_uuid = 1;
+    optional string reason = 2;
+}
+
+message HelloMsg {
+    required string uuid = 1;
+    required uint32 timeout = 2;
+}
+
+message RuleDesc {
+    message Event {
+        required string type = 1;
+        required string func_name = 2;
+        optional string interface = 3;
+        required string args = 4;
+        required string repeat_interval = 5;
+    }
+    message Filter {
+        required string filter_type = 1;
+        required string filter_window_type = 2;
+        required string filter_window_size = 3;
+    }
+    message Match {
+        required string condition = 7;
+        required string value = 8;
+    }
+    message Action {
+        required string type = 1;
+        required string func_name = 2;
+        required string args = 3;
+    }
+    enum Permanence {
+      TRANSIENT = 0;
+      PERMANENT = 1;
+    }
+    required Event event = 1;
+    repeated Filter filter = 2;
+    optional Match match = 3;
+    optional Permanence permanence = 4 [default = TRANSIENT];
+    optional Action action = 5;
+    optional string callback = 6;
+}

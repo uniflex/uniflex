@@ -2,9 +2,9 @@ import logging
 import threading
 from queue import Queue
 
-import wishful_framework as msgs
-import wishful_framework as wishful_module
 import wishful_upis as upis
+from .msgs import management_pb2 as msgs
+from .core import wishful_module
 from .node import Node, Device
 
 __author__ = "Piotr Gawlowicz"

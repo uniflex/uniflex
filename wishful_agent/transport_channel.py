@@ -9,8 +9,9 @@ except:
     import pickle
 
 from .timer import TimerEventSender
-import wishful_framework as msgs
-import wishful_framework as wishful_module
+from .msgs import management_pb2 as msgs
+from .msgs import msg_helper as msghelper
+from .core import wishful_module
 import wishful_upis as upis
 
 __author__ = "Piotr Gawlowicz"
@@ -157,8 +158,8 @@ class TransportChannel(wishful_module.AgentModule):
             topic = dest
 
         cmdDesc = msgs.CmdDesc()
-        cmdDesc.type = msgs.get_msg_type(msgs.NodeInfoMsg)
-        cmdDesc.func_name = msgs.get_msg_type(msgs.NodeInfoMsg)
+        cmdDesc.type = msghelper.get_msg_type(msgs.NodeInfoMsg)
+        cmdDesc.func_name = msghelper.get_msg_type(msgs.NodeInfoMsg)
         cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
 
         msg = msgs.NodeInfoMsg()
@@ -200,8 +201,8 @@ class TransportChannel(wishful_module.AgentModule):
         if dest:
             topic = dest
         cmdDesc = msgs.CmdDesc()
-        cmdDesc.type = msgs.get_msg_type(msgs.NodeInfoRequest)
-        cmdDesc.func_name = msgs.get_msg_type(msgs.NodeInfoRequest)
+        cmdDesc.type = msghelper.get_msg_type(msgs.NodeInfoRequest)
+        cmdDesc.func_name = msghelper.get_msg_type(msgs.NodeInfoRequest)
         cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
 
         msg = msgs.NodeInfoRequest()
@@ -213,8 +214,8 @@ class TransportChannel(wishful_module.AgentModule):
     def send_node_add_notification(self, dest):
         topic = dest
         cmdDesc = msgs.CmdDesc()
-        cmdDesc.type = msgs.get_msg_type(msgs.NodeAddNotification)
-        cmdDesc.func_name = msgs.get_msg_type(msgs.NodeAddNotification)
+        cmdDesc.type = msghelper.get_msg_type(msgs.NodeAddNotification)
+        cmdDesc.func_name = msghelper.get_msg_type(msgs.NodeAddNotification)
         cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
 
         msg = msgs.NodeAddNotification()
@@ -254,8 +255,8 @@ class TransportChannel(wishful_module.AgentModule):
         self.log.debug("Agent sends HelloMsg")
         topic = "HELLO_MSG"
         cmdDesc = msgs.CmdDesc()
-        cmdDesc.type = msgs.get_msg_type(msgs.HelloMsg)
-        cmdDesc.func_name = msgs.get_msg_type(msgs.HelloMsg)
+        cmdDesc.type = msghelper.get_msg_type(msgs.HelloMsg)
+        cmdDesc.func_name = msghelper.get_msg_type(msgs.HelloMsg)
         cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
 
         msg = msgs.HelloMsg()
@@ -285,8 +286,8 @@ class TransportChannel(wishful_module.AgentModule):
         self.log.debug("Agend sends NodeExitMsg".format())
         topic = "NODE_EXIT"
         cmdDesc = msgs.CmdDesc()
-        cmdDesc.type = msgs.get_msg_type(msgs.NodeExitMsg)
-        cmdDesc.func_name = msgs.get_msg_type(msgs.NodeExitMsg)
+        cmdDesc.type = msghelper.get_msg_type(msgs.NodeExitMsg)
+        cmdDesc.func_name = msghelper.get_msg_type(msgs.NodeExitMsg)
         cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
 
         msg = msgs.NodeExitMsg()
@@ -306,19 +307,19 @@ class TransportChannel(wishful_module.AgentModule):
         self.log.debug(
             "Transport Channel received message: {}".format(cmdDesc.type))
 
-        if cmdDesc.type == msgs.get_msg_type(msgs.NodeInfoMsg):
+        if cmdDesc.type == msghelper.get_msg_type(msgs.NodeInfoMsg):
             self._nodeManager.serve_node_info_msg(msgContainer)
 
-        elif cmdDesc.type == msgs.get_msg_type(msgs.NodeInfoRequest):
+        elif cmdDesc.type == msghelper.get_msg_type(msgs.NodeInfoRequest):
             self.send_node_info(src)
 
-        elif cmdDesc.type == msgs.get_msg_type(msgs.NodeAddNotification):
+        elif cmdDesc.type == msghelper.get_msg_type(msgs.NodeAddNotification):
             self._nodeManager.serve_node_add_notification(msgContainer)
 
-        elif cmdDesc.type == msgs.get_msg_type(msgs.NodeExitMsg):
+        elif cmdDesc.type == msghelper.get_msg_type(msgs.NodeExitMsg):
             self._nodeManager.serve_node_exit_msg(msgContainer)
 
-        elif cmdDesc.type == msgs.get_msg_type(msgs.HelloMsg):
+        elif cmdDesc.type == msghelper.get_msg_type(msgs.HelloMsg):
             self._nodeManager.serve_hello_msg(msgContainer)
 
         else:

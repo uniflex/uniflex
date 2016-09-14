@@ -5,6 +5,7 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
+
 setup(
     name='wishful_agent',
     version='0.1.0',
@@ -18,5 +19,5 @@ setup(
     description='WiSHFUL Agent Implementation Framework',
     long_description='Implementation of a wireless agent using the unified programming interfaces (UPIs) of the Wishful project.',
     keywords='wireless control',
-    install_requires=['pyzmq', 'apscheduler', 'dill'],
+    install_requires=['apscheduler', 'pyzmq', 'dill', 'protobuf', 'decorator'],
 )

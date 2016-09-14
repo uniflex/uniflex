@@ -6,7 +6,7 @@ import fcntl
 import struct
 import datetime
 import wishful_upis as upis
-from wishful_framework import upis_builder
+from .core import upis_builder
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"

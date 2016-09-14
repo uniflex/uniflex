@@ -2,7 +2,7 @@ import logging
 import datetime
 import random
 import wishful_upis as upis
-import wishful_framework as wishful_module
+from .core import wishful_module
 from wishful_agent.timer import TimerEventSender
 
 
