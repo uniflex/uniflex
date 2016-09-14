@@ -1,0 +1,15 @@
+## WiSHFUL Agent config file
+
+agent_info:
+  name: 'unit_test'
+  info: 'testing net module using local controller'
+  iface: 'lo'
+
+modules:
+  network:
+      module : wishful_module_net_linux
+      class_name : NetworkModule
+
+  iperf:
+      module : wishful_module_iperf
+      class_name : IperfModule

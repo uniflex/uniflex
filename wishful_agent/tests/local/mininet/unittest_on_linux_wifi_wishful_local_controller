@@ -1,0 +1,186 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+unittest_on_linux_wifi_wishful_local_controller.py: First implementation of WiSHFUL controller
+
+Usage:
+   unittest_on_linux_wifi_wishful_local_controller.py [options] [-q | -v]
+
+Options:
+   --logfile name      Name of the logfile
+   --config configFile Config file path
+
+Example:
+   ./unittest_on_linux_wifi_wishful_local_controller -v --config ./config.yaml
+
+Other options:
+   -h, --help          show this help message and exit
+   -q, --quiet         print less text
+   -v, --verbose       print more text
+   --version           show version and exit
+"""
+
+import sys
+import datetime
+import logging
+import wishful_agent
+import time
+import yaml
+import wishful_upis as upis
+from wishful_framework import TimeEvent, PktEvent, MovAvgFilter, PeakDetector, Match, Action, Permanance, PktMatch, FieldSelector
+from scapy.all import *
+
+__author__ = "Zubow"
+__copyright__ = "Copyright (c) 2016, Technische Universität Berlin"
+__version__ = "0.1.0"
+__email__ = "zubow@tkn.tu-berlin.de"
+
+
+log = logging.getLogger('wishful_agent.main')
+agent = wishful_agent.Agent(local=True)
+controller = agent.get_local_controller()
+
+# storing all dot11 source addresses (client MAC addresses)
+sta_mac_addr_set = set()
+rule_mac_addr_tbl = {}
+
+@controller.set_default_callback()
+def default_callback(cmd, data):
+    log.info("{} DEFAULT CALLBACK : Cmd: {}, Returns: {}".format(datetime.datetime.now(), cmd, data))
+
+
+def per_link_radiotap_rssi_rule(ruleId, averaged_rssi):
+
+    sta_mac_addr = rule_mac_addr_tbl[ruleId]
+
+    log.info("{} Radiotap rssi rule with id: {} was matched; STA mac addr: {}, averaged RSSI: {}".format(datetime.datetime.now(), ruleId, sta_mac_addr, averaged_rssi))
+
+
+def dot11_src_based_rule_matched(ruleId, sta_mac_addr):
+    if sta_mac_addr in sta_mac_addr_set:
+        # already known client sta
+        pass
+    else:
+        log.info("{} Dot11 source rule with id: {} was matched; new client found: {}".format(datetime.datetime.now(), ruleId, sta_mac_addr))
+        sta_mac_addr_set.add(sta_mac_addr)
+        log.info('Add new rule')
+
+        ruleDesc = controller.rule.add(event=PktEvent(iface='mon0'),
+                                       pktMatch=PktMatch("Dot11.addr2 == " + sta_mac_addr),
+                                       selector=FieldSelector("RadioTap.dbm_antsignal"),
+                                       filters=[MovAvgFilter(10), ],
+                                       permanence=Permanance.PERSISTENT,
+                                       ctrl_callback=per_link_radiotap_rssi_rule)
+        rule_mac_addr_tbl[ruleDesc.id] = sta_mac_addr
+        pass
+
+def main(args):
+    log.debug(args)
+
+    log.info('--- main ---')
+
+    config_file_path = args['--config']
+    config = None
+    with open(config_file_path, 'r') as f:
+        config = yaml.load(f)
+
+    agent.load_config(config)
+    agent.run()
+
+    wface = 'ap1-wlan0'
+
+    log.info('--- 1. test ---')
+    ''' 1. Test some basic 802.11 monitoring functionality '''
+    if True:
+        for blocking_call in [True, False]:
+            controller.blocking(blocking_call).net.iface(wface).get_inactivity_time_of_connected_devices()
+            #controller.blocking(blocking_call).net.iface(wface).get_avg_sigpower_of_connected_devices()
+            #controller.blocking(blocking_call).net.iface(wface).get_sigpower_of_connected_devices()
+            #controller.blocking(blocking_call).net.iface(wface).get_tx_retries_of_connected_devices()
+            #controller.blocking(blocking_call).net.iface(wface).get_tx_packets_of_connected_devices()
+            #controller.blocking(blocking_call).net.iface(wface).get_tx_failed_of_connected_devices()
+            #controller.blocking(blocking_call).net.iface(wface).get_tx_bytes_of_connected_devices()
+            #controller.blocking(blocking_call).net.iface(wface).get_tx_bitrate_of_connected_devices()
+            #controller.blocking(blocking_call).net.iface(wface).get_rx_bytes_of_connected_devices()
+            #controller.blocking(blocking_call).net.iface(wface).get_rx_packets_of_connected_devices()
+            #controller.blocking(blocking_call).net.iface(wface).get_authorized_connected_device()
+            #controller.blocking(blocking_call).net.iface(wface).get_authenticated_connected_device()
+            #controller.blocking(blocking_call).net.iface(wface).get_used_preamble_connected_device()
+            #controller.blocking(blocking_call).net.iface(wface).get_mfp_connected_device()
+            #controller.blocking(blocking_call).net.iface(wface).get_wmm_wme_connected_device()
+            #controller.blocking(blocking_call).net.iface(wface).get_tdls_peer_connected_device()
+
+            time.sleep(1)
+
+    if True:
+        log.info('--- 2. test ---')
+        ''' 2. rule-based matching '''
+
+        ruleDesc = controller.rule.add(event=PktEvent(iface='mon0'),
+                                       selector=FieldSelector("Dot11.addr2"),
+                                       permanence=Permanance.PERSISTENT,
+                                       ctrl_callback=dot11_src_based_rule_matched)
+
+        log.info("{} Dot11 source address learning rule with ID: {} was added".format(datetime.datetime.now(), ruleDesc.id))
+
+        '''
+        myGenerator = controller.generator.start(event=PktEvent(iface="mon0"))
+
+        log.info("{} New generator with ID: {}".format(datetime.datetime.now(), myGenerator.id))
+
+        sampleNum = 100
+        i = 0
+        for pkt in myGenerator:
+            log.info(str(pkt))
+            i = i + 1
+            if i == sampleNum:
+              break
+
+        retVal = myGenerator.stop()
+        log.info("{} Generator with ID: {} was {}".format(datetime.datetime.now(), myGenerator.id, retVal))
+        time.sleep(2)
+        '''
+
+    while True:
+        time.sleep(1)
+
+    retVal = ruleDesc.remove()
+
+
+if __name__ == "__main__":
+    try:
+        from docopt import docopt
+    except:
+        print("""
+        Please install docopt using:
+            pip install docopt==0.6.1
+        For more refer to:
+        https://github.com/docopt/docopt
+        """)
+        raise
+
+    args = docopt(__doc__, version=__version__)
+
+    log_level = logging.INFO  # default
+    if args['--verbose']:
+        log_level = logging.DEBUG
+    elif args['--quiet']:
+        log_level = logging.ERROR
+
+    logfile = None
+    if args['--logfile']:
+        logfile = args['--logfile']
+
+    logging.basicConfig(filename=logfile, level=log_level,
+        format='%(asctime)s - %(name)s.%(funcName)s() - %(levelname)s - %(message)s')
+
+    try:
+        main(args)
+    except KeyboardInterrupt:
+        log.debug("Controller exits")
+    except Exception as ex:
+        log.fatal(ex)
+    finally:
+        log.debug("Exit")
+        agent.stop()
