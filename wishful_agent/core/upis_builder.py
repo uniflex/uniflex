@@ -1,5 +1,3 @@
-import sys
-import wishful_upis
 import decorator
 from types import FunctionType
 
@@ -14,7 +12,8 @@ def _add_function(fn, *args, **kwargs):
     def wrapped(self, *args, **kwargs):
         # send function to controller
         return self._obj.cmd_wrapper(upi_type=self._msg_type,
-                                   fname=fn.__module__ + "." + fn.__name__, args=args, kwargs=kwargs)
+                                     fname=fn.__module__ + "." +
+                                     fn.__name__, args=args, kwargs=kwargs)
 
     return wrapped(*args, **kwargs)
 
@@ -27,6 +26,7 @@ def functions_in_class(module):
         )
     ]
 
+
 def classes_in_module(module):
     md = module.__dict__
     return [
@@ -35,9 +35,11 @@ def classes_in_module(module):
         )
     ]
 
+
 def iface_func(self, iface):
     self._obj.iface(iface)
     return self
+
 
 def copy_functions_from_subclasses_to_base_class(myclass):
     for subclass in myclass.__subclasses__():
