@@ -341,15 +341,11 @@ class TransportChannel(wishful_module.AgentModule):
             socks = dict(self.poller.poll(self.timeout))
             if self.sub in socks and socks[self.sub] == zmq.POLLIN:
                 msgContainer = self.sub.recv_multipart()
-                print(msgContainer)
                 assert len(msgContainer) == 3, msgContainer
                 dest = msgContainer[0]
                 cmdDesc = msgs.CmdDesc()
                 # TODO: workaround FIX IT!!
-                try:
-                    cmdDesc.ParseFromString(msgContainer[1])
-                except:
-                    pass
+                cmdDesc.ParseFromString(msgContainer[1])
 
                 msg = msgContainer[2]
 
