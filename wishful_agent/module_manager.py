@@ -71,6 +71,9 @@ class ModuleManager(object):
         wishfulModule.id = moduleId
         wishfulModule.set_module_manager(self)
         wishfulModule.set_agent(self.agent)
+
+        self.subscribe_for_event(wishfulModule)
+
         self.register_event_handlers(wishfulModule)
         self.register_function_handlers(wishfulModule)
 
@@ -102,6 +105,25 @@ class ModuleManager(object):
                     self._event_handlers.setdefault(ev_cls, [])
                     self._event_handlers[ev_cls].append(handler)
                     i.events.append(handler.__name__)
+
+    def subscribe_for_event(self, i):
+        events = set()
+        filterEvents = set(["NewNodeEvent", "AgentStartEvent",
+                            "ControllerDiscoveredEvent", "AgentExitEvent",
+                            "NodeExitEvent", "NodeLostEvent",
+                            "SendHelloMsgTimeEvent", "HelloMsgTimeoutEvent",
+                            "ControllerConnectedEvent", "CtxReturnValueEvent",
+                            "CtxCommandEvent"])
+
+        for _k, handler in inspect.getmembers(i, inspect.ismethod):
+            if hasattr(handler, 'callers'):
+                for ev_cls, c in handler.callers.items():
+                    events.add(ev_cls.__name__)
+
+        events = events - filterEvents
+        events = list(events)
+        for e in events:
+            self.agent.transport.subscribe_to(e)
 
     def get_event_handlers(self, ev, state=None):
         ev_cls = ev.__class__

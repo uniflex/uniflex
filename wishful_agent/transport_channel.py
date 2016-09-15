@@ -300,12 +300,13 @@ class TransportChannel(wishful_module.AgentModule):
     def process_msgs(self, msgContainer):
         cmdDesc = msgContainer[1]
         src = cmdDesc.caller_id
-        if src == self.agent.uuid:
-            self.log.debug("Received own msg; discard")
-            return
-
         self.log.debug(
-            "Transport Channel received message: {}".format(cmdDesc.type))
+            "Transport Channel received message: {} from: {}"
+            .format(cmdDesc.type, src))
+
+        if src == self.agent.uuid:
+            self.log.debug("OWN msg -> discard")
+            return
 
         if cmdDesc.type == msghelper.get_msg_type(msgs.NodeInfoMsg):
             self._nodeManager.serve_node_info_msg(msgContainer)
@@ -359,17 +360,23 @@ class TransportChannel(wishful_module.AgentModule):
 
         # flatten event
         self.log.debug("Event name: {}".format(event.__class__.__name__))
-        #print("Before:",event.node, event.device)
         if event.node and not isinstance(event.node, str):
             event.node = event.node.uuid
         if event.device and not isinstance(event.device, str):
             event.device = event.device._id
-        #print("After:",event.node, event.device)
 
-        self.log.debug("sends cmd event : {}".format(event.__class__.__name__))
-        topic = "ALL"
+        topic = event.__class__.__name__
+
+        # TODO: improve below, call function with dstNode!!!
+        if event.__class__.__name__ == 'CtxReturnValueEvent':
+            topic = event.dest
+
         if dstNode:
             topic = dstNode.uuid
+
+        self.log.debug("sends cmd event : {} on topic: {}"
+                       .format(event.__class__.__name__, topic))
+
         cmdDesc = msgs.CmdDesc()
         cmdDesc.type = "event"
         cmdDesc.func_name = "event"

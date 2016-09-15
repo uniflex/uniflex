@@ -112,7 +112,8 @@ class CommandExecutor(wishful_module.AgentModule):
                     else:
                         self.log.debug("asynchronous call device: {}"
                                        .format(module.device))
-                        event = upis.mgmt.CtxReturnValueEvent(ctx, returnValue)
+                        event = upis.mgmt.CtxReturnValueEvent(event.node.uuid,
+                                                              ctx, returnValue)
                         event.device = module.devObj
                         self.send_event(event)
 

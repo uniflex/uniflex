@@ -188,6 +188,8 @@ class NodeManager(wishful_module.AgentModule):
     def send_event_cmd(self, event, dstNode):
         self.log.debug("{}:{}".format(event.ctx._upi_type, event.ctx._upi))
 
+        event.node = self.agent.nodeManager.get_local_node()
+
         responseQueue = None
         callback = None
         if dstNode.local:
@@ -222,6 +224,7 @@ class NodeManager(wishful_module.AgentModule):
 
     def serve_event_msg(self, msgContainer):
         event = msgContainer[2]
+        srcNodeUuid = event.node
         node = self.get_node_by_uuid(event.node)
         self.log.debug("received event from node: {}".format(event.node))
         event.node = node
@@ -234,7 +237,8 @@ class NodeManager(wishful_module.AgentModule):
                 event.responseQueue = Queue()
                 self.moduleManager.send_event_locally(event)
                 response = event.responseQueue.get()
-                retEvent = upis.mgmt.CtxReturnValueEvent(event.ctx, response)
+                retEvent = upis.mgmt.CtxReturnValueEvent(srcNodeUuid,
+                                                         event.ctx, response)
                 retEvent.node = self.agent.nodeManager.get_local_node()
                 retEvent.device = event.ctx._device
                 self.log.debug("send response for blocking call")
