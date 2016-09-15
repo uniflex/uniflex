@@ -2,6 +2,7 @@ import sys
 import zmq
 import logging
 import threading
+import json
 import dill  # for pickling what standard pickle can’t cope with
 try:
     import cPickle as pickle
@@ -231,15 +232,24 @@ class TransportChannel(wishful_module.AgentModule):
 
         cmdDesc.caller_id = self.agent.uuid
         msgContainer[0] = topic
+
+        serialized = False
+        if hasattr(msg, 'serialize'):
+            cmdDesc.serialization_type = msgs.CmdDesc.JSON
+            msg = json.dumps(msg.serialize())
+            msg = msg.encode('utf-8')
+            serialized = True
+
         msgContainer[1] = cmdDesc.SerializeToString()
 
-        if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
-            try:
-                msg = pickle.dumps(msg)
-            except:
-                msg = dill.dumps(msg)
-        elif cmdDesc.serialization_type == msgs.CmdDesc.PROTOBUF:
-            msg = msg.SerializeToString()
+        if not serialized:
+            if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
+                try:
+                    msg = pickle.dumps(msg)
+                except:
+                    msg = dill.dumps(msg)
+            elif cmdDesc.serialization_type == msgs.CmdDesc.PROTOBUF:
+                msg = msg.SerializeToString()
 
         msgContainer[2] = msg
 
@@ -331,10 +341,16 @@ class TransportChannel(wishful_module.AgentModule):
             socks = dict(self.poller.poll(self.timeout))
             if self.sub in socks and socks[self.sub] == zmq.POLLIN:
                 msgContainer = self.sub.recv_multipart()
+                print(msgContainer)
                 assert len(msgContainer) == 3, msgContainer
                 dest = msgContainer[0]
                 cmdDesc = msgs.CmdDesc()
-                cmdDesc.ParseFromString(msgContainer[1])
+                # TODO: workaround FIX IT!!
+                try:
+                    cmdDesc.ParseFromString(msgContainer[1])
+                except:
+                    pass
+
                 msg = msgContainer[2]
 
                 if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
@@ -342,6 +358,10 @@ class TransportChannel(wishful_module.AgentModule):
                         msg = pickle.loads(msg)
                     except:
                         msg = dill.loads(msg)
+                elif cmdDesc.serialization_type == msgs.CmdDesc.JSON:
+                    msg = msg.decode('utf-8')
+                    msg = json.loads(msg)
+                    # get event class and create it
 
                 msgContainer[0] = dest.decode('utf-8')
                 msgContainer[1] = cmdDesc
