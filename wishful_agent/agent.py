@@ -98,42 +98,44 @@ class Agent(object):
             self.nodeManager.create_local_node(self)
 
         # load control programs
-        controllers = config['controllers']
-        for controllerName, params in controllers.items():
-            pyModuleName = params['module']
-            pyClassName = params['class_name']
-            kwargs = {}
-            if 'kwargs' in params:
-                kwargs = params['kwargs']
+        if "controllers" in config:
+            controllers = config['controllers']
+            for controllerName, params in controllers.items():
+                pyModuleName = params['module']
+                pyClassName = params['class_name']
+                kwargs = {}
+                if 'kwargs' in params:
+                    kwargs = params['kwargs']
 
-            self.moduleManager.register_module(
-                controllerName, pyModuleName, pyClassName,
-                None, kwargs)
+                self.moduleManager.register_module(
+                    controllerName, pyModuleName, pyClassName,
+                    None, kwargs)
 
         # load modules
-        moduleDesc = config['modules']
-        for moduleName, m_params in moduleDesc.items():
+        if "modules" in config:
+            moduleDesc = config['modules']
+            for moduleName, m_params in moduleDesc.items():
 
-            controlled_devices = []
-            if 'devices' in m_params:
-                controlled_devices = m_params['devices']
+                controlled_devices = []
+                if 'devices' in m_params:
+                    controlled_devices = m_params['devices']
 
-            kwargs = {}
-            if 'kwargs' in m_params:
-                kwargs = m_params['kwargs']
+                kwargs = {}
+                if 'kwargs' in m_params:
+                    kwargs = m_params['kwargs']
 
-            pyModuleName = m_params['module']
-            className = m_params['class_name']
+                pyModuleName = m_params['module']
+                className = m_params['class_name']
 
-            if controlled_devices:
-                for device in controlled_devices:
+                if controlled_devices:
+                    for device in controlled_devices:
+                        self.moduleManager.register_module(
+                            moduleName, pyModuleName, className,
+                            device, kwargs)
+                else:
                     self.moduleManager.register_module(
                         moduleName, pyModuleName, className,
-                        device, kwargs)
-            else:
-                self.moduleManager.register_module(
-                    moduleName, pyModuleName, className,
-                    None, kwargs)
+                        None, kwargs)
 
     def run(self):
         self.log.debug("Agent starts all modules".format())
