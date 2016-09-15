@@ -1,3 +1,4 @@
+import sys
 import uuid
 import logging
 
@@ -54,8 +55,11 @@ class Agent(object):
         return self.moduleManager.register_module(
             moduleName, pyModule, className, device, kwargs)
 
-    def load_config(self, config):
-        self.log.debug("Config: {0}".format(config))
+    def load_config(self, config, configPath=None):
+        self.log.debug("Config: {}, path: {}".format(config, configPath))
+
+        if configPath:
+            sys.path.append(configPath)
 
         agent_config = config['agent_config']
 
@@ -83,7 +87,7 @@ class Agent(object):
         if "uplink" in agent_config:
             ul = agent_config["uplink"]
 
-        if self.agentType == 'master' or self.agentType == 'slave':
+        if self.agentType is not 'local':
             self.transport = TransportChannel(self)
             self.moduleManager.add_module_obj(
                 "transport_channel", self.transport)
@@ -91,17 +95,17 @@ class Agent(object):
             self.transport.set_uplink(ul)
             self.transport._nodeManager = self.nodeManager
             self.nodeManager._transportChannel = self.transport
-            self.nodeManager.create_local_node(self)
 
-        else:
-            self.transport = None
-            self.nodeManager.create_local_node(self)
+        self.nodeManager.create_local_node(self)
 
         # load control programs
         if "controllers" in config:
             controllers = config['controllers']
             for controllerName, params in controllers.items():
-                pyModuleName = params['module']
+                pyModuleName = params.get('module', None)
+                if not pyModuleName:
+                    myfile = params.get('file', None)
+                    pyModuleName = myfile.split('.')[0]
                 pyClassName = params['class_name']
                 kwargs = {}
                 if 'kwargs' in params:

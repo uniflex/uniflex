@@ -21,6 +21,7 @@ Other options:
    --version           show version and exit
 """
 
+import os
 import logging
 import yaml
 import wishful_agent
@@ -38,12 +39,13 @@ def main(args):
     log.debug(args)
 
     config_file_path = args['--config']
+    configPath = os.path.dirname(os.path.abspath(config_file_path))
 
     config = None
     with open(config_file_path, 'r') as f:
         config = yaml.load(f)
 
-    agent.load_config(config)
+    agent.load_config(config, configPath)
     agent.run()
 
 
