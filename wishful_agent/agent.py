@@ -5,6 +5,7 @@ import logging
 from .common import get_ip_address  # TODO: remove ip or iface
 from .module_manager import ModuleManager
 from .transport_channel import TransportChannel
+from .transport_channel import Broker
 from .node_manager import NodeManager
 from .executor import CommandExecutor
 
@@ -25,6 +26,8 @@ class Agent(object):
         self.info = None
         self.iface = None
         self.ip = None
+
+        self.broker = None
 
         self.moduleManager = ModuleManager(self)
 
@@ -82,10 +85,14 @@ class Agent(object):
             dl = agent_config["dl"]
         if "downlink" in agent_config:
             dl = agent_config["downlink"]
+        if "sub" in agent_config:
+            dl = agent_config["sub"]
         if "ul" in agent_config:
             ul = agent_config["ul"]
         if "uplink" in agent_config:
             ul = agent_config["uplink"]
+        if "pub" in agent_config:
+            ul = agent_config["pub"]
 
         if self.agentType is not 'local':
             self.transport = TransportChannel(self)
@@ -97,6 +104,16 @@ class Agent(object):
             self.nodeManager._transportChannel = self.transport
 
         self.nodeManager.create_local_node(self)
+
+        if "broker" in config:
+            broker_config = config["broker"]
+            xpub = broker_config["xpub"]
+            xsub = broker_config["xsub"]
+            self.log.info("Start Broker with XPUB: {}, XSUB: {}"
+                          .format(xpub, xsub))
+            self.broker = Broker(xpub, xsub)
+            self.broker.setDaemon(True)
+            self.broker.start()
 
         # load control programs
         if "controllers" in config:
@@ -148,5 +165,7 @@ class Agent(object):
 
     def stop(self):
         self.log.debug("Stop all modules")
+        if self.broker:
+            self.broker.stop()
         # nofity EXIT to modules
         self.moduleManager.exit()
