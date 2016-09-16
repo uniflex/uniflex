@@ -1,25 +1,17 @@
-package wishful_controller.framework;
+package wishful_framework;
 
-message CmdDesc {
+message MsgDescription {
     required string type = 1;
-    optional string family = 2;
-    required string func_name = 3;
-    optional string exec_time = 4;
-    optional string call_id = 5;
-    optional string caller_id = 6;
-    optional string transaction_id = 7;
-    optional string interface = 8;
+    required string source_uuid = 2;
 
     enum Serialization {
       NONE = 0;
-      PICKLE = 1;
-      PROTOBUF = 2;
-      JSON = 3;
+      JSON = 1;
+      PICKLE = 2;
+      MSGPACK = 3;
+      PROTOBUF = 4;
     }
-    optional Serialization serialization_type = 9 [default = NONE];
-
-    optional string repeat_interval = 10;
-    optional uint32 repeat_number = 11;
+    required Serialization serialization_type = 3 [default = NONE];
 }
 
 message Device {

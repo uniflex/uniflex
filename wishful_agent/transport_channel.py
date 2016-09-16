@@ -10,7 +10,7 @@ except:
     import pickle
 
 from .timer import TimerEventSender
-from .msgs import management_pb2 as msgs
+from .msgs import messages_pb2 as msgs
 from .msgs import msg_helper as msghelper
 from .core import wishful_module
 import wishful_upis as upis
@@ -158,10 +158,9 @@ class TransportChannel(wishful_module.AgentModule):
         if dest:
             topic = dest
 
-        cmdDesc = msgs.CmdDesc()
-        cmdDesc.type = msghelper.get_msg_type(msgs.NodeInfoMsg)
-        cmdDesc.func_name = msghelper.get_msg_type(msgs.NodeInfoMsg)
-        cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
+        msgDesc = msgs.MsgDescription()
+        msgDesc.type = msghelper.get_msg_type(msgs.NodeInfoMsg)
+        msgDesc.serialization_type = msgs.MsgDescription.PROTOBUF
 
         msg = msgs.NodeInfoMsg()
         msg.agent_uuid = self.agent.uuid
@@ -192,7 +191,7 @@ class TransportChannel(wishful_module.AgentModule):
             for name in module.get_services():
                 service = moduleMsg.services.add()
                 service.name = name
-        msgContainer = [topic, cmdDesc, msg]
+        msgContainer = [topic, msgDesc, msg]
 
         self.log.debug("Agent sends node info")
         self.send(msgContainer)
@@ -201,54 +200,52 @@ class TransportChannel(wishful_module.AgentModule):
         topic = "ALL"
         if dest:
             topic = dest
-        cmdDesc = msgs.CmdDesc()
-        cmdDesc.type = msghelper.get_msg_type(msgs.NodeInfoRequest)
-        cmdDesc.func_name = msghelper.get_msg_type(msgs.NodeInfoRequest)
-        cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
+        msgDesc = msgs.MsgDescription()
+        msgDesc.type = msghelper.get_msg_type(msgs.NodeInfoRequest)
+        msgDesc.serialization_type = msgs.MsgDescription.PROTOBUF
 
         msg = msgs.NodeInfoRequest()
         msg.agent_uuid = self.agent.uuid
-        msgContainer = [topic, cmdDesc, msg]
+        msgContainer = [topic, msgDesc, msg]
         self.log.debug("Agent sends node info request")
         self.send(msgContainer)
 
     def send_node_add_notification(self, dest):
         topic = dest
-        cmdDesc = msgs.CmdDesc()
-        cmdDesc.type = msghelper.get_msg_type(msgs.NodeAddNotification)
-        cmdDesc.func_name = msghelper.get_msg_type(msgs.NodeAddNotification)
-        cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
+        msgDesc = msgs.MsgDescription()
+        msgDesc.type = msghelper.get_msg_type(msgs.NodeAddNotification)
+        msgDesc.serialization_type = msgs.MsgDescription.PROTOBUF
 
         msg = msgs.NodeAddNotification()
         msg.agent_uuid = self.agent.uuid
-        msgContainer = [topic, cmdDesc, msg]
+        msgContainer = [topic, msgDesc, msg]
         self.log.debug("Agent sends node add notification")
         self.send(msgContainer)
 
     def send(self, msgContainer):
         topic = msgContainer[0].encode('utf-8')
-        cmdDesc = msgContainer[1]
+        msgDesc = msgContainer[1]
         msg = msgContainer[2]
 
-        cmdDesc.caller_id = self.agent.uuid
+        msgDesc.source_uuid = self.agent.uuid
         msgContainer[0] = topic
 
         serialized = False
         if hasattr(msg, 'serialize'):
-            cmdDesc.serialization_type = msgs.CmdDesc.JSON
+            msgDesc.serialization_type = msgs.MsgDescription.JSON
             msg = json.dumps(msg.serialize())
             msg = msg.encode('utf-8')
             serialized = True
 
-        msgContainer[1] = cmdDesc.SerializeToString()
+        msgContainer[1] = msgDesc.SerializeToString()
 
         if not serialized:
-            if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
+            if msgDesc.serialization_type == msgs.MsgDescription.PICKLE:
                 try:
                     msg = pickle.dumps(msg)
                 except:
                     msg = dill.dumps(msg)
-            elif cmdDesc.serialization_type == msgs.CmdDesc.PROTOBUF:
+            elif msgDesc.serialization_type == msgs.MsgDescription.PROTOBUF:
                 msg = msg.SerializeToString()
 
         msgContainer[2] = msg
@@ -264,15 +261,14 @@ class TransportChannel(wishful_module.AgentModule):
     def send_hello_msg(self, event):
         self.log.debug("Agent sends HelloMsg")
         topic = "HELLO_MSG"
-        cmdDesc = msgs.CmdDesc()
-        cmdDesc.type = msghelper.get_msg_type(msgs.HelloMsg)
-        cmdDesc.func_name = msghelper.get_msg_type(msgs.HelloMsg)
-        cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
+        msgDesc = msgs.MsgDescription()
+        msgDesc.type = msghelper.get_msg_type(msgs.HelloMsg)
+        msgDesc.serialization_type = msgs.MsgDescription.PROTOBUF
 
         msg = msgs.HelloMsg()
         msg.uuid = str(self.agent.uuid)
         msg.timeout = self.helloTimeOut
-        msgContainer = [topic, cmdDesc, msg]
+        msgContainer = [topic, msgDesc, msg]
         self.send(msgContainer)
 
         # reschedule hello msg
@@ -295,42 +291,41 @@ class TransportChannel(wishful_module.AgentModule):
     def notify_node_exit(self):
         self.log.debug("Agend sends NodeExitMsg".format())
         topic = "NODE_EXIT"
-        cmdDesc = msgs.CmdDesc()
-        cmdDesc.type = msghelper.get_msg_type(msgs.NodeExitMsg)
-        cmdDesc.func_name = msghelper.get_msg_type(msgs.NodeExitMsg)
-        cmdDesc.serialization_type = msgs.CmdDesc.PROTOBUF
+        msgDesc = msgs.MsgDescription()
+        msgDesc.type = msghelper.get_msg_type(msgs.NodeExitMsg)
+        msgDesc.serialization_type = msgs.MsgDescription.PROTOBUF
 
         msg = msgs.NodeExitMsg()
         msg.agent_uuid = self.agent.uuid
         msg.reason = "Process terminated"
 
-        msgContainer = [topic, cmdDesc, msg]
+        msgContainer = [topic, msgDesc, msg]
         self.send(msgContainer)
 
     def process_msgs(self, msgContainer):
-        cmdDesc = msgContainer[1]
-        src = cmdDesc.caller_id
+        msgDesc = msgContainer[1]
+        src = msgDesc.source_uuid
         self.log.debug(
             "Transport Channel received message: {} from: {}"
-            .format(cmdDesc.type, src))
+            .format(msgDesc.type, src))
 
         if src == self.agent.uuid:
             self.log.debug("OWN msg -> discard")
             return
 
-        if cmdDesc.type == msghelper.get_msg_type(msgs.NodeInfoMsg):
+        if msgDesc.type == msghelper.get_msg_type(msgs.NodeInfoMsg):
             self._nodeManager.serve_node_info_msg(msgContainer)
 
-        elif cmdDesc.type == msghelper.get_msg_type(msgs.NodeInfoRequest):
+        elif msgDesc.type == msghelper.get_msg_type(msgs.NodeInfoRequest):
             self.send_node_info(src)
 
-        elif cmdDesc.type == msghelper.get_msg_type(msgs.NodeAddNotification):
+        elif msgDesc.type == msghelper.get_msg_type(msgs.NodeAddNotification):
             self._nodeManager.serve_node_add_notification(msgContainer)
 
-        elif cmdDesc.type == msghelper.get_msg_type(msgs.NodeExitMsg):
+        elif msgDesc.type == msghelper.get_msg_type(msgs.NodeExitMsg):
             self._nodeManager.serve_node_exit_msg(msgContainer)
 
-        elif cmdDesc.type == msghelper.get_msg_type(msgs.HelloMsg):
+        elif msgDesc.type == msghelper.get_msg_type(msgs.HelloMsg):
             self._nodeManager.serve_hello_msg(msgContainer)
 
         else:
@@ -343,24 +338,24 @@ class TransportChannel(wishful_module.AgentModule):
                 msgContainer = self.sub.recv_multipart()
                 assert len(msgContainer) == 3, msgContainer
                 dest = msgContainer[0]
-                cmdDesc = msgs.CmdDesc()
+                msgDesc = msgs.MsgDescription()
                 # TODO: workaround FIX IT!!
-                cmdDesc.ParseFromString(msgContainer[1])
+                msgDesc.ParseFromString(msgContainer[1])
 
                 msg = msgContainer[2]
 
-                if cmdDesc.serialization_type == msgs.CmdDesc.PICKLE:
+                if msgDesc.serialization_type == msgs.MsgDescription.PICKLE:
                     try:
                         msg = pickle.loads(msg)
                     except:
                         msg = dill.loads(msg)
-                elif cmdDesc.serialization_type == msgs.CmdDesc.JSON:
+                elif msgDesc.serialization_type == msgs.MsgDescription.JSON:
                     msg = msg.decode('utf-8')
                     msg = json.loads(msg)
                     # get event class and create it
 
                 msgContainer[0] = dest.decode('utf-8')
-                msgContainer[1] = cmdDesc
+                msgContainer[1] = msgDesc
                 msgContainer[2] = msg
 
                 self.process_msgs(msgContainer)
@@ -393,13 +388,12 @@ class TransportChannel(wishful_module.AgentModule):
         self.log.debug("sends cmd event : {} on topic: {}"
                        .format(event.__class__.__name__, topic))
 
-        cmdDesc = msgs.CmdDesc()
-        cmdDesc.type = "event"
-        cmdDesc.func_name = "event"
-        cmdDesc.serialization_type = msgs.CmdDesc.PICKLE
+        msgDesc = msgs.MsgDescription()
+        msgDesc.type = "event"
+        msgDesc.serialization_type = msgs.MsgDescription.PICKLE
 
         data = event
-        msgContainer = [topic, cmdDesc, data]
+        msgContainer = [topic, msgDesc, data]
         self.send(msgContainer)
 
 

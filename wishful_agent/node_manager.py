@@ -3,7 +3,7 @@ import threading
 from queue import Queue
 
 import wishful_upis as upis
-from .msgs import management_pb2 as msgs
+from .msgs import messages_pb2 as msgs
 from .core import wishful_module
 from .node import Node, Device
 
@@ -166,7 +166,7 @@ class NodeManager(wishful_module.AgentModule):
 
     def serve_hello_msg(self, msgContainer):
         cmd = msgContainer[1]
-        sourceUuid = cmd.caller_id
+        sourceUuid = cmd.source_uuid
         if sourceUuid == self.agent.uuid:
             self.log.debug("Received own HELLO MESSAGE; discard"
                            .format())
