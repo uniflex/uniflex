@@ -228,9 +228,11 @@ class NodeManager(wishful_module.AgentModule):
         node = self.get_node_by_uuid(event.node)
         self.log.debug("received event from node: {}".format(event.node))
         event.node = node
-        if not event.node:
-            return
-        event.device = event.node.get_device(event.device)
+        # TODO: uncomment it!! but find solution for support for node-red
+        # if not event.node:
+        #    return
+        if event.device:
+            event.device = event.node.get_device(event.device)
 
         if isinstance(event, upis.mgmt.CtxCommandEvent):
             if event.ctx._blocking:

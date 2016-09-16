@@ -13,6 +13,7 @@ from .timer import TimerEventSender
 from .msgs import messages_pb2 as msgs
 from .msgs import msg_helper as msghelper
 from .core import wishful_module
+from .common import get_inheritors
 import wishful_upis as upis
 
 __author__ = "Piotr Gawlowicz"
@@ -44,6 +45,8 @@ class TransportChannel(wishful_module.AgentModule):
         self.xsub_url = None
         self.timeout = 500  # ms
         self.forceStop = False
+
+        self.eventClasses = None
 
         self.connected = False
         self.helloMsgInterval = 3
@@ -96,6 +99,8 @@ class TransportChannel(wishful_module.AgentModule):
         thread = threading.Thread(target=self.recv_msgs)
         thread.setDaemon(True)
         thread.start()
+
+        self.eventClasses = get_inheritors(upis.upi.EventBase)
 
     @wishful_module.on_exit()
     def stop_module(self):
@@ -339,9 +344,7 @@ class TransportChannel(wishful_module.AgentModule):
                 assert len(msgContainer) == 3, msgContainer
                 dest = msgContainer[0]
                 msgDesc = msgs.MsgDescription()
-                # TODO: workaround FIX IT!!
                 msgDesc.ParseFromString(msgContainer[1])
-
                 msg = msgContainer[2]
 
                 if msgDesc.serialization_type == msgs.MsgDescription.PICKLE:
@@ -352,7 +355,19 @@ class TransportChannel(wishful_module.AgentModule):
                 elif msgDesc.serialization_type == msgs.MsgDescription.JSON:
                     msg = msg.decode('utf-8')
                     msg = json.loads(msg)
+                    eventType = str(dest.decode())
+                    # print(eventType, msgDesc, msg)
                     # get event class and create it
+                    myClass = self.eventClasses.get(eventType, None)
+                    # print(str(dest), "myClass: ", myClass)
+                    if myClass and hasattr(myClass, 'parse'):
+                        myEvent = myClass.parse(msg)
+                        myEvent.node = msgDesc.source_uuid
+                        myEvent.device = None
+                        msg = myEvent
+                    else:
+                        # discard message that cannot be parsed
+                        continue
 
                 msgContainer[0] = dest.decode('utf-8')
                 msgContainer[1] = msgDesc
