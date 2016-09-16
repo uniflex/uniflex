@@ -9,10 +9,11 @@ Usage:
 
 Options:
    --logfile name      Name of the logfile
-   --config configFile Config file path
+   --xpub pub_url      Publisher URL
+   --xsub sub_url      Subscriber URL
 
 Example:
-   wishful-broker -v --config ./config.yaml
+   wishful-broker --xpub tcp://127.0.0.1:8990 --xsub tcp://127.0.0.1:8989
 
 Other options:
    -h, --help          show this help message and exit
@@ -30,12 +31,6 @@ __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
 log = logging.getLogger('wishful-broker')
-agent = wishful_agent.Agent()
-
-xpub = "tcp://127.0.0.1:8990"
-xsub = "tcp://127.0.0.1:8989"
-broker = wishful_agent.Broker(xpub, xsub)
-
 
 if __name__ == "__main__":
     try:
@@ -57,15 +52,25 @@ if __name__ == "__main__":
     elif args['--quiet']:
         log_level = logging.ERROR
 
+    xpub = "tcp://127.0.0.1:8990"
+    xsub = "tcp://127.0.0.1:8989"
+    if args['--xpub']:
+        xpub = args['--xpub']
+
+    if args['--xsub']:
+        xsub = args['--xsub']
+
     logfile = None
     if args['--logfile']:
         logfile = args['--logfile']
 
     logging.basicConfig(filename=logfile, level=log_level,
                         format='%(asctime)s - %(name)s.%(funcName)s() - %(levelname)s - %(message)s')
+    log.info(args)
+    broker = wishful_agent.Broker(xpub, xsub)
 
     try:
-        log.debug(args)
+        log.info("Start Broker with XPUB: {}, XSUB: {}".format(xpub, xsub))
         broker.start()
         broker.join()
     except KeyboardInterrupt:
