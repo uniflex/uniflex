@@ -79,7 +79,6 @@ class NodeManager(wishful_module.AgentModule):
         # set localNode variable in each app
         modules = self.agent.moduleManager.modules.values()
         for m in modules:
-            print("set local node for :", m.name)
             m.localNode = self.local_node
 
     def get_local_node(self):
