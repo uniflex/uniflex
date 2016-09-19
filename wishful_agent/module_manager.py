@@ -56,6 +56,7 @@ class ModuleManager(object):
 
         wishfulModule = self.add_module_obj(moduleName, wishfulModule)
         node = self.agent.nodeManager.get_local_node()
+        wishfulModule.localNode = node
         if device:
             devId = self.generate_new_device_id()
             dev = Device(devId, device, node)
@@ -122,8 +123,9 @@ class ModuleManager(object):
 
         events = events - filterEvents
         events = list(events)
-        for e in events:
-            self.agent.transport.subscribe_to(e)
+        if self.agent.transport:
+            for e in events:
+                self.agent.transport.subscribe_to(e)
 
     def get_event_handlers(self, ev, state=None):
         ev_cls = ev.__class__

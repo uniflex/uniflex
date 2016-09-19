@@ -28,6 +28,8 @@ class Agent(object):
         self.ip = None
 
         self.broker = None
+        # extention of event bus
+        self.transport = None
 
         self.moduleManager = ModuleManager(self)
 
@@ -39,9 +41,6 @@ class Agent(object):
         # command executor with scheduler
         self.moduleManager.add_module_obj(
             "command_executor", CommandExecutor(self))
-
-        # extention of event bus
-        self.transport = None
 
     def set_agent_info(self, name=None, info=None, iface=None, ip=None):
         self.name = name
@@ -94,7 +93,7 @@ class Agent(object):
         if "pub" in agent_config:
             ul = agent_config["pub"]
 
-        if self.agentType is not 'local':
+        if self.agentType != 'local':
             self.transport = TransportChannel(self)
             self.moduleManager.add_module_obj(
                 "transport_channel", self.transport)

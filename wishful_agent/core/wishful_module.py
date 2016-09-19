@@ -170,6 +170,7 @@ class WishfulModule(object):
         self.uuid = str(uuid.uuid4())
         self.name = self.__class__.__name__
         self.agent = None
+        self.localNode = None
         self.moduleManager = None
 
         self.callIdGen = 0

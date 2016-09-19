@@ -71,12 +71,16 @@ class NodeManager(wishful_module.AgentModule):
 
     def create_local_node(self, agent):
         self.local_node = Node(agent.uuid)
-        self.hostname = socket.gethostname()
+        self.nodes.append(self.local_node)  # do we need it in nodes?
+        self.local_node.hostname = socket.gethostname()
         self.local_node.nodeManager = self
-        self.nodes.append(self.local_node)
-        event = upis.mgmt.NewNodeEvent()
-        event.node = self.local_node
-        self.moduleManager.send_event(event)
+        # TODO: fill info about modules, etc
+
+        # set localNode variable in each app
+        modules = self.agent.moduleManager.modules.values()
+        for m in modules:
+            print("set local node for :", m.name)
+            m.localNode = self.local_node
 
     def get_local_node(self):
         return self.local_node
