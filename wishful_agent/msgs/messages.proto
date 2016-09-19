@@ -1,19 +1,5 @@
 package wishful_framework;
 
-message MsgDescription {
-    required string type = 1;
-    required string source_uuid = 2;
-
-    enum Serialization {
-      NONE = 0;
-      JSON = 1;
-      PICKLE = 2;
-      MSGPACK = 3;
-      PROTOBUF = 4;
-    }
-    required Serialization serialization_type = 3 [default = NONE];
-}
-
 message Device {
     required uint32 id = 1;
     required string name = 2;
@@ -56,13 +42,6 @@ message NodeInfoRequest {
 
 message NodeAddNotification {
     required string agent_uuid = 1;
-}
-
-message NewNodeAck {
-    required bool status = 1;
-    optional string controller_uuid = 2;
-    optional string agent_uuid = 3;
-    repeated string topics = 4;
 }
 
 message NodeExitMsg {
