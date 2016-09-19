@@ -79,6 +79,7 @@ class Node(ControllableUnit):
         self.info = None
         self.nodeManager = None
         self.local = True  # Local or remote
+        self.apps = {}
         self.devices = {}
         self.modules = {}
 
@@ -166,6 +167,12 @@ class Node(ControllableUnit):
             if dev.name == name:
                 return dev
         return None
+
+    def get_modules(self):
+        return self.modules.values()
+
+    def get_apps(self):
+        return self.apps.values()
 
     def set_timer_callback(self, cb):
         self._timerCallback = cb

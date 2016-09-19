@@ -57,6 +57,7 @@ class ModuleManager(object):
         wishfulModule = self.add_module_obj(moduleName, wishfulModule)
         node = self.agent.nodeManager.get_local_node()
         wishfulModule.localNode = node
+        node.modules[wishfulModule.id] = wishfulModule
         if device:
             devId = self.generate_new_device_id()
             dev = Device(devId, device, node)
