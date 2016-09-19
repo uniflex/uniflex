@@ -9,11 +9,11 @@ try:
 except:
     import pickle
 
+import wishful_agent.msgs as msgs
 from .timer import TimerEventSender
-from .msgs import messages_pb2 as msgs
-from .msgs import msg_helper as msghelper
 from .core import wishful_module
 from .common import get_inheritors
+from .node import Node, Device
 import wishful_upis as upis
 
 __author__ = "Piotr Gawlowicz"
@@ -163,9 +163,9 @@ class TransportChannel(wishful_module.AgentModule):
         if dest:
             topic = dest
 
-        msgDesc = msgs.MsgDescription()
-        msgDesc.type = msghelper.get_msg_type(msgs.NodeInfoMsg)
-        msgDesc.serialization_type = msgs.MsgDescription.PROTOBUF
+        msgDesc = msgs.MessageDescription()
+        msgDesc.msgType = msgs.get_msg_type(msgs.NodeInfoMsg)
+        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
 
         msg = msgs.NodeInfoMsg()
         msg.agent_uuid = self.agent.uuid
@@ -181,7 +181,7 @@ class TransportChannel(wishful_module.AgentModule):
             if module.device:
                 deviceDesc = msgs.Device()
                 deviceDesc.id = module.deviceId
-                deviceDesc.name = module.device
+                deviceDesc.name = module.device.name
                 moduleMsg.device.CopyFrom(deviceDesc)
 
             for name in module.get_attributes():
@@ -205,9 +205,9 @@ class TransportChannel(wishful_module.AgentModule):
         topic = "ALL"
         if dest:
             topic = dest
-        msgDesc = msgs.MsgDescription()
-        msgDesc.type = msghelper.get_msg_type(msgs.NodeInfoRequest)
-        msgDesc.serialization_type = msgs.MsgDescription.PROTOBUF
+        msgDesc = msgs.MessageDescription()
+        msgDesc.msgType = msgs.get_msg_type(msgs.NodeInfoRequest)
+        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
 
         msg = msgs.NodeInfoRequest()
         msg.agent_uuid = self.agent.uuid
@@ -217,9 +217,9 @@ class TransportChannel(wishful_module.AgentModule):
 
     def send_node_add_notification(self, dest):
         topic = dest
-        msgDesc = msgs.MsgDescription()
-        msgDesc.type = msghelper.get_msg_type(msgs.NodeAddNotification)
-        msgDesc.serialization_type = msgs.MsgDescription.PROTOBUF
+        msgDesc = msgs.MessageDescription()
+        msgDesc.msgType = msgs.get_msg_type(msgs.NodeAddNotification)
+        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
 
         msg = msgs.NodeAddNotification()
         msg.agent_uuid = self.agent.uuid
@@ -232,26 +232,30 @@ class TransportChannel(wishful_module.AgentModule):
         msgDesc = msgContainer[1]
         msg = msgContainer[2]
 
-        msgDesc.source_uuid = self.agent.uuid
+        msgDesc.sourceUuid = self.agent.uuid
         msgContainer[0] = topic
 
         serialized = False
         if hasattr(msg, 'serialize'):
-            msgDesc.serialization_type = msgs.MsgDescription.JSON
+            msgDesc.serializationType = msgs.SerializationType.JSON
             msg = json.dumps(msg.serialize())
             msg = msg.encode('utf-8')
             serialized = True
 
-        msgContainer[1] = msgDesc.SerializeToString()
-
         if not serialized:
-            if msgDesc.serialization_type == msgs.MsgDescription.PICKLE:
+            if msgDesc.serializationType == msgs.SerializationType.PROTOBUF:
+                msg = msg.SerializeToString()
+
+            # if serialization not set, pickle it
+            else:
+                msgDesc.serializationType = msgs.SerializationType.PICKLE
                 try:
                     msg = pickle.dumps(msg)
                 except:
                     msg = dill.dumps(msg)
-            elif msgDesc.serialization_type == msgs.MsgDescription.PROTOBUF:
-                msg = msg.SerializeToString()
+
+        msgDesc = json.dumps(msgDesc.serialize())
+        msgContainer[1] = msgDesc.encode('utf-8')
 
         msgContainer[2] = msg
 
@@ -266,9 +270,9 @@ class TransportChannel(wishful_module.AgentModule):
     def send_hello_msg(self, event):
         self.log.debug("Agent sends HelloMsg")
         topic = "HELLO_MSG"
-        msgDesc = msgs.MsgDescription()
-        msgDesc.type = msghelper.get_msg_type(msgs.HelloMsg)
-        msgDesc.serialization_type = msgs.MsgDescription.PROTOBUF
+        msgDesc = msgs.MessageDescription()
+        msgDesc.msgType = msgs.get_msg_type(msgs.HelloMsg)
+        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
 
         msg = msgs.HelloMsg()
         msg.uuid = str(self.agent.uuid)
@@ -296,9 +300,9 @@ class TransportChannel(wishful_module.AgentModule):
     def notify_node_exit(self):
         self.log.debug("Agend sends NodeExitMsg".format())
         topic = "NODE_EXIT"
-        msgDesc = msgs.MsgDescription()
-        msgDesc.type = msghelper.get_msg_type(msgs.NodeExitMsg)
-        msgDesc.serialization_type = msgs.MsgDescription.PROTOBUF
+        msgDesc = msgs.MessageDescription()
+        msgDesc.msgType = msgs.get_msg_type(msgs.NodeExitMsg)
+        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
 
         msg = msgs.NodeExitMsg()
         msg.agent_uuid = self.agent.uuid
@@ -309,28 +313,28 @@ class TransportChannel(wishful_module.AgentModule):
 
     def process_msgs(self, msgContainer):
         msgDesc = msgContainer[1]
-        src = msgDesc.source_uuid
+        src = msgDesc.sourceUuid
         self.log.debug(
-            "Transport Channel received message: {} from: {}"
-            .format(msgDesc.type, src))
+            "Transport Channel received message: {} from: {}, myUuid: {}"
+            .format(msgDesc.msgType, src, self.agent.uuid))
 
         if src == self.agent.uuid:
             self.log.debug("OWN msg -> discard")
             return
 
-        if msgDesc.type == msghelper.get_msg_type(msgs.NodeInfoMsg):
+        if msgDesc.msgType == msgs.get_msg_type(msgs.NodeInfoMsg):
             self._nodeManager.serve_node_info_msg(msgContainer)
 
-        elif msgDesc.type == msghelper.get_msg_type(msgs.NodeInfoRequest):
+        elif msgDesc.msgType == msgs.get_msg_type(msgs.NodeInfoRequest):
             self.send_node_info(src)
 
-        elif msgDesc.type == msghelper.get_msg_type(msgs.NodeAddNotification):
+        elif msgDesc.msgType == msgs.get_msg_type(msgs.NodeAddNotification):
             self._nodeManager.serve_node_add_notification(msgContainer)
 
-        elif msgDesc.type == msghelper.get_msg_type(msgs.NodeExitMsg):
+        elif msgDesc.msgType == msgs.get_msg_type(msgs.NodeExitMsg):
             self._nodeManager.serve_node_exit_msg(msgContainer)
 
-        elif msgDesc.type == msghelper.get_msg_type(msgs.HelloMsg):
+        elif msgDesc.msgType == msgs.get_msg_type(msgs.HelloMsg):
             self._nodeManager.serve_hello_msg(msgContainer)
 
         else:
@@ -342,34 +346,36 @@ class TransportChannel(wishful_module.AgentModule):
             if self.sub in socks and socks[self.sub] == zmq.POLLIN:
                 msgContainer = self.sub.recv_multipart()
                 assert len(msgContainer) == 3, msgContainer
-                dest = msgContainer[0]
-                msgDesc = msgs.MsgDescription()
-                msgDesc.ParseFromString(msgContainer[1])
+                topic = msgContainer[0].decode('utf-8')
+                msgDesc = msgContainer[1].decode('utf-8')
+                msgDesc = json.loads(msgDesc)
+                msgDesc = msgs.MessageDescription.parse(msgDesc)
                 msg = msgContainer[2]
 
-                if msgDesc.serialization_type == msgs.MsgDescription.PICKLE:
+                if msgDesc.serializationType == msgs.SerializationType.PICKLE:
                     try:
                         msg = pickle.loads(msg)
                     except:
                         msg = dill.loads(msg)
-                elif msgDesc.serialization_type == msgs.MsgDescription.JSON:
+                elif msgDesc.serializationType == msgs.SerializationType.PROTOBUF:
+                    # TODO: move all protobuf serialization here
+                    pass
+                elif msgDesc.serializationType == msgs.SerializationType.JSON:
                     msg = msg.decode('utf-8')
                     msg = json.loads(msg)
-                    eventType = str(dest.decode())
-                    # print(eventType, msgDesc, msg)
+                    eventType = str(topic)
                     # get event class and create it
                     myClass = self.eventClasses.get(eventType, None)
-                    # print(str(dest), "myClass: ", myClass)
                     if myClass and hasattr(myClass, 'parse'):
                         myEvent = myClass.parse(msg)
-                        myEvent.node = msgDesc.source_uuid
+                        myEvent.node = msgDesc.sourceUuid
                         myEvent.device = None
                         msg = myEvent
                     else:
                         # discard message that cannot be parsed
                         continue
 
-                msgContainer[0] = dest.decode('utf-8')
+                msgContainer[0] = topic
                 msgContainer[1] = msgDesc
                 msgContainer[2] = msg
 
@@ -386,9 +392,9 @@ class TransportChannel(wishful_module.AgentModule):
 
         # flatten event
         self.log.debug("Event name: {}".format(event.__class__.__name__))
-        if event.node and not isinstance(event.node, str):
+        if event.node and isinstance(event.node, Node):
             event.node = event.node.uuid
-        if event.device and not isinstance(event.device, str):
+        if event.device and isinstance(event.device, Device):
             event.device = event.device._id
 
         topic = event.__class__.__name__
@@ -403,9 +409,9 @@ class TransportChannel(wishful_module.AgentModule):
         self.log.debug("sends cmd event : {} on topic: {}"
                        .format(event.__class__.__name__, topic))
 
-        msgDesc = msgs.MsgDescription()
-        msgDesc.type = "event"
-        msgDesc.serialization_type = msgs.MsgDescription.PICKLE
+        msgDesc = msgs.MessageDescription()
+        msgDesc.msgType = event.__class__.__name__
+        msgDesc.serializationType = msgs.SerializationType.PICKLE
 
         data = event
         msgContainer = [topic, msgDesc, data]

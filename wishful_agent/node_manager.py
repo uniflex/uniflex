@@ -165,8 +165,8 @@ class NodeManager(wishful_module.AgentModule):
             self.send_event(event)
 
     def serve_hello_msg(self, msgContainer):
-        cmd = msgContainer[1]
-        sourceUuid = cmd.source_uuid
+        msgDesc = msgContainer[1]
+        sourceUuid = msgDesc.sourceUuid
         if sourceUuid == self.agent.uuid:
             self.log.debug("Received own HELLO MESSAGE; discard"
                            .format())
@@ -231,7 +231,7 @@ class NodeManager(wishful_module.AgentModule):
         # TODO: uncomment it!! but find solution for support for node-red
         # if not event.node:
         #    return
-        if event.device:
+        if event.device is not None and isinstance(event.device, int):
             event.device = event.node.get_device(event.device)
 
         if isinstance(event, upis.mgmt.CtxCommandEvent):
@@ -242,7 +242,7 @@ class NodeManager(wishful_module.AgentModule):
                 retEvent = upis.mgmt.CtxReturnValueEvent(srcNodeUuid,
                                                          event.ctx, response)
                 retEvent.node = self.agent.nodeManager.get_local_node()
-                retEvent.device = event.ctx._device
+                retEvent.device = event.device
                 self.log.debug("send response for blocking call")
                 self._transportChannel.send_event_outside(retEvent)
             else:
@@ -260,7 +260,3 @@ class NodeManager(wishful_module.AgentModule):
                 self.moduleManager.send_event_locally(event)
         else:
             self.moduleManager.send_event_locally(event)
-
-        # returnValue = event.responseQueue.get()
-        # event.responseQueue.put(returnValue)
-        pass
