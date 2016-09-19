@@ -60,7 +60,7 @@ class ModuleManager(object):
         if device:
             devId = self.generate_new_device_id()
             dev = Device(devId, device, node)
-            wishfulModule.set_device(devId, dev)
+            wishfulModule.set_device(dev)
             node.devices[devId] = dev
         return wishfulModule
 

@@ -165,6 +165,7 @@ class WishfulModule(object):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
 
+        self._enabled = False
         self.worker = ModuleWorker(self)
         self.id = None
         self.uuid = str(uuid.uuid4())
@@ -178,7 +179,6 @@ class WishfulModule(object):
 
         # TODO: move to AgentModule (DeviceModule)
         self.device = None  # used for filtering of commands
-        self.deviceId = None  # used for filtering of commands
         self.attributes = []
         self.functions = []
         self.events = []
@@ -205,8 +205,7 @@ class WishfulModule(object):
         self.moduleManager.send_event(event)
 
     # TODO: move to AgentModule (DeviceModule)
-    def set_device(self, devId, dev):
-        self.deviceId = devId
+    def set_device(self, dev):
         self.device = dev
 
     def get_device(self):

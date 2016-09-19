@@ -182,7 +182,7 @@ class TransportChannel(wishful_module.AgentModule):
 
             if module.device:
                 deviceDesc = msgs.Device()
-                deviceDesc.id = module.deviceId
+                deviceDesc.id = module.device._id
                 deviceDesc.name = module.device.name
                 moduleMsg.device.CopyFrom(deviceDesc)
 
