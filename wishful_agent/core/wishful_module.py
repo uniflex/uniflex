@@ -186,7 +186,8 @@ class WishfulModule(object):
         self.firstCallToModule = False
 
         # TODO: move to ControllerModule (ControllerApp)
-        self.controller = None
+        # node container
+        self._nodes = {}
 
     @on_event(upis.mgmt.AgentExitEvent)
     def agent_exit_handler(self, event):
@@ -224,8 +225,17 @@ class WishfulModule(object):
         return self.services
 
     # TODO: move to ControllerModule (ControllerApp)
-    def set_controller(self, controller):
-        self.controller = controller
+    def add_node(self, node):
+        self._nodes[node.uuid] = node
+
+    def get_node_by_uuid(self, uuid):
+        return self._nodes.get(uuid, None)
+
+    def get_node_by_hostname(self, hostname):
+        for n in self._nodes:
+            if n.hostname == hostname:
+                return n
+        return None
 
     def _generate_call_id(self):
         self.callIdGen = self.callIdGen + 1
