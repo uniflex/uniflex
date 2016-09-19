@@ -1,5 +1,6 @@
 import sys
 import zmq
+import socket
 import logging
 import threading
 import json
@@ -171,6 +172,7 @@ class TransportChannel(wishful_module.AgentModule):
         msg.agent_uuid = self.agent.uuid
         msg.ip = self.agent.ip
         msg.name = self.agent.name
+        msg.hostname = socket.gethostname()
         msg.info = self.agent.info
 
         for mid, module in self.agent.moduleManager.modules.items():

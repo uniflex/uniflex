@@ -1,4 +1,5 @@
 import logging
+import socket
 import threading
 from queue import Queue
 
@@ -70,6 +71,7 @@ class NodeManager(wishful_module.AgentModule):
 
     def create_local_node(self, agent):
         self.local_node = Node(agent.uuid)
+        self.hostname = socket.gethostname()
         self.local_node.nodeManager = self
         self.nodes.append(self.local_node)
         event = upis.mgmt.NewNodeEvent()

@@ -18,7 +18,7 @@ _sym_db = _symbol_database.Default()
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='messages.proto',
   package='wishful_framework',
-  serialized_pb=_b('\n\x0emessages.proto\x12\x11wishful_framework\"\xd2\x01\n\x0eMsgDescription\x12\x0c\n\x04type\x18\x01 \x02(\t\x12\x13\n\x0bsource_uuid\x18\x02 \x02(\t\x12Q\n\x12serialization_type\x18\x03 \x02(\x0e\x32/.wishful_framework.MsgDescription.Serialization:\x04NONE\"J\n\rSerialization\x12\x08\n\x04NONE\x10\x00\x12\x08\n\x04JSON\x10\x01\x12\n\n\x06PICKLE\x10\x02\x12\x0b\n\x07MSGPACK\x10\x03\x12\x0c\n\x08PROTOBUF\x10\x04\"\"\n\x06\x44\x65vice\x12\n\n\x02id\x18\x01 \x02(\r\x12\x0c\n\x04name\x18\x02 \x02(\t\"\x88\x03\n\x06Module\x12\n\n\x02id\x18\x01 \x02(\r\x12\x0c\n\x04name\x18\x02 \x02(\t\x12)\n\x06\x64\x65vice\x18\x03 \x01(\x0b\x32\x19.wishful_framework.Device\x12\x37\n\nattributes\x18\x04 \x03(\x0b\x32#.wishful_framework.Module.Attribute\x12\x35\n\tfunctions\x18\x05 \x03(\x0b\x32\".wishful_framework.Module.Function\x12/\n\x06\x65vents\x18\x06 \x03(\x0b\x32\x1f.wishful_framework.Module.Event\x12\x33\n\x08services\x18\x07 \x03(\x0b\x32!.wishful_framework.Module.Service\x1a\x19\n\tAttribute\x12\x0c\n\x04name\x18\x01 \x02(\t\x1a\x18\n\x08\x46unction\x12\x0c\n\x04name\x18\x01 \x02(\t\x1a\x15\n\x05\x45vent\x12\x0c\n\x04name\x18\x01 \x02(\t\x1a\x17\n\x07Service\x12\x0c\n\x04name\x18\x01 \x02(\t\"u\n\x0bNodeInfoMsg\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\x12\n\n\x02ip\x18\x02 \x02(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x0c\n\x04info\x18\x04 \x01(\t\x12*\n\x07modules\x18\x05 \x03(\x0b\x32\x19.wishful_framework.Module\"%\n\x0fNodeInfoRequest\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\")\n\x13NodeAddNotification\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\"Y\n\nNewNodeAck\x12\x0e\n\x06status\x18\x01 \x02(\x08\x12\x17\n\x0f\x63ontroller_uuid\x18\x02 \x01(\t\x12\x12\n\nagent_uuid\x18\x03 \x01(\t\x12\x0e\n\x06topics\x18\x04 \x03(\t\"1\n\x0bNodeExitMsg\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\x12\x0e\n\x06reason\x18\x02 \x01(\t\")\n\x08HelloMsg\x12\x0c\n\x04uuid\x18\x01 \x02(\t\x12\x0f\n\x07timeout\x18\x02 \x02(\r')
+  serialized_pb=_b('\n\x0emessages.proto\x12\x11wishful_framework\"\xd2\x01\n\x0eMsgDescription\x12\x0c\n\x04type\x18\x01 \x02(\t\x12\x13\n\x0bsource_uuid\x18\x02 \x02(\t\x12Q\n\x12serialization_type\x18\x03 \x02(\x0e\x32/.wishful_framework.MsgDescription.Serialization:\x04NONE\"J\n\rSerialization\x12\x08\n\x04NONE\x10\x00\x12\x08\n\x04JSON\x10\x01\x12\n\n\x06PICKLE\x10\x02\x12\x0b\n\x07MSGPACK\x10\x03\x12\x0c\n\x08PROTOBUF\x10\x04\"\"\n\x06\x44\x65vice\x12\n\n\x02id\x18\x01 \x02(\r\x12\x0c\n\x04name\x18\x02 \x02(\t\"\x88\x03\n\x06Module\x12\n\n\x02id\x18\x01 \x02(\r\x12\x0c\n\x04name\x18\x02 \x02(\t\x12)\n\x06\x64\x65vice\x18\x03 \x01(\x0b\x32\x19.wishful_framework.Device\x12\x37\n\nattributes\x18\x04 \x03(\x0b\x32#.wishful_framework.Module.Attribute\x12\x35\n\tfunctions\x18\x05 \x03(\x0b\x32\".wishful_framework.Module.Function\x12/\n\x06\x65vents\x18\x06 \x03(\x0b\x32\x1f.wishful_framework.Module.Event\x12\x33\n\x08services\x18\x07 \x03(\x0b\x32!.wishful_framework.Module.Service\x1a\x19\n\tAttribute\x12\x0c\n\x04name\x18\x01 \x02(\t\x1a\x18\n\x08\x46unction\x12\x0c\n\x04name\x18\x01 \x02(\t\x1a\x15\n\x05\x45vent\x12\x0c\n\x04name\x18\x01 \x02(\t\x1a\x17\n\x07Service\x12\x0c\n\x04name\x18\x01 \x02(\t\"\x87\x01\n\x0bNodeInfoMsg\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\x12\n\n\x02ip\x18\x02 \x02(\t\x12\x0c\n\x04name\x18\x03 \x01(\t\x12\x10\n\x08hostname\x18\x04 \x01(\t\x12\x0c\n\x04info\x18\x05 \x01(\t\x12*\n\x07modules\x18\x06 \x03(\x0b\x32\x19.wishful_framework.Module\"%\n\x0fNodeInfoRequest\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\")\n\x13NodeAddNotification\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\"Y\n\nNewNodeAck\x12\x0e\n\x06status\x18\x01 \x02(\x08\x12\x17\n\x0f\x63ontroller_uuid\x18\x02 \x01(\t\x12\x12\n\nagent_uuid\x18\x03 \x01(\t\x12\x0e\n\x06topics\x18\x04 \x03(\t\"1\n\x0bNodeExitMsg\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\x12\x0e\n\x06reason\x18\x02 \x01(\t\")\n\x08HelloMsg\x12\x0c\n\x04uuid\x18\x01 \x02(\t\x12\x0f\n\x07timeout\x18\x02 \x02(\r')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -358,15 +358,22 @@ _NODEINFOMSG = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='info', full_name='wishful_framework.NodeInfoMsg.info', index=3,
+      name='hostname', full_name='wishful_framework.NodeInfoMsg.hostname', index=3,
       number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='modules', full_name='wishful_framework.NodeInfoMsg.modules', index=4,
-      number=5, type=11, cpp_type=10, label=3,
+      name='info', full_name='wishful_framework.NodeInfoMsg.info', index=4,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='modules', full_name='wishful_framework.NodeInfoMsg.modules', index=5,
+      number=6, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -382,8 +389,8 @@ _NODEINFOMSG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=681,
-  serialized_end=798,
+  serialized_start=682,
+  serialized_end=817,
 )
 
 
@@ -412,8 +419,8 @@ _NODEINFOREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=800,
-  serialized_end=837,
+  serialized_start=819,
+  serialized_end=856,
 )
 
 
@@ -442,8 +449,8 @@ _NODEADDNOTIFICATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=839,
-  serialized_end=880,
+  serialized_start=858,
+  serialized_end=899,
 )
 
 
@@ -493,8 +500,8 @@ _NEWNODEACK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=882,
-  serialized_end=971,
+  serialized_start=901,
+  serialized_end=990,
 )
 
 
@@ -530,8 +537,8 @@ _NODEEXITMSG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=973,
-  serialized_end=1022,
+  serialized_start=992,
+  serialized_end=1041,
 )
 
 
@@ -567,8 +574,8 @@ _HELLOMSG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1024,
-  serialized_end=1065,
+  serialized_start=1043,
+  serialized_end=1084,
 )
 
 _MSGDESCRIPTION.fields_by_name['serialization_type'].enum_type = _MSGDESCRIPTION_SERIALIZATION

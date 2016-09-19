@@ -75,6 +75,7 @@ class Node(ControllableUnit):
         self.uuid = uuid
         self.ip = None
         self.name = None
+        self.hostname = None
         self.info = None
         self.nodeManager = None
         self.local = True  # Local or remote
@@ -87,6 +88,7 @@ class Node(ControllableUnit):
         node.local = False
         node.ip = str(msg.ip)
         node.name = str(msg.name)
+        node.hostname = str(msg.hostname)
         node.info = str(msg.info)
 
         node._stop = False
@@ -122,9 +124,10 @@ class Node(ControllableUnit):
     def __str__(self):
         string = ("\nNode Description:\n" +
                   " UUID:{}\n"
+                  " Hostname:{}\n"
                   " Name:{}\n"
                   " IP:{}\n"
-                  .format(self.uuid, self.name, self.ip))
+                  .format(self.uuid, self.hostname, self.name, self.ip))
 
         string = string + " Devices:\n"
         for devId, device in self.devices.items():

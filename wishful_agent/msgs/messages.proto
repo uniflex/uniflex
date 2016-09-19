@@ -45,8 +45,9 @@ message NodeInfoMsg {
     required string agent_uuid = 1;
     required string ip = 2;
     optional string name = 3;
-    optional string info = 4;
-    repeated Module modules = 5;
+    optional string hostname = 4;
+    optional string info = 5;
+    repeated Module modules = 6;
 }
 
 message NodeInfoRequest {
