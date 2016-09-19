@@ -60,10 +60,14 @@ class CommandExecutor(wishful_module.AgentModule):
             try:
                 module = handler.__self__
                 mdevice = module.get_device()
+                mdevName = None
+                if mdevice:
+                    mdevName = mdevice.name
                 self.log.debug("Execute function: {} in module: {}"
                                " handler: {}; mdev: {}, cdev: {}"
                                .format(ctx._upi, module.__class__.__name__,
-                                       handler.__name__, mdevice, ctx._device))
+                                       handler.__name__, mdevName,
+                                       ctx._device))
 
                 # filter based on device present:
                 # if device is not required execute function
@@ -75,7 +79,7 @@ class CommandExecutor(wishful_module.AgentModule):
                                            handler.__name__))
                     execute = True
                 # if devices match execute function
-                elif mdevice == ctx._device:
+                elif mdevName == ctx._device:
                     self.log.debug("Execute function: {} in module: {}"
                                    " with device: {} ; handler: {}"
                                    .format(ctx._upi, module.__class__.__name__,
@@ -110,11 +114,10 @@ class CommandExecutor(wishful_module.AgentModule):
                         self.log.debug("synchronous call")
                         event.responseQueue.put(returnValue)
                     else:
-                        self.log.debug("asynchronous call device: {}"
-                                       .format(module.device))
+                        self.log.debug("asynchronous call")
                         event = upis.mgmt.CtxReturnValueEvent(event.node.uuid,
                                                               ctx, returnValue)
-                        event.device = module.devObj
+                        event.device = module.device
                         self.send_event(event)
 
                 else:

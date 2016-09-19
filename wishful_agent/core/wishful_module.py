@@ -178,7 +178,6 @@ class WishfulModule(object):
         # TODO: move to AgentModule (DeviceModule)
         self.device = None  # used for filtering of commands
         self.deviceId = None  # used for filtering of commands
-        self.devObj = None
         self.attributes = []
         self.functions = []
         self.events = []
@@ -201,14 +200,13 @@ class WishfulModule(object):
     def send_event(self, event):
         # stamp event with device
         if not event.device:
-            event.device = self.devObj
+            event.device = self.device
         self.moduleManager.send_event(event)
 
     # TODO: move to AgentModule (DeviceModule)
     def set_device(self, devId, dev):
         self.deviceId = devId
-        self.device = dev.name
-        self.devObj = dev
+        self.device = dev
 
     def get_device(self):
         return self.device

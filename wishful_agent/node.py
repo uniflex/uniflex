@@ -164,12 +164,6 @@ class Node(ControllableUnit):
                 return dev
         return None
 
-    def get_device_id(self, name):
-        for k, v in self.device.items():
-            if v == name:
-                return k
-        return None
-
     def set_timer_callback(self, cb):
         self._timerCallback = cb
 
