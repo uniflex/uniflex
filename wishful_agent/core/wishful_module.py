@@ -149,8 +149,8 @@ class ModuleWorker(Thread):
                 break
             try:
                 func(*args, **kargs)
-            except Exception as e:
-                print(e)
+            except:
+                raise
             self.taskQueue.task_done()
 
     def stop(self):
