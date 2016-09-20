@@ -3,6 +3,7 @@ package wishful_framework;
 message Device {
     required uint32 id = 1;
     required string name = 2;
+    required uint32 module_id = 3;
 }
 
 message Module {
@@ -33,7 +34,9 @@ message NodeInfoMsg {
     optional string name = 3;
     optional string hostname = 4;
     optional string info = 5;
-    repeated Module modules = 6;
+    repeated Device devices = 6;
+    repeated Module modules = 7;
+    repeated Module apps = 8;
 }
 
 message NodeInfoRequest {
