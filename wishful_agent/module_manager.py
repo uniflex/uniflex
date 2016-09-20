@@ -2,7 +2,7 @@ import logging
 import inspect
 import threading
 from importlib import import_module
-from queue import Queue
+from queue import Queue, Empty
 from .node import Device
 import wishful_upis as upis
 
@@ -153,7 +153,10 @@ class ModuleManager(object):
 
     def serve_event_queue(self):
         while True:
-            event = self.eventQueue.get()
+            try:
+                event = self.eventQueue.get(0.5)
+            except Empty:
+                continue
             handlers = self.get_event_handlers(event)
             self.log.debug("Serving event: {}"
                            .format(event.__class__.__name__))
@@ -170,6 +173,7 @@ class ModuleManager(object):
                                                      args=(event))
                             t.setDaemon(True)
                             t.start()
+
                     else:
                         self.log.debug("Add task: {} to worker"
                                        .format(handler.__name__))

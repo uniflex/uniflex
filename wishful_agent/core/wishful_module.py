@@ -1,7 +1,7 @@
 import uuid
 import logging
 import inspect
-from queue import Queue
+from queue import Queue, Empty
 from threading import Thread
 from functools import partial
 import wishful_upis as upis
@@ -144,13 +144,16 @@ class ModuleWorker(Thread):
 
     def run(self):
         while self.running:
-            (func, args, kargs) = self.taskQueue.get()
-            if not self.running:
-                break
             try:
+                (func, args, kargs) = self.taskQueue.get(0.2)
+                if not self.running:
+                    break
                 func(*args, **kargs)
+            except Empty:
+                continue
             except:
                 raise
+
             self.taskQueue.task_done()
 
     def stop(self):

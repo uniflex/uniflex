@@ -22,7 +22,7 @@ class Timer(object):
         if not self._thread.is_alive():
             return
         self._event.set()
-        self._thread.join()
+        # self._thread.join()
         self._thread = None
 
     def is_running(self):
