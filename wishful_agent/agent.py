@@ -64,6 +64,14 @@ class Agent(object):
             sys.path.append(configPath)
 
         agent_config = config['agent_config']
+        if not agent_config:
+            agent_config = config['agent_info']
+        if not agent_config:
+            agent_config = config['config']
+
+        if not agent_config:
+            self.log.error("Config file not provided!")
+            return
 
         if 'name' in agent_config:
             self.name = agent_config['name']

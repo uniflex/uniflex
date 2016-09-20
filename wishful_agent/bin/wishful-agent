@@ -39,6 +39,10 @@ def main(args):
     log.debug(args)
 
     config_file_path = args['--config']
+    if not config_file_path:
+        log.error("Please run wishful-agent with config file")
+        return
+
     configPath = os.path.dirname(os.path.abspath(config_file_path))
 
     config = None
