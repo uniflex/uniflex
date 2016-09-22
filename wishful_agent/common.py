@@ -51,7 +51,6 @@ def get_ip_address(ifname):
         struct.pack('256s', ifname)
     )[20:24])
     s.close()
-
     return val
 
 
@@ -71,7 +70,6 @@ class CallingContext(object):
         self._timeout = None
         self._callback = None
         self._scope = None  # todo remove
-        self._iface = None  # todo remove
 
 
 class ControllableUnit(object):
@@ -97,12 +95,10 @@ class ControllableUnit(object):
         return self
 
     def device(self, dev):
-        self._callingCtx._iface = dev
         self._callingCtx._device = dev
         return self
 
     def iface(self, iface):
-        self._callingCtx._iface = iface
         self._callingCtx._device = iface
         return self
 
@@ -144,7 +140,6 @@ class ControllableUnit(object):
         self._callingCtx._timeout = None
         self._callingCtx._callback = None
         self._callingCtx._scope = None  # todo remove
-        self._callingCtx._iface = None  # todo remove
         if ctx:
             ctx._src = None
             ctx._dst = None
@@ -159,7 +154,6 @@ class ControllableUnit(object):
             ctx._timeout = None
             ctx._callback = None
             ctx._scope = None  # todo remove
-            ctx._iface = None  # todo remove
 
     def send_msg(self, ctx):
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))

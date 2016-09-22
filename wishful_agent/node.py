@@ -22,7 +22,6 @@ class Device(ControllableUnit):
 
     def send_msg(self, ctx):
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
-        ctx._iface = self.name
         ctx._device = self.name
         response = self.node.send_msg(ctx)
         self._clear_call_context()
