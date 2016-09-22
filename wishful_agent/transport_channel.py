@@ -265,6 +265,8 @@ class TransportChannel(wishful_module.AgentModule):
         self.pubSocketLock.acquire()
         try:
             self.pub.send_multipart(msgContainer)
+        except zmq.error.ZMQError:
+            self.log.debug("ZMQError: Socket operation on non-socket")
         finally:
             self.pubSocketLock.release()
 
@@ -384,8 +386,7 @@ class TransportChannel(wishful_module.AgentModule):
 
                     self.process_msgs(msgContainer)
             except zmq.error.ZMQError:
-                pass
-
+                self.log.debug("ZMQError: Socket operation on non-socket")
 
     def send_event_outside(self, event, dstNode=None):
         filterEvents = ["NewNodeEvent", "AgentStartEvent",
