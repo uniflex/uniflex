@@ -92,7 +92,9 @@ class ModuleManager(object):
         self.log.debug("Notify START to modules".format())
         self.send_event(upis.mgmt.AgentStartEvent())
         # send new node event to interested control programs
-        self.serve_event_queue()
+        self.eventServeThread = threading.Thread(target=self.serve_event_queue)
+        self.eventServeThread.setDaemon(True)
+        self.eventServeThread.start()
 
     def exit(self):
         self.log.debug("Notify EXIT to modules".format())

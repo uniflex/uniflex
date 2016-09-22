@@ -1,4 +1,5 @@
 import sys
+import time
 import uuid
 import logging
 
@@ -169,6 +170,14 @@ class Agent(object):
         self.log.debug("Agent starts all modules".format())
         # nofity START to modules
         self.moduleManager.start()
+        try:
+            while True:
+                time.sleep(1)
+        except:
+            self.stop()
+            # TODO: find better way to wait for all modules to exit
+            # check if thay are _enabled?
+            time.sleep(0.5)
 
     def stop(self):
         self.log.debug("Stop all modules")
@@ -176,3 +185,4 @@ class Agent(object):
             self.broker.stop()
         # nofity EXIT to modules
         self.moduleManager.exit()
+        self.log.debug("STOP AGENT")

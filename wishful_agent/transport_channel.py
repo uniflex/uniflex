@@ -344,44 +344,48 @@ class TransportChannel(wishful_module.AgentModule):
 
     def recv_msgs(self):
         while not self.forceStop:
-            socks = dict(self.poller.poll(self.timeout))
-            if self.sub in socks and socks[self.sub] == zmq.POLLIN:
-                msgContainer = self.sub.recv_multipart()
-                assert len(msgContainer) == 3, msgContainer
-                topic = msgContainer[0].decode('utf-8')
-                msgDesc = msgContainer[1].decode('utf-8')
-                msgDesc = json.loads(msgDesc)
-                msgDesc = msgs.MessageDescription.parse(msgDesc)
-                msg = msgContainer[2]
+            try:
+                socks = dict(self.poller.poll(self.timeout))
+                if self.sub in socks and socks[self.sub] == zmq.POLLIN:
+                    msgContainer = self.sub.recv_multipart()
+                    assert len(msgContainer) == 3, msgContainer
+                    topic = msgContainer[0].decode('utf-8')
+                    msgDesc = msgContainer[1].decode('utf-8')
+                    msgDesc = json.loads(msgDesc)
+                    msgDesc = msgs.MessageDescription.parse(msgDesc)
+                    msg = msgContainer[2]
 
-                if msgDesc.serializationType == msgs.SerializationType.PICKLE:
-                    try:
-                        msg = pickle.loads(msg)
-                    except:
-                        msg = dill.loads(msg)
-                elif msgDesc.serializationType == msgs.SerializationType.PROTOBUF:
-                    # TODO: move all protobuf serialization here
-                    pass
-                elif msgDesc.serializationType == msgs.SerializationType.JSON:
-                    msg = msg.decode('utf-8')
-                    msg = json.loads(msg)
-                    eventType = str(topic)
-                    # get event class and create it
-                    myClass = self.eventClasses.get(eventType, None)
-                    if myClass and hasattr(myClass, 'parse'):
-                        myEvent = myClass.parse(msg)
-                        myEvent.node = msgDesc.sourceUuid
-                        myEvent.device = None
-                        msg = myEvent
-                    else:
-                        # discard message that cannot be parsed
-                        continue
+                    if msgDesc.serializationType == msgs.SerializationType.PICKLE:
+                        try:
+                            msg = pickle.loads(msg)
+                        except:
+                            msg = dill.loads(msg)
+                    elif msgDesc.serializationType == msgs.SerializationType.PROTOBUF:
+                        # TODO: move all protobuf serialization here
+                        pass
+                    elif msgDesc.serializationType == msgs.SerializationType.JSON:
+                        msg = msg.decode('utf-8')
+                        msg = json.loads(msg)
+                        eventType = str(topic)
+                        # get event class and create it
+                        myClass = self.eventClasses.get(eventType, None)
+                        if myClass and hasattr(myClass, 'parse'):
+                            myEvent = myClass.parse(msg)
+                            myEvent.node = msgDesc.sourceUuid
+                            myEvent.device = None
+                            msg = myEvent
+                        else:
+                            # discard message that cannot be parsed
+                            continue
 
-                msgContainer[0] = topic
-                msgContainer[1] = msgDesc
-                msgContainer[2] = msg
+                    msgContainer[0] = topic
+                    msgContainer[1] = msgDesc
+                    msgContainer[2] = msg
 
-                self.process_msgs(msgContainer)
+                    self.process_msgs(msgContainer)
+            except zmq.error.ZMQError:
+                pass
+
 
     def send_event_outside(self, event, dstNode=None):
         filterEvents = ["NewNodeEvent", "AgentStartEvent",

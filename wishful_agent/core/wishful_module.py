@@ -192,10 +192,6 @@ class WishfulModule(object):
         # node container
         self._nodes = {}
 
-    @on_event(upis.mgmt.AgentExitEvent)
-    def agent_exit_handler(self, event):
-        self.worker.stop()
-
     def set_agent(self, agent):
         self.agent = agent
 
