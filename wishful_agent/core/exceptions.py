@@ -1,6 +1,8 @@
 '''
 Base class for all exceptions.
 '''
+
+
 class WishfulException(Exception):
     message = 'An unknown exception'
 
@@ -16,17 +18,27 @@ class WishfulException(Exception):
 
         super(WishfulException, self).__init__(msg)
 
+
 class AgentNotAvailable(WishfulException):
     message = 'agent %(id)s not available'
+
 
 class InvalidArgumentException(WishfulException):
     message = 'function %(func_name)s called with wrong arguments'
 
+
 class UnsupportedUPIFunctionException(WishfulException):
-    message = 'function %(func_name)s is not supported by connector_module %(conn_module)s'
+    message = ("function %(func_name)s is not supported",
+               "by connector_module %(conn_module)s")
+
 
 class SchedulingFunctionCallsInThePastException(WishfulException):
     message = 'function %(func_name)s was scheduled in the past for execution'
 
+
 class UPIFunctionExecutionFailedException(WishfulException):
-    message = 'function %(func_name)s was not correctly executed; error msg: %(err_msg)s'
+    message = ("function %(func_name)s was not correctly executed;",
+               " error msg: %(err_msg)s")
+
+
+UPIFunctionExecutionFailed = UPIFunctionExecutionFailedException
