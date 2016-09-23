@@ -224,13 +224,20 @@ class WishfulModule(object):
         return self.services
 
     # TODO: move to ControllerModule (ControllerApp)
-    def add_node(self, node):
+    def _add_node(self, node):
         self._nodes[node.uuid] = node
+        return True
 
-    def get_node_by_uuid(self, uuid):
+    def _remove_node(self, node):
+        if node in self._nodes:
+            self._nodes.remove(node)
+            return True
+        return False
+
+    def _get_node_by_uuid(self, uuid, ):
         return self._nodes.get(uuid, None)
 
-    def get_node_by_hostname(self, hostname):
+    def _get_node_by_hostname(self, hostname):
         for n in self._nodes:
             if n.hostname == hostname:
                 return n
