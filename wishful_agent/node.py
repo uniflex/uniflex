@@ -19,10 +19,14 @@ class Device(ControllableUnit):
         self._id = devId
         self.name = name
         self.node = node
+        self._module = None
 
     def send_msg(self, ctx):
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
         ctx._device = self.name
+        upiName = ctx._upi
+        upiName = upiName.split(".")[-1]
+
         response = self.node.send_msg(ctx)
         self._clear_call_context()
         return response

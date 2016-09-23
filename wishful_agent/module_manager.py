@@ -1,4 +1,5 @@
 import logging
+import copy
 import inspect
 import threading
 from importlib import import_module
@@ -151,7 +152,9 @@ class ModuleManager(object):
         # quick hack to sent events also through transport channel
         # TODO: improve it
         if self.agent.transport:
-            self.agent.transport.send_event_outside(event)
+            # do not change original event that was sent to event queue
+            eventCopy = copy.copy(event)
+            self.agent.transport.send_event_outside(eventCopy)
 
     def serve_event_queue(self):
         while True:
