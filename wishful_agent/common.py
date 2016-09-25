@@ -5,13 +5,15 @@ import socket
 import fcntl
 import struct
 import datetime
+from netifaces import AF_INET, AF_INET6, AF_LINK
+import netifaces as ni
 import wishful_upis as upis
 from .core import upis_builder
 
-__author__ = "Piotr Gawlowicz"
+__author__ = "Piotr Gawlowicz, Anatolij Zubow"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
 __version__ = "0.1.0"
-__email__ = "gawlowicz@tkn.tu-berlin.de"
+__email__ = "{gawlowicz|zubow}@tkn.tu-berlin.de"
 
 
 def get_inheritors(klass):
@@ -39,19 +41,14 @@ def get_inheritors_set(klass):
 
 
 def get_ip_address(ifname):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    if sys.version_info.major >= 3:
-        ifname = bytes(ifname[:15], 'utf-8')
-    else:
-        ifname = ifname[:15]
-
-    val = socket.inet_ntoa(fcntl.ioctl(
-        s.fileno(),
-        0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname)
-    )[20:24])
-    s.close()
-    return val
+    try:
+        # AZU: old code was for Linux only; does not work with OSX
+        # new solution is platform independent
+        val = ni.ifaddresses(ifname)[AF_INET][0]['addr']
+        return val
+    except Exception as e:
+        print("Exception!!!: {} {}".format(ifname, e))
+        raise e
 
 
 class CallingContext(object):
