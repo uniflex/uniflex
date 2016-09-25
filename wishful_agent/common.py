@@ -47,7 +47,7 @@ def get_ip_address(ifname):
         val = ni.ifaddresses(ifname)[AF_INET][0]['addr']
         return val
     except Exception as e:
-        print("Exception!!!: {} {}".format(ifname, e))
+        print("Failed to get IP address of iface: {} {}".format(ifname, e))
         raise e
 
 
