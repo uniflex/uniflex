@@ -1,11 +1,7 @@
-import sys
 import inspect
 import logging
-import socket
-import fcntl
-import struct
 import datetime
-from netifaces import AF_INET, AF_INET6, AF_LINK
+from netifaces import AF_INET, AF_INET6
 import netifaces as ni
 import wishful_upis as upis
 from .core import upis_builder
