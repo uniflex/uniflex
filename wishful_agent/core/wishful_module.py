@@ -229,10 +229,13 @@ class WishfulModule(object):
         return True
 
     def _remove_node(self, node):
-        if node in self._nodes:
-            self._nodes.remove(node)
+        if node.uuid in self._nodes:
+            del self._nodes[node.uuid]
             return True
         return False
+
+    def get_nodes(self):
+        return list(self._nodes.values())
 
     def _get_node_by_uuid(self, uuid, ):
         return self._nodes.get(uuid, None)
