@@ -62,7 +62,6 @@ class CallingContext(object):
         self._exec_time = None
         self._timeout = None
         self._callback = None
-        self._scope = None  # todo remove
 
 
 class ControllableUnit(object):
@@ -80,11 +79,11 @@ class ControllableUnit(object):
         self.context = builder.create_upi(upis.context.Context, "context")
 
     def node(self, node):
-        self._callingCtx._scope = node
+        self._callingCtx._dst = node
         return self
 
     def nodes(self, nodelist):
-        self._callingCtx._scope = nodelist
+        self._callingCtx._dst = nodelist
         return self
 
     def device(self, dev):
@@ -119,7 +118,7 @@ class ControllableUnit(object):
         self._callingCtx._blocking = False
         return self
 
-    def _clear_call_context(self, ctx=None):
+    def _clear_call_context(self):
         self._callingCtx._src = None
         self._callingCtx._dst = None
         self._callingCtx._device = None
@@ -132,21 +131,6 @@ class ControllableUnit(object):
         self._callingCtx._exec_time = None
         self._callingCtx._timeout = None
         self._callingCtx._callback = None
-        self._callingCtx._scope = None  # todo remove
-        if ctx:
-            ctx._src = None
-            ctx._dst = None
-            ctx._device = None
-            ctx._upi_type = None
-            ctx._upi = None
-            ctx._args = None
-            ctx._kwargs = None
-            ctx._callId = "1"
-            ctx._blocking = True
-            ctx._exec_time = None
-            ctx._timeout = None
-            ctx._callback = None
-            ctx._scope = None  # todo remove
 
     def send_msg(self, ctx):
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
