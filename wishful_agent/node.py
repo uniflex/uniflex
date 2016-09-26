@@ -21,13 +21,13 @@ class Device(ControllableUnit):
         self.node = node
         self._module = None
 
-    def send_msg(self, ctx):
+    def send_cmd_event(self, ctx):
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
         ctx._device = self.name
         upiName = ctx._upi
         upiName = upiName.split(".")[-1]
 
-        response = self.node.send_msg(ctx)
+        response = self.node.send_cmd_event(ctx)
         self._clear_call_context()
         return response
 
@@ -68,6 +68,13 @@ class ModuleDescriptor(object):
         for k in self.services:
             string = string + "      {}\n".format(k)
         return string
+
+
+class Application(ControllableUnit):
+    """docstring for Application"""
+
+    def __init__(self):
+        super(Application, self).__init__()
 
 
 class Node(ControllableUnit):
@@ -190,7 +197,7 @@ class Node(ControllableUnit):
     def refresh_hello_timer(self):
         self._helloTimeout = 9
 
-    def send_msg(self, ctx):
+    def send_cmd_event(self, ctx):
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
         if ctx._callback:
             app = ctx._callback.__self__

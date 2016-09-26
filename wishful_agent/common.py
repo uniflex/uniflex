@@ -132,7 +132,10 @@ class ControllableUnit(object):
         self._callingCtx._timeout = None
         self._callingCtx._callback = None
 
-    def send_msg(self, ctx):
+    def send_event(self, event):
+        self.log.info("{}".format(event.__class__.__name__))
+
+    def send_cmd_event(self, ctx):
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
 
     def cmd_wrapper(self, upi_type, fname, *args, **kwargs):
@@ -140,7 +143,7 @@ class ControllableUnit(object):
         self._callingCtx._upi = fname
         self._callingCtx._args = args
         self._callingCtx._kwargs = kwargs
-        return self.send_msg(self._callingCtx)
+        return self.send_cmd_event(self._callingCtx)
 
     def get_upi_string(self, event):
         className = None
@@ -151,42 +154,36 @@ class ControllableUnit(object):
 
         return event.__module__ + '.' + className
 
-    def enable_event(self, event):
+    def enable_event(self, event, *args, **kwargs):
         self._callingCtx._upi_type = "event_enable"
         self._callingCtx._upi = self.get_upi_string(event)
-        self._callingCtx._args = ["start"]
-        self._callingCtx._kwargs = {}
-        return self.send_msg(self._callingCtx)
+        self._callingCtx._args = args
+        self._callingCtx._kwargs = kwargs
+        return self.send_cmd_event(self._callingCtx)
 
     def disable_event(self, event):
         self._callingCtx._upi_type = "event_disable"
         self._callingCtx._upi = self.get_upi_string(event)
-        self._callingCtx._args = ["stop"]
+        self._callingCtx._args = []
         self._callingCtx._kwargs = {}
-        return self.send_msg(self._callingCtx)
+        return self.send_cmd_event(self._callingCtx)
 
     def is_event_enabled(self, event):
         pass
 
-    def start_service(self, service):
+    def start_service(self, service, *args, **kwargs):
         self._callingCtx._upi_type = "service_start"
         self._callingCtx._upi = self.get_upi_string(service)
-        self._callingCtx._args = ["start"]
-        self._callingCtx._kwargs = {}
-        return self.send_msg(self._callingCtx)
+        self._callingCtx._args = args
+        self._callingCtx._kwargs = kwargs
+        return self.send_cmd_event(self._callingCtx)
 
     def stop_service(self, service):
         self._callingCtx._upi_type = "service_stop"
         self._callingCtx._upi = self.get_upi_string(service)
-        self._callingCtx._args = ["stop"]
+        self._callingCtx._args = []
         self._callingCtx._kwargs = {}
-        return self.send_msg(self._callingCtx)
+        return self.send_cmd_event(self._callingCtx)
 
     def is_service_enabled(self, service):
-        pass
-
-    def add_rule(self, rule):
-        pass
-
-    def del_rule(self, rule):
         pass
