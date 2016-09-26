@@ -57,7 +57,7 @@ class CallingContext(object):
         self._upi = None
         self._args = None
         self._kwargs = None
-        self._callId = "1"
+        self._callId = None
         self._blocking = True
         self._exec_time = None
         self._timeout = None
@@ -77,22 +77,6 @@ class ControllableUnit(object):
         self.net = builder.create_upi(upis.net.Network, "net")
         self.mgmt = builder.create_upi(upis.mgmt.Mgmt, "mgmt")
         self.context = builder.create_upi(upis.context.Context, "context")
-
-    def node(self, node):
-        self._callingCtx._dst = node
-        return self
-
-    def nodes(self, nodelist):
-        self._callingCtx._dst = nodelist
-        return self
-
-    def device(self, dev):
-        self._callingCtx._device = dev
-        return self
-
-    def iface(self, iface):
-        self._callingCtx._device = iface
-        return self
 
     def blocking(self, value=True):
         self._callingCtx._blocking = value

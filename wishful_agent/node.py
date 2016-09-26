@@ -76,6 +76,9 @@ class Application(ControllableUnit):
     def __init__(self):
         super(Application, self).__init__()
 
+    def send_cmd_event(self, ctx):
+        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
+
 
 class Node(ControllableUnit):
     def __init__(self, uuid):
