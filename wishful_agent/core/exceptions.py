@@ -28,7 +28,7 @@ class InvalidArgumentException(WishfulException):
 
 
 class UnsupportedUPIFunctionException(WishfulException):
-    message = ("function %(func_name)s is not supported",
+    message = ("function %(func_name)s is not supported" +
                "by connector_module %(conn_module)s")
 
 
@@ -37,7 +37,7 @@ class SchedulingFunctionCallsInThePastException(WishfulException):
 
 
 class UPIFunctionExecutionFailedException(WishfulException):
-    message = ("function %(func_name)s was not correctly executed;",
+    message = ("function %(func_name)s was not correctly executed;" +
                " error msg: %(err_msg)s")
 
 
