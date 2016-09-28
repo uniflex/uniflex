@@ -34,7 +34,7 @@ class HelloMsgTimeoutEvent(upis.mgmt.TimeEvent):
 
 
 @wishful_module.build_module
-class TransportChannel(wishful_module.AgentModule):
+class TransportChannel(wishful_module.CoreModule):
     def __init__(self, agent):
         super().__init__()
         self.log = logging.getLogger("{module}.{name}".format(
@@ -176,14 +176,25 @@ class TransportChannel(wishful_module.AgentModule):
         msg.info = self.agent.info
 
         for mid, module in self.agent.moduleManager.modules.items():
+            if isinstance(module, wishful_module.CoreModule):
+                continue
+
             moduleMsg = msg.modules.add()
+            moduleMsg.uuid = module.uuid
             moduleMsg.id = mid
             moduleMsg.name = module.name
+            moduleMsg.type = msgs.Module.MODULE
+
+            if isinstance(module, wishful_module.Application):
+                moduleMsg.type = msgs.Module.APPLICATION
+            else:
+                moduleMsg.type = msgs.Module.MODULE
 
             if module.device:
+                moduleMsg.type = msgs.Module.DEVICE
                 deviceDesc = msgs.Device()
-                deviceDesc.id = module.device._id
-                deviceDesc.name = module.device.name
+                deviceDesc.id = module.deviceObj._id
+                deviceDesc.name = module.deviceObj.name
                 moduleMsg.device.CopyFrom(deviceDesc)
 
             for name in module.get_attributes():

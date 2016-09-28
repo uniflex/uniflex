@@ -13,7 +13,7 @@ __email__ = "gawlowicz@tkn.tu-berlin.de"
 
 
 @wishful_module.build_module
-class CommandExecutor(wishful_module.AgentModule):
+class CommandExecutor(wishful_module.CoreModule):
     def __init__(self, agent):
         super().__init__()
         self.log = logging.getLogger("{module}.{name}".format(
@@ -59,7 +59,7 @@ class CommandExecutor(wishful_module.AgentModule):
         for handler in handlers:
             try:
                 module = handler.__self__
-                mdevice = module.get_device()
+                mdevice = module.get_device_obj()
                 mdevName = None
                 if mdevice:
                     mdevName = mdevice.name
@@ -117,7 +117,7 @@ class CommandExecutor(wishful_module.AgentModule):
                         self.log.debug("asynchronous call")
                         event = upis.mgmt.CtxReturnValueEvent(event.node.uuid,
                                                               ctx, returnValue)
-                        event.device = module.device
+                        event.device = module.deviceObj
                         self.send_event(event)
 
                 else:
@@ -129,11 +129,11 @@ class CommandExecutor(wishful_module.AgentModule):
                     continue
 
             except Exception as e:
-                self.log.debug('Exception occurred during handler '
+                self.log.info('Exception occurred during handler '
                                'processing. Backtrace from offending '
                                'handler [%s] servicing UPI function '
-                               '[%s] follows',
-                               handler.__name__, ctx._upi)
+                               '[%s] follows [%s]',
+                               handler.__name__, ctx._upi, e)
 
                 # create exception event and send it back to controller
                 if ctx._blocking:

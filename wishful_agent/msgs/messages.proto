@@ -1,42 +1,50 @@
 package wishful_framework;
 
+message Attribute {
+    required string name = 1;
+}
+message Function {
+    required string name = 1;
+}
+message Event {
+    required string name = 1;
+}
+message Service {
+    required string name = 1;
+}
+
+
 message Device {
     required uint32 id = 1;
     required string name = 2;
-    required uint32 module_id = 3;
 }
 
 message Module {
-    message Attribute {
-        required string name = 1;
+    enum ModuleType {
+      MODULE = 0;
+      DEVICE = 1;
+      APPLICATION = 2;
     }
-    message Function {
-        required string name = 1;
-    }
-    message Event {
-        required string name = 1;
-    }
-    message Service {
-        required string name = 1;
-    }
-    required uint32 id = 1;
-    required string name = 2;
-    optional Device device = 3;
-    repeated Attribute attributes = 4;
-    repeated Function functions = 5;
-    repeated Event events = 6;
-    repeated Service services = 7;
+    required string uuid = 1;
+    required uint32 id = 2;
+    required string name = 3;
+    required ModuleType type = 4;
+    optional Device device = 5;
+    repeated Attribute attributes = 6;
+    repeated Function functions = 7;
+    repeated Event events = 8;
+    repeated Service services = 9;
 }
 
 message NodeInfoMsg {
     required string agent_uuid = 1;
     required string ip = 2;
-    optional string name = 3;
-    optional string hostname = 4;
+    required string name = 3;
+    required string hostname = 4;
     optional string info = 5;
-    repeated Device devices = 6;
+    repeated Module devices = 6;
     repeated Module modules = 7;
-    repeated Module apps = 8;
+    repeated Module applications = 8;
 }
 
 message NodeInfoRequest {

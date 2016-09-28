@@ -14,7 +14,7 @@ __version__ = "0.1.0"
 __email__ = "gawlowicz@tkn.tu-berlin.de"
 
 
-class NodeManager(wishful_module.AgentModule):
+class NodeManager(wishful_module.CoreModule):
     def __init__(self, agent):
         super().__init__()
         self.log = logging.getLogger("{module}.{name}".format(

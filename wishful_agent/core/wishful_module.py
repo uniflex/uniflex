@@ -182,6 +182,7 @@ class WishfulModule(object):
 
         # TODO: move to AgentModule (DeviceModule)
         self.device = None  # used for filtering of commands
+        self.deviceObj = None  # used for filtering of commands
         self.attributes = []
         self.functions = []
         self.events = []
@@ -201,15 +202,19 @@ class WishfulModule(object):
     def send_event(self, event):
         # stamp event with device
         if not event.device:
-            event.device = self.device
+            event.device = self.deviceObj
         self.moduleManager.send_event(event)
 
     # TODO: move to AgentModule (DeviceModule)
     def set_device(self, dev):
-        self.device = dev
+        self.deviceObj = dev
+        self.device = dev.name
 
     def get_device(self):
         return self.device
+
+    def get_device_obj(self):
+        return self.deviceObj
 
     def get_attributes(self):
         return self.attributes
@@ -259,13 +264,25 @@ class WishfulModule(object):
         self.callbacks[ctx._callId] = ctx._callback
 
 
+class CoreModule(WishfulModule):
+    def __init__(self):
+        super(CoreModule, self).__init__()
+
+
+class AgentModule(WishfulModule):
+    def __init__(self):
+        super(AgentModule, self).__init__()
+
+
+class DeviceModule(WishfulModule):
+    def __init__(self):
+        super(DeviceModule, self).__init__()
+
+
 class ControllerModule(WishfulModule):
     def __init__(self):
         super(ControllerModule, self).__init__()
         self.upiCallCallbacks = {}
-
-    def add_rule(self,):
-        pass
 
     @on_event(upis.mgmt.CtxReturnValueEvent)
     def serve_asynchronous_return_value(self, event):
@@ -281,6 +298,6 @@ class ControllerModule(WishfulModule):
             callback(event)
 
 
-class AgentModule(WishfulModule):
+class Application(ControllerModule):
     def __init__(self):
-        super(AgentModule, self).__init__()
+        super(Application, self).__init__()

@@ -61,7 +61,10 @@ class ModuleManager(object):
         node.modules[wishfulModule.id] = wishfulModule
         if device:
             devId = self.generate_new_device_id()
-            dev = Device(devId, device, node)
+            dev = Device()
+            dev._id = devId
+            dev.name = device
+            dev.node = node
             wishfulModule.set_device(dev)
             node.devices[devId] = dev
         return wishfulModule
@@ -109,7 +112,6 @@ class ModuleManager(object):
                 for ev_cls, c in handler.callers.items():
                     self._event_handlers.setdefault(ev_cls, [])
                     self._event_handlers[ev_cls].append(handler)
-                    i.events.append(handler.__name__)
 
     def subscribe_for_event(self, i):
         events = set()
@@ -200,7 +202,6 @@ class ModuleManager(object):
                 if handler._upiFunc_:
                     self._function_handlers.setdefault(handler._upiFunc_, [])
                     self._function_handlers[handler._upiFunc_].append(handler)
-                    i.functions.append(handler.__name__)
 
     def get_function_handlers(self, upiFunc, state=None):
         handlers = self._function_handlers.get(upiFunc, [])
@@ -214,7 +215,6 @@ class ModuleManager(object):
                         handler._event_enable_, [])
                     self._event_enable_handlers[handler._event_enable_].append(
                         handler)
-                    # i.events.append(handler.__name__)
 
     def get_event_enable_handlers(self, event, state=None):
         handlers = self._event_enable_handlers.get(event, [])
@@ -228,7 +228,6 @@ class ModuleManager(object):
                         handler._event_disable_, [])
                     self._event_disable_handlers[handler._event_disable_].append(
                         handler)
-                    # i.events.append(handler.__name__)
 
     def get_event_disable_handlers(self, event, state=None):
         handlers = self._event_disable_handlers.get(event, [])
@@ -242,7 +241,6 @@ class ModuleManager(object):
                         handler._service_start_, [])
                     self._service_start_handlers[handler._service_start_].append(
                         handler)
-                    # i.events.append(handler.__name__)
 
     def get_service_start_handlers(self, service, state=None):
         handlers = self._service_start_handlers.get(service, [])

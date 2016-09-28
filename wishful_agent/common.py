@@ -70,6 +70,12 @@ class ControllableUnit(object):
             module=self.__class__.__module__, name=self.__class__.__name__))
 
         self.uuid = None
+        self.id = None
+        self.module_id = None
+        self.name = None
+        self.module_name = None
+        self.node = None
+
         self._callingCtx = CallingContext()
         self._clear_call_context()
         # UPIs
@@ -78,6 +84,31 @@ class ControllableUnit(object):
         self.net = builder.create_upi(upis.net.Network, "net")
         self.mgmt = builder.create_upi(upis.mgmt.Mgmt, "mgmt")
         self.context = builder.create_upi(upis.context.Context, "context")
+
+        # containers for unit description
+        self.attributes = []
+        self.functions = []
+        self.events = []
+        self.services = []
+
+    def __str__(self):
+        string = ("  Module: {}\n"
+                  "    ID: {} \n"
+                  .format(self.module_name, self.module_id))
+
+        string = string + "    Attributes:\n"
+        for k in self.attributes:
+            string = string + "      {}\n".format(k)
+        string = string + "    Functions:\n"
+        for k in self.functions:
+            string = string + "      {}\n".format(k)
+        string = string + "    Events:\n"
+        for k in self.events:
+            string = string + "      {}\n".format(k)
+        string = string + "    Services:\n"
+        for k in self.services:
+            string = string + "      {}\n".format(k)
+        return string
 
     def blocking(self, value=True):
         self._callingCtx._blocking = value
@@ -172,3 +203,20 @@ class ControllableUnit(object):
 
     def is_service_enabled(self, service):
         pass
+
+    def is_upi_supported(self, upiType, upiName):
+        self.log.info("Checking call: {}.{} for device {} in node {}"
+                      .format(upiType, upiName, self.name, self.node.hostname))
+
+        return True
+        myModule = self._module
+
+        if upiType == "function":
+            if upiName in myModule.functions:
+                return True
+        elif upiType == "event_enable":
+            return True
+        else:
+            return True
+
+        return False

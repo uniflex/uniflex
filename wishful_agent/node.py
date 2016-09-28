@@ -3,6 +3,7 @@ import time
 import logging
 from queue import Queue
 from .common import ControllableUnit
+import wishful_agent.msgs as msgs
 import wishful_upis as upis
 
 __author__ = "Piotr Gawlowicz"
@@ -11,15 +12,36 @@ __version__ = "0.1.0"
 __email__ = "{gawlowicz}@tkn.tu-berlin.de"
 
 
+class Module(ControllableUnit):
+    """docstring for Module"""
+
+    def __init__(self):
+        super(Module, self).__init__()
+
+    def send_event(self, event):
+        self.log.debug()
+
+    def send_cmd_event(self, ctx):
+        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
+
+
 class Device(ControllableUnit):
-    def __init__(self, devId, name, node):
+    def __init__(self):
         super().__init__()
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
-        self._id = devId
-        self.name = name
-        self.node = node
-        self._module = None
+        self._id = None
+        self.name = None
+
+    def __str__(self):
+        string = super().__str__()
+        desc = ("    Device: {}:{} \n"
+                .format(self._id, self.name))
+        string = string + desc
+        return string
+
+    def send_event(self, event):
+        self.log.debug()
 
     def send_cmd_event(self, ctx):
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
@@ -27,47 +49,13 @@ class Device(ControllableUnit):
         upiName = ctx._upi
         upiName = upiName.split(".")[-1]
 
+        # chech if UPI is supported
+        # if not self.is_upi_supported(ctx._upi_type, upiName):
+        #     raise
+
         response = self.node.send_cmd_event(ctx)
         self._clear_call_context()
         return response
-
-
-class ModuleDescriptor(object):
-    """docstring for ModuleDescriptor"""
-
-    def __init__(self):
-        super(ModuleDescriptor, self).__init__()
-        self.id = None
-        self.name = None
-        self.device = None
-        self.attributes = []
-        self.functions = []
-        self.events = []
-        self.services = []
-
-    def __str__(self):
-        string = ("  Module: {}\n"
-                  "    ID: {} \n"
-                  .format(self.name, self.id))
-
-        if self.device:
-            desc = ("    Device: {}:{} \n"
-                    .format(self.device._id, self.device.name))
-            string = string + desc
-
-        string = string + "    Attributes:\n"
-        for k in self.attributes:
-            string = string + "      {}\n".format(k)
-        string = string + "    Functions:\n"
-        for k in self.functions:
-            string = string + "      {}\n".format(k)
-        string = string + "    Events:\n"
-        for k in self.events:
-            string = string + "      {}\n".format(k)
-        string = string + "    Services:\n"
-        for k in self.services:
-            string = string + "      {}\n".format(k)
-        return string
 
 
 class Application(ControllableUnit):
@@ -76,10 +64,14 @@ class Application(ControllableUnit):
     def __init__(self):
         super(Application, self).__init__()
 
+    def send_event(self, event):
+        self.log.debug()
+
     def send_cmd_event(self, ctx):
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
 
 
+# TODO: node is not controllable, only modules devs and apps
 class Node(ControllableUnit):
     def __init__(self, uuid):
         super().__init__()
@@ -93,8 +85,8 @@ class Node(ControllableUnit):
         self.nodeManager = None
         self.local = True  # Local or remote
         self.apps = {}
-        self.devices = {}
         self.modules = {}
+        self.devices = {}
 
     @staticmethod
     def create_node_from_msg(msg):
@@ -110,14 +102,20 @@ class Node(ControllableUnit):
         node._timerCallback = None
 
         for module in msg.modules:
-            moduleDesc = ModuleDescriptor()
-            moduleDesc.id = module.id
-            moduleDesc.name = str(module.name)
+            moduleDesc = None
+            if module.type == msgs.Module.APPLICATION:
+                moduleDesc = Application()
+            elif module.type == msgs.Module.DEVICE:
+                moduleDesc = Device()
+            else:
+                moduleDesc = Module()
 
-            if module.HasField('device'):
-                deviceDesc = Device(module.device.id, module.device.name, node)
-                moduleDesc.device = deviceDesc
-                node.devices[deviceDesc._id] = deviceDesc
+            moduleDesc.node = node
+            moduleDesc.uuid = module.uuid
+            moduleDesc.id = module.id
+            moduleDesc.module_id = module.id
+            moduleDesc.name = str(module.name)
+            moduleDesc.module_name = str(module.name)
 
             for attr in module.attributes:
                 moduleDesc.attributes.append(str(attr.name))
@@ -131,7 +129,17 @@ class Node(ControllableUnit):
             for service in module.services:
                 moduleDesc.services.append(str(service.name))
 
-            node.modules[moduleDesc.name] = moduleDesc
+            if module.type == msgs.Module.APPLICATION:
+                node.apps[moduleDesc.module_name] = moduleDesc
+
+            elif module.type == msgs.Module.DEVICE:
+                if module.HasField('device'):
+                    moduleDesc._id = module.device.id
+                    moduleDesc.name = module.device.name
+
+                node.devices[moduleDesc._id] = moduleDesc
+            else:
+                node.modules[moduleDesc.module_name] = moduleDesc
 
         return node
 
@@ -151,6 +159,11 @@ class Node(ControllableUnit):
         for name, module in self.modules.items():
             moduleString = module.__str__()
             string = string + moduleString
+
+        string = string + " Applications:\n"
+        for name, app in self.apps.items():
+            appString = app.__str__()
+            string = string + appString
 
         return string
 
@@ -200,8 +213,11 @@ class Node(ControllableUnit):
     def refresh_hello_timer(self):
         self._helloTimeout = 9
 
+    def send_event(self, event):
+        self.log.debug()
+
     def send_cmd_event(self, ctx):
-        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
+        self.log.info("{}:{}".format(ctx._upi_type, ctx._upi))
         if ctx._callback:
             app = ctx._callback.__self__
             app._register_callback(ctx)
@@ -232,3 +248,13 @@ class NodeGroup(object):
 
     def __init__(self):
         super(NodeGroup, self).__init__()
+
+    def is_upi_supported(self, device, upiType, upiName):
+        self.log.debug("Checking call: {}.{} for device {} in node {}"
+                       .format(upiType, upiName, device, self.name))
+
+    def send_event(self, event):
+        self.log.debug()
+
+    def send_cmd_event(self, ctx):
+        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
