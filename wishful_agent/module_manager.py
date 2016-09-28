@@ -112,6 +112,7 @@ class ModuleManager(object):
                 for ev_cls, c in handler.callers.items():
                     self._event_handlers.setdefault(ev_cls, [])
                     self._event_handlers[ev_cls].append(handler)
+                    i.in_events.append(ev_cls.__name__)
 
     def subscribe_for_event(self, i):
         events = set()
@@ -202,6 +203,7 @@ class ModuleManager(object):
                 if handler._upiFunc_:
                     self._function_handlers.setdefault(handler._upiFunc_, [])
                     self._function_handlers[handler._upiFunc_].append(handler)
+                    i.functions.append(handler._upiFunc_)
 
     def get_function_handlers(self, upiFunc, state=None):
         handlers = self._function_handlers.get(upiFunc, [])
@@ -215,6 +217,7 @@ class ModuleManager(object):
                         handler._event_enable_, [])
                     self._event_enable_handlers[handler._event_enable_].append(
                         handler)
+                    i.out_events.append(handler._event_enable_)
 
     def get_event_enable_handlers(self, event, state=None):
         handlers = self._event_enable_handlers.get(event, [])
@@ -241,6 +244,7 @@ class ModuleManager(object):
                         handler._service_start_, [])
                     self._service_start_handlers[handler._service_start_].append(
                         handler)
+                    i.services.append(handler._service_start_)
 
     def get_service_start_handlers(self, service, state=None):
         handlers = self._service_start_handlers.get(service, [])
@@ -254,7 +258,6 @@ class ModuleManager(object):
                         handler._service_stop_, [])
                     self._service_stop_handlers[handler._service_stop_].append(
                         handler)
-                    # i.events.append(handler.__name__)
 
     def get_service_stop_handlers(self, service, state=None):
         handlers = self._service_stop_handlers.get(service, [])

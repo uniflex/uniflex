@@ -185,7 +185,8 @@ class WishfulModule(object):
         self.deviceObj = None  # used for filtering of commands
         self.attributes = []
         self.functions = []
-        self.events = []
+        self.in_events = []
+        self.out_events = []
         self.services = []
         self.firstCallToModule = False
 
@@ -222,8 +223,11 @@ class WishfulModule(object):
     def get_functions(self):
         return self.functions
 
-    def get_events(self):
-        return self.events
+    def get_in_events(self):
+        return self.in_events
+
+    def get_out_events(self):
+        return self.out_events
 
     def get_services(self):
         return self.services

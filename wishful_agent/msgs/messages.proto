@@ -32,8 +32,9 @@ message Module {
     optional Device device = 5;
     repeated Attribute attributes = 6;
     repeated Function functions = 7;
-    repeated Event events = 8;
-    repeated Service services = 9;
+    repeated Event in_events = 8;
+    repeated Event out_events = 9;
+    repeated Service services = 10;
 }
 
 message NodeInfoMsg {

@@ -88,7 +88,8 @@ class ControllableUnit(object):
         # containers for unit description
         self.attributes = []
         self.functions = []
-        self.events = []
+        self.in_events = []
+        self.out_events = []
         self.services = []
 
     def __str__(self):
@@ -102,8 +103,11 @@ class ControllableUnit(object):
         string = string + "    Functions:\n"
         for k in self.functions:
             string = string + "      {}\n".format(k)
-        string = string + "    Events:\n"
-        for k in self.events:
+        string = string + "    Consumes Events:\n"
+        for k in self.in_events:
+            string = string + "      {}\n".format(k)
+        string = string + "    Generates Events:\n"
+        for k in self.out_events:
             string = string + "      {}\n".format(k)
         string = string + "    Services:\n"
         for k in self.services:

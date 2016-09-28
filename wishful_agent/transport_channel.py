@@ -203,8 +203,11 @@ class TransportChannel(wishful_module.CoreModule):
             for name in module.get_functions():
                 function = moduleMsg.functions.add()
                 function.name = name
-            for name in module.get_events():
-                event = moduleMsg.events.add()
+            for name in module.get_in_events():
+                event = moduleMsg.in_events.add()
+                event.name = name
+            for name in module.get_out_events():
+                event = moduleMsg.out_events.add()
                 event.name = name
             for name in module.get_services():
                 service = moduleMsg.services.add()

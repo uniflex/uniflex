@@ -123,8 +123,11 @@ class Node(ControllableUnit):
             for func in module.functions:
                 moduleDesc.functions.append(str(func.name))
 
-            for event in module.events:
-                moduleDesc.events.append(str(event.name))
+            for event in module.in_events:
+                moduleDesc.in_events.append(str(event.name))
+
+            for event in module.out_events:
+                moduleDesc.out_events.append(str(event.name))
 
             for service in module.services:
                 moduleDesc.services.append(str(service.name))
@@ -217,7 +220,7 @@ class Node(ControllableUnit):
         self.log.debug()
 
     def send_cmd_event(self, ctx):
-        self.log.info("{}:{}".format(ctx._upi_type, ctx._upi))
+        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
         if ctx._callback:
             app = ctx._callback.__self__
             app._register_callback(ctx)
