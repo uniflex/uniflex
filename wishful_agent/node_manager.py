@@ -231,11 +231,17 @@ class NodeManager(wishful_module.CoreModule):
         event = msgContainer[2]
         srcNodeUuid = event.node
         node = self.get_node_by_uuid(event.node)
+
+        # TODO: uncomment it!! but find solution for support for node-red
+        #if node is None:
+        #    self.log.debug("Unknown node: {}"
+        #                   .format(srcNodeUuid))
+        #    self._transportChannel.send_node_info_request(srcNodeUuid)
+        #    return
+
         self.log.debug("received event from node: {}".format(event.node))
         event.node = node
-        # TODO: uncomment it!! but find solution for support for node-red
-        # if not event.node:
-        #    return
+
         if event.device is not None and isinstance(event.device, int):
             event.device = event.node.get_device(event.device)
 
