@@ -116,12 +116,13 @@ class ModuleManager(object):
 
     def subscribe_for_event(self, i):
         events = set()
-        filterEvents = set(["NewNodeEvent", "AgentStartEvent",
-                            "ControllerDiscoveredEvent", "AgentExitEvent",
-                            "NodeExitEvent", "NodeLostEvent",
+        filterEvents = set(["AgentStartEvent", "AgentExitEvent",
+                            "NewNodeEvent", "NodeExitEvent", "NodeLostEvent",
+                            "BrokerDiscoveredEvent",
+                            "ConnectionEstablishedEvent",
+                            "ConnectionLostEvent",
                             "SendHelloMsgTimeEvent", "HelloMsgTimeoutEvent",
-                            "ControllerConnectedEvent", "CtxReturnValueEvent",
-                            "CtxCommandEvent"])
+                            "CtxReturnValueEvent", "CtxCommandEvent"])
 
         for _k, handler in inspect.getmembers(i, inspect.ismethod):
             if hasattr(handler, 'callers'):

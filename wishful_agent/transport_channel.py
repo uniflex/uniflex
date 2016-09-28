@@ -60,7 +60,7 @@ class TransportChannel(wishful_module.CoreModule):
         self.poller = zmq.Poller()
         self.context = zmq.Context()
 
-        # for downlink communication with controller
+        # for downlink communication
         self.sub = self.context.socket(zmq.SUB)
         self.log.debug(
             "Agent connects subscribes to topics")
@@ -71,7 +71,7 @@ class TransportChannel(wishful_module.CoreModule):
         self.subscribe_to("HELLO_MSG")
         self.sub.setsockopt(zmq.LINGER, 100)
 
-        # for uplink communication with controller
+        # for uplink communication
         self.pub = self.context.socket(zmq.PUB)
 
         # register module socket in poller
@@ -116,7 +116,7 @@ class TransportChannel(wishful_module.CoreModule):
         except:
             pass
 
-    @wishful_module.on_event(upis.mgmt.ControllerDiscoveredEvent)
+    @wishful_module.on_event(upis.mgmt.BrokerDiscoveredEvent)
     def connect_to_broker(self, event):
         if self.connected or self.forceStop:
             self.log.debug("Agent already connected to broker".format())
@@ -152,8 +152,8 @@ class TransportChannel(wishful_module.CoreModule):
         self.connected = True
         # stop discovery module
         # and notify CONNECTED to modules
-        self.log.debug("Notify controller connected")
-        event = upis.mgmt.ControllerConnectedEvent()
+        self.log.debug("Notify connection estabilished")
+        event = upis.mgmt.ConnectionEstablishedEvent()
         self.send_event(event)
 
         # start sending hello msgs
@@ -308,12 +308,9 @@ class TransportChannel(wishful_module.CoreModule):
         self.helloMsgTimer.cancel()
 
         # notify Connection Lost
-        event = upis.mgmt.ControllerLostEvent(0)
+        event = upis.mgmt.ConnectionLostEvent(0)
         self.send_event(event)
-        # notify DISCONNECTED
-        event = upis.mgmt.ControllerDisconnectedEvent()
         self.disconnect()
-        self.send_event(event)
 
     def notify_node_exit(self):
         self.log.debug("Agend sends NodeExitMsg".format())
@@ -403,11 +400,13 @@ class TransportChannel(wishful_module.CoreModule):
                 self.log.debug("ZMQError: Socket operation on non-socket")
 
     def send_event_outside(self, event, dstNode=None):
-        filterEvents = ["NewNodeEvent", "AgentStartEvent",
-                        "ControllerDiscoveredEvent", "AgentExitEvent",
-                        "NodeExitEvent", "NodeLostEvent",
-                        "SendHelloMsgTimeEvent", "HelloMsgTimeoutEvent",
-                        "ControllerConnectedEvent"]
+        filterEvents = set(["AgentStartEvent", "AgentExitEvent",
+                            "NewNodeEvent", "NodeExitEvent", "NodeLostEvent",
+                            "BrokerDiscoveredEvent",
+                            "ConnectionEstablishedEvent",
+                            "ConnectionLostEvent",
+                            "SendHelloMsgTimeEvent", "HelloMsgTimeoutEvent"])
+
         if event.__class__.__name__ in filterEvents:
             return
 
