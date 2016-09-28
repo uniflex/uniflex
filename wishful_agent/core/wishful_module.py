@@ -170,8 +170,8 @@ class WishfulModule(object):
 
         self._enabled = False
         self.worker = ModuleWorker(self)
-        self.id = None
         self.uuid = str(uuid.uuid4())
+        self.id = None
         self.name = self.__class__.__name__
         self.agent = None
         self.localNode = None

@@ -36,8 +36,8 @@ def classes_in_module(module):
     ]
 
 
-def iface_func(self, iface):
-    self._obj.iface(iface)
+def device_func(self, device):
+    self._obj.device(device)
     return self
 
 
@@ -54,8 +54,7 @@ class UpiBuilder(object):
     def create_upi(self, upiClass, upiType):
         setattr(upiClass, "_obj", None)
         setattr(upiClass, "_msg_type", None)
-        upiClass.iface = iface_func
-        upiClass.device = iface_func
+        upiClass.device = device_func
 
         # flatten UPIs, i.e. wifiRadioUpis -> radioUpis
         copy_functions_from_subclasses_to_base_class(upiClass)

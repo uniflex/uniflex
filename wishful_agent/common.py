@@ -1,8 +1,8 @@
 import inspect
 import logging
 import datetime
-from netifaces import AF_INET, AF_INET6
 import netifaces as ni
+from netifaces import AF_INET
 import wishful_upis as upis
 from .core import upis_builder
 
@@ -69,6 +69,7 @@ class ControllableUnit(object):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
 
+        self.uuid = None
         self._callingCtx = CallingContext()
         self._clear_call_context()
         # UPIs
