@@ -420,7 +420,7 @@ class TransportChannel(wishful_module.CoreModule):
         topic = event.__class__.__name__
 
         # TODO: improve below, call function with dstNode!!!
-        if event.__class__.__name__ == 'CtxReturnValueEvent':
+        if event.__class__.__name__ == 'ReturnValueEvent':
             topic = event.dest
 
         if dstNode:

@@ -228,7 +228,7 @@ class Node(ControllableUnit):
         ctxCopy = copy.copy(ctx)
         self._clear_call_context()
 
-        event = upis.mgmt.CtxCommandEvent(ctx=ctxCopy)
+        event = upis.mgmt.CommandEvent(ctx=ctxCopy)
         if ctxCopy._blocking:
             event.responseQueue = Queue()
 

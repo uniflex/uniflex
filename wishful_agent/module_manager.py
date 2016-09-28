@@ -122,7 +122,7 @@ class ModuleManager(object):
                             "ConnectionEstablishedEvent",
                             "ConnectionLostEvent",
                             "SendHelloMsgTimeEvent", "HelloMsgTimeoutEvent",
-                            "CtxReturnValueEvent", "CtxCommandEvent"])
+                            "ReturnValueEvent", "CommandEvent"])
 
         for _k, handler in inspect.getmembers(i, inspect.ismethod):
             if hasattr(handler, 'callers'):

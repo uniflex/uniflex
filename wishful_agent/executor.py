@@ -115,8 +115,8 @@ class CommandExecutor(wishful_module.CoreModule):
                         event.responseQueue.put(returnValue)
                     else:
                         self.log.debug("asynchronous call")
-                        event = upis.mgmt.CtxReturnValueEvent(event.node.uuid,
-                                                              ctx, returnValue)
+                        event = upis.mgmt.ReturnValueEvent(event.node.uuid,
+                                                           ctx, returnValue)
                         event.device = module.deviceObj
                         self.send_event(event)
 
@@ -129,7 +129,7 @@ class CommandExecutor(wishful_module.CoreModule):
                     continue
 
             except Exception as e:
-                self.log.info('Exception occurred during handler '
+                self.log.debug('Exception occurred during handler '
                                'processing. Backtrace from offending '
                                'handler [%s] servicing UPI function '
                                '[%s] follows [%s]',
@@ -145,7 +145,7 @@ class CommandExecutor(wishful_module.CoreModule):
                        .format(ctx._upi, callNumber))
         # TODO: if callNum == 0 rise an exeption?
 
-    @wishful_module.on_event(upis.mgmt.CtxCommandEvent)
+    @wishful_module.on_event(upis.mgmt.CommandEvent)
     def serve_ctx_command_event(self, event):
         ctx = event.ctx
 

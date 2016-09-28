@@ -287,7 +287,7 @@ class ControllerModule(WishfulModule):
         super(ControllerModule, self).__init__()
         self.upiCallCallbacks = {}
 
-    @on_event(upis.mgmt.CtxReturnValueEvent)
+    @on_event(upis.mgmt.ReturnValueEvent)
     def serve_asynchronous_return_value(self, event):
         ctx = event.ctx
         self.log.debug("Serving asynchronous return value: {}:{}"

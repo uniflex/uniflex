@@ -245,13 +245,13 @@ class NodeManager(wishful_module.CoreModule):
         if event.device is not None and isinstance(event.device, int):
             event.device = event.node.get_device(event.device)
 
-        if isinstance(event, upis.mgmt.CtxCommandEvent):
+        if isinstance(event, upis.mgmt.CommandEvent):
             if event.ctx._blocking:
                 event.responseQueue = Queue()
                 self.moduleManager.send_event_locally(event)
                 response = event.responseQueue.get()
-                retEvent = upis.mgmt.CtxReturnValueEvent(srcNodeUuid,
-                                                         event.ctx, response)
+                retEvent = upis.mgmt.ReturnValueEvent(srcNodeUuid,
+                                                      event.ctx, response)
                 retEvent.node = self.agent.nodeManager.get_local_node()
                 retEvent.device = event.device
                 self.log.debug("send response for blocking call")
@@ -259,7 +259,7 @@ class NodeManager(wishful_module.CoreModule):
             else:
                 self.moduleManager.send_event_locally(event)
 
-        elif isinstance(event, upis.mgmt.CtxReturnValueEvent):
+        elif isinstance(event, upis.mgmt.ReturnValueEvent):
             if event.ctx._callId in self.synchronousCalls:
                 queue = self.synchronousCalls[event.ctx._callId]
                 queue.put(event.msg)
