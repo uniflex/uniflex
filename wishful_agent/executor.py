@@ -3,7 +3,6 @@ import datetime
 import threading
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from .core import wishful_module
 import wishful_upis as upis
 
 __author__ = "Piotr Gawlowicz"
@@ -12,14 +11,15 @@ __version__ = "0.1.0"
 __email__ = "gawlowicz@tkn.tu-berlin.de"
 
 
-@wishful_module.build_module
-class CommandExecutor(wishful_module.CoreModule):
-    def __init__(self, agent):
+class CommandExecutor(object):
+    def __init__(self, agent, nodeManager):
         super().__init__()
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
 
         self.agent = agent
+        self.nodeManager = nodeManager
+        self.moduleManager = agent.moduleManager
         apscheduler_logger = logging.getLogger('apscheduler')
         apscheduler_logger.setLevel(logging.CRITICAL)
         self.jobScheduler = BackgroundScheduler()
@@ -28,12 +28,53 @@ class CommandExecutor(wishful_module.CoreModule):
     def stop(self):
         self.jobScheduler.shutdown()
 
+    def _execute_command(self, module, handler, args, kwargs):
+        self.log.info("Execute function: {} module: {} handler: {}"
+                      .format(handler.__name__, module.__class__.__name__,
+                              handler.__name__))
+        returnValue = None
+        # if there is function that has to be
+        # called before UPI function, call
+        if hasattr(handler, '_before_call_'):
+            before_func = getattr(handler, "_before_call_")
+            before_func(module)
+
+        returnValue = handler(*args, **kwargs)
+
+        # if there is function that has to be
+        # called after UPI function, call
+        if hasattr(handler, '_after_call_'):
+            after_func = getattr(handler, "_after_call_")
+            after_func(module)
+
+        return returnValue
+
+    def _execute_thread(self, module, handler, args, kwargs):
+        # if there is function that has to be
+        # called before UPI function, call
+        self.log.info("Thread: {} {}".format(module.__class__.__name__,
+                                             handler.__name__))
+
+        if hasattr(handler, '_before_call_'):
+            before_func = getattr(handler, "_before_call_")
+            before_func(module)
+
+        thread = threading.Thread(target=handler,
+                                  args=args, kwargs=kwargs)
+        thread.setDaemon(True)
+        thread.start()
+
+        # if there is function that has to be
+        # called after UPI function, call
+        if hasattr(handler, '_after_call_'):
+            after_func = getattr(handler, "_after_call_")
+            after_func(module)
+
     def _serve_ctx_command_event(self, event):
         ctx = event.ctx
         handlers = []
-        callNumber = 0
-        returnValue = None
         runInThread = False
+        retValue = None
 
         if ctx._upi_type == "function":
             handlers = self.moduleManager.get_function_handlers(ctx._upi)
@@ -50,6 +91,8 @@ class CommandExecutor(wishful_module.CoreModule):
         else:
             self.log.debug("UPI Type not supported")
 
+        self.log.info("UPI: {} {} THREAD:{}".format(ctx._upi, ctx._upi_type, runInThread))
+
         args = ()
         kwargs = {}
         if ctx._kwargs:
@@ -61,52 +104,25 @@ class CommandExecutor(wishful_module.CoreModule):
                 module = handler.__self__
                 # filter based on module uuid
                 if event.dstModule == module.uuid:
-                    self.log.info("Execute function: {} module: {} handler: {}"
-                                  .format(ctx._upi, module.__class__.__name__,
-                                          handler.__name__))
-
-                    # if there is function that has to be
-                    # called before UPI function, call
-                    if hasattr(handler, '_before_call_'):
-                        before_func = getattr(handler, "_before_call_")
-                        before_func(module)
-
                     if runInThread:
-                        thread = threading.Thread(target=handler,
-                                                  args=args, kwargs=kwargs)
-                        thread.setDaemon(True)
-                        thread.start()
-                        callNumber = callNumber + 1
+                        self._execute_thread(module, handler,
+                                             args, kwargs)
                     else:
-                        returnValue = handler(*args, **kwargs)
-                        callNumber = callNumber + 1
+                        retValue = self._execute_command(module, handler,
+                                                         args, kwargs)
 
-                    # if there is function that has to be
-                    # called after UPI function, call
-                    if hasattr(handler, '_after_call_'):
-                        after_func = getattr(handler, "_after_call_")
-                        after_func(module)
-
-                    # create and send return value event
-                    if ctx._blocking:
-                        self.log.debug("synchronous call")
-                        event.responseQueue.put(returnValue)
-                    else:
-                        self.log.debug("asynchronous call")
-                        event = upis.mgmt.ReturnValueEvent(event.srcNode.uuid,
-                                                           ctx, returnValue)
-                        event.srcNode = self.agent.nodeManager.get_local_node()
-                        event.srcModule = module
-                        #event.dstNode = event.srcNode.uuid
-                        #event.dstModule = event.srcModule.uuid
-                        self.send_event(event)
+                        retEvent = upis.mgmt.ReturnValueEvent(event.ctx, retValue)
+                        retEvent.srcNode = self.agent.nodeManager.get_local_node()
+                        retEvent.srcModule = event.dstModule
+                        self.log.debug("send response")
+                        self.agent.transport.send_event_outside(retEvent,
+                                                                event.srcNode)
 
                 else:
                     self.log.debug("UPI: {} in module: {}"
                                    " handler: {} was not executed"
                                    .format(ctx._upi, module.__class__.__name__,
                                            handler.__name__))
-                    raise
                     # go to check next module
                     continue
 
@@ -116,18 +132,13 @@ class CommandExecutor(wishful_module.CoreModule):
                                'handler [%s] servicing UPI function '
                                '[%s] follows [%s]',
                                handler.__name__, ctx._upi, e)
+                retEvent = upis.mgmt.ReturnValueEvent(event.ctx, e)
+                retEvent.srcNode = self.agent.nodeManager.get_local_node()
+                retEvent.srcModule = event.dstModule
+                self.log.debug("send response")
+                self.agent.transport.send_event_outside(retEvent,
+                                                        event.srcNode)
 
-                # create exception event and send it back to controller
-                if ctx._blocking:
-                    event.responseQueue.put(e)
-                else:
-                    pass
-
-        self.log.debug("UPI: {} was called {} times"
-                       .format(ctx._upi, callNumber))
-        # TODO: if callNum == 0 rise an exeption?
-
-    @wishful_module.on_event(upis.mgmt.CommandEvent)
     def serve_ctx_command_event(self, event):
         ctx = event.ctx
 

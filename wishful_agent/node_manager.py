@@ -1,12 +1,13 @@
 import logging
 import socket
-import threading
 from queue import Queue
+import threading
 
 import wishful_upis as upis
 from .msgs import messages_pb2 as msgs
 from .core import wishful_module
-from .node import Node, Device
+from .node import Node
+from .executor import CommandExecutor
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -21,6 +22,7 @@ class NodeManager(wishful_module.CoreModule):
             module=self.__class__.__module__, name=self.__class__.__name__))
 
         self.agent = agent
+        self.commandExecutor = CommandExecutor(agent, self)
         self._transportChannel = None
         self.local_node = None
         self.nodes = []
@@ -197,31 +199,24 @@ class NodeManager(wishful_module.CoreModule):
     def send_event_cmd(self, event, dstNode):
         self.log.debug("{}:{}".format(event.ctx._upi_type, event.ctx._upi))
 
-        responseQueue = None
-        callback = None
         if dstNode.local:
+            # TODO: add callback and queue for blocking
             self.send_event(event)
         else:
+            callId = self.generate_call_id()
+            event.ctx._callId = callId
             if event.ctx._blocking:
                 # save reference to response queue
-                callId = self.generate_call_id()
-                event.ctx._callId = callId
-                responseQueue = event.responseQueue
-                self.synchronousCalls[callId] = responseQueue
-                event.responseQueue = None
+                self.synchronousCalls[callId] = Queue()
             elif event.ctx._callback:
                 # save reference to callback
-                callId = self.generate_call_id()
-                event.ctx._callId = callId
-                callback = event.ctx._callback
-                self.callCallbacks[callId] = callback
+                self.callCallbacks[callId] = event.ctx._callback
                 event.ctx._callback = None
 
             self._transportChannel.send_event_outside(event, dstNode)
+
             if event.ctx._blocking:
-                event.responseQueue = responseQueue
-            elif event.ctx._callback:
-                event.ctx._callback = callback
+                event.responseQueue = self.synchronousCalls[callId]
 
     def serve_event_msg(self, msgContainer):
         event = msgContainer[2]
@@ -248,22 +243,12 @@ class NodeManager(wishful_module.CoreModule):
         if not event.srcModule:
             return
 
-        self.log.debug("received event from node: {}, module: {}"
-                       .format(event.srcNode.uuid, event.srcModule.uuid))
+        self.log.debug("received event {} from node: {}, module: {}"
+                       .format(event.__class__.__name__, event.srcNode.uuid,
+                               event.srcModule.uuid))
 
         if isinstance(event, upis.mgmt.CommandEvent):
-            if event.ctx._blocking:
-                event.responseQueue = Queue()
-                self.moduleManager.send_event_locally(event)
-                response = event.responseQueue.get()
-                retEvent = upis.mgmt.ReturnValueEvent(srcNodeUuid,
-                                                      event.ctx, response)
-                retEvent.srcNode = self.agent.nodeManager.get_local_node()
-                retEvent.srcModule = event.dstModule
-                self.log.debug("send response for blocking call")
-                self._transportChannel.send_event_outside(retEvent)
-            else:
-                self.moduleManager.send_event_locally(event)
+            self.commandExecutor.serve_ctx_command_event(event)
 
         elif isinstance(event, upis.mgmt.ReturnValueEvent):
             if event.ctx._callId in self.synchronousCalls:
@@ -273,7 +258,5 @@ class NodeManager(wishful_module.CoreModule):
                 self.log.debug("received cmd: {}".format(event.ctx._upi))
                 callback = self.callCallbacks[event.ctx._callId]
                 callback(event)
-            else:
-                self.moduleManager.send_event_locally(event)
         else:
             self.moduleManager.send_event_locally(event)

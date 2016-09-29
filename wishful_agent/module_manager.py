@@ -180,19 +180,19 @@ class ModuleManager(object):
                             t.start()
 
                     else:
-                        self.log.debug("Add task: {} to worker"
-                                       .format(handler.__name__))
+                        self.log.debug("Add task: {} to worker in module {}"
+                                       .format(handler.__name__, module.name))
                         if len(inspect.getargspec(handler)[0]) == 1:
                             module.worker.add_task(handler, None)
                         else:
                             module.worker.add_task(handler, event)
                 except:
-                    self.log.exception('Exception occurred during handler '
-                                       'processing. Backtrace from offending '
-                                       'handler [%s] servicing event [%s]'
-                                       'follows',
-                                       handler.__name__,
-                                       event.__class__.__name__)
+                    self.log.debug('Exception occurred during handler '
+                                   'processing. Backtrace from offending '
+                                   'handler [%s] servicing event [%s]'
+                                   'follows',
+                                   handler.__name__,
+                                   event.__class__.__name__)
 
     def register_function_handlers(self, i):
         for _k, handler in inspect.getmembers(i, inspect.ismethod):

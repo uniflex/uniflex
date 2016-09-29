@@ -3,12 +3,11 @@ import time
 import uuid
 import logging
 
-from .common import get_ip_address  # TODO: remove ip or iface
+from .common import get_ip_address
 from .module_manager import ModuleManager
 from .transport_channel import TransportChannel
 from .transport_channel import Broker
 from .node_manager import NodeManager
-from .executor import CommandExecutor
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -38,10 +37,6 @@ class Agent(object):
         self.nodeManager = NodeManager(self)
         self.moduleManager.add_module_obj(
             "node_manager", self.nodeManager)
-
-        # command executor with scheduler
-        self.moduleManager.add_module_obj(
-            "command_executor", CommandExecutor(self))
 
     def set_agent_info(self, name=None, info=None, iface=None, ip=None):
         self.name = name

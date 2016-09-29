@@ -265,18 +265,6 @@ class WishfulModule(object):
                 return n
         return None
 
-    def _generate_call_id(self):
-        self.callIdGen = self.callIdGen + 1
-        return self.callIdGen
-
-    def _register_callback(self, ctx):
-        self.log.debug("Register callback function for {}:{}"
-                       .format(ctx._upi_type, ctx._upi))
-        ctx._src = self.uuid
-        ctx._callId = self._generate_call_id()
-
-        self.callbacks[ctx._callId] = ctx._callback
-
 
 class CoreModule(WishfulModule):
     def __init__(self):
@@ -296,20 +284,6 @@ class DeviceModule(WishfulModule):
 class ControllerModule(WishfulModule):
     def __init__(self):
         super(ControllerModule, self).__init__()
-        self.upiCallCallbacks = {}
-
-    @on_event(upis.mgmt.ReturnValueEvent)
-    def serve_asynchronous_return_value(self, event):
-        ctx = event.ctx
-        self.log.debug("Serving asynchronous return value: {}:{}"
-                       .format(ctx._upi_type, ctx._upi))
-
-        if ctx._src != self.uuid:
-            return
-
-        callback = self.callbacks.get(ctx._callId, None)
-        if callback:
-            callback(event)
 
 
 class Application(ControllerModule):

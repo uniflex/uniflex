@@ -1,6 +1,5 @@
 import time
 import logging
-from queue import Queue
 from .common import ModuleProxy
 import wishful_agent.msgs as msgs
 
@@ -143,21 +142,6 @@ class Node(object):
 
         return string
 
-    def is_upi_supported(self, device, upiType, upiName):
-        self.log.debug("Checking call: {}.{} for device {} in node {}"
-                       .format(upiType, upiName, device, self.name))
-
-        for module in self.modules.items():
-            mdevice = module._deviceName
-            if mdevice == device:
-                if upiName in module._functions:
-                    return True
-            elif mdevice is None and device is None:
-                if upiName in module._functions:
-                    return True
-            else:
-                return False
-
     def get_devices(self):
         return self.devices.values()
 
@@ -196,12 +180,6 @@ class Node(object):
         event.dstNode = self.uuid
         ctx = event.ctx
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
-        if ctx._callback:
-            app = ctx._callback.__self__
-            app._register_callback(ctx)
-
-        if ctx._blocking:
-            event.responseQueue = Queue()
 
         response = self.nodeManager.send_event_cmd(event, self)
 
