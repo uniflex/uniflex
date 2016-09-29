@@ -29,9 +29,9 @@ class CommandExecutor(object):
         self.jobScheduler.shutdown()
 
     def _execute_command(self, module, handler, args, kwargs):
-        self.log.info("Execute function: {} module: {} handler: {}"
-                      .format(handler.__name__, module.__class__.__name__,
-                              handler.__name__))
+        self.log.debug("Execute function: {} module: {} handler: {}"
+                       .format(handler.__name__, module.__class__.__name__,
+                               handler.__name__))
         returnValue = None
         # if there is function that has to be
         # called before UPI function, call
@@ -52,8 +52,8 @@ class CommandExecutor(object):
     def _execute_thread(self, module, handler, args, kwargs):
         # if there is function that has to be
         # called before UPI function, call
-        self.log.info("Thread: {} {}".format(module.__class__.__name__,
-                                             handler.__name__))
+        self.log.debug("Thread: {} {}".format(module.__class__.__name__,
+                                              handler.__name__))
 
         if hasattr(handler, '_before_call_'):
             before_func = getattr(handler, "_before_call_")
@@ -91,7 +91,8 @@ class CommandExecutor(object):
         else:
             self.log.debug("UPI Type not supported")
 
-        self.log.info("UPI: {} {} THREAD:{}".format(ctx._upi, ctx._upi_type, runInThread))
+        self.log.debug("UPI: {} {} THREAD:{}".format(ctx._upi, ctx._upi_type,
+                                                     runInThread))
 
         args = ()
         kwargs = {}

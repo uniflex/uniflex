@@ -39,7 +39,6 @@ class Application(ModuleProxy):
         super(Application, self).__init__()
 
 
-# TODO: node is not controllable, only modules devs and apps
 class Node(object):
     def __init__(self, uuid):
         super().__init__()

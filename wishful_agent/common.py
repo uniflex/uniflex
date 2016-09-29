@@ -52,8 +52,6 @@ def get_ip_address(ifname):
 class CallingContext(object):
     def __init__(self):
         # function call context
-        self._src = None
-        self._dst = None
         self._upi_type = None
         self._upi = None
         self._args = None
@@ -143,8 +141,6 @@ class ModuleProxy(object):
         return self
 
     def _clear_call_context(self):
-        self._callingCtx._src = None
-        self._callingCtx._dst = None
         self._callingCtx._upi_type = None
         self._callingCtx._upi = None
         self._callingCtx._args = None
