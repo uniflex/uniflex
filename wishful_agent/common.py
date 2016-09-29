@@ -179,6 +179,13 @@ class ModuleProxy(object):
 
         return event.__module__ + '.' + className
 
+    def _send_cmd_event(self, ctx):
+        cmdEvent = upis.mgmt.CommandEvent(ctx=ctx)
+        cmdEvent.srcModule = threading.currentThread().module
+        cmdEvent.srcNode = self._currentNode
+        cmdEvent.dstModule = self.uuid
+        return self.node.send_cmd_event(cmdEvent)
+
     def cmd_wrapper(self, upi_type, fname, *args, **kwargs):
         self._callingCtx._upi_type = "function"
         self._callingCtx._upi = fname
@@ -187,12 +194,7 @@ class ModuleProxy(object):
 
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
-        cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
-        cmdEvent.srcModule = threading.currentThread().module
-        cmdEvent.srcNode = self._currentNode
-        cmdEvent.dstModule = self.uuid
-
-        return self.node.send_cmd_event(cmdEvent)
+        return self._send_cmd_event(ctxCopy)
 
     def enable_event(self, event, *args, **kwargs):
         self._callingCtx._upi_type = "event_enable"
@@ -202,12 +204,7 @@ class ModuleProxy(object):
 
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
-        cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
-        cmdEvent.srcModule = threading.currentThread().module
-        cmdEvent.srcNode = self._currentNode
-        cmdEvent.dstModule = self.uuid
-
-        return self.node.send_cmd_event(cmdEvent)
+        return self._send_cmd_event(ctxCopy)
 
     def disable_event(self, event):
         self._callingCtx._upi_type = "event_disable"
@@ -217,12 +214,7 @@ class ModuleProxy(object):
 
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
-        cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
-        cmdEvent.srcModule = threading.currentThread().module
-        cmdEvent.srcNode = self._currentNode
-        cmdEvent.dstModule = self.uuid
-
-        return self.node.send_cmd_event(cmdEvent)
+        return self._send_cmd_event(ctxCopy)
 
     def is_event_enabled(self, event):
         pass
@@ -235,12 +227,7 @@ class ModuleProxy(object):
 
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
-        cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
-        cmdEvent.srcModule = threading.currentThread().module
-        cmdEvent.srcNode = self._currentNode
-        cmdEvent.dstModule = self.uuid
-
-        return self.node.send_cmd_event(cmdEvent)
+        return self._send_cmd_event(ctxCopy)
 
     def stop_service(self, service):
         self._callingCtx._upi_type = "service_stop"
@@ -250,12 +237,7 @@ class ModuleProxy(object):
 
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
-        cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
-        cmdEvent.srcModule = threading.currentThread().module
-        cmdEvent.srcNode = self._currentNode
-        cmdEvent.dstModule = self.uuid
-
-        return self.node.send_cmd_event(cmdEvent)
+        return self._send_cmd_event(ctxCopy)
 
     def is_service_enabled(self, service):
         pass
