@@ -102,9 +102,13 @@ class ModuleManager(object):
 
     def exit(self):
         self.log.debug("Notify EXIT to modules".format())
-        self.send_event(upis.mgmt.AgentExitEvent())
+        event = upis.mgmt.AgentExitEvent()
+        event.node = self.agent.nodeManager.get_local_node()
+        self.send_event(event)
         # send node exit event to all interested control programs
-        self.send_event(upis.mgmt.NodeExitEvent(0))
+        event = upis.mgmt.NodeExitEvent(0)
+        event.node = self.agent.nodeManager.get_local_node()
+        self.send_event(event)
 
     def register_event_handlers(self, i):
         for _k, handler in inspect.getmembers(i, inspect.ismethod):
