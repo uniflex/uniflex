@@ -1,10 +1,8 @@
-import copy
 import time
 import logging
 from queue import Queue
 from .common import ControllableUnit
 import wishful_agent.msgs as msgs
-import wishful_upis as upis
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
@@ -21,7 +19,9 @@ class Module(ControllableUnit):
     def send_event(self, event):
         self.log.debug()
 
-    def send_cmd_event(self, ctx):
+    def send_cmd_event(self, event):
+        event.dstModule = self.uuid
+        ctx = event.ctx
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
 
 
@@ -43,7 +43,9 @@ class Device(ControllableUnit):
     def send_event(self, event):
         self.log.debug()
 
-    def send_cmd_event(self, ctx):
+    def send_cmd_event(self, event):
+        event.dstModule = self.uuid
+        ctx = event.ctx
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
         ctx._device = self.name
         upiName = ctx._upi
@@ -52,10 +54,7 @@ class Device(ControllableUnit):
         # chech if UPI is supported
         # if not self.is_upi_supported(ctx._upi_type, upiName):
         #     raise
-
-        response = self.node.send_cmd_event(ctx)
-        self._clear_call_context()
-        return response
+        return self.node.send_cmd_event(event)
 
 
 class Application(ControllableUnit):
@@ -65,9 +64,11 @@ class Application(ControllableUnit):
         super(Application, self).__init__()
 
     def send_event(self, event):
-        self.log.debug()
+        self.log.info(event.__class__.__name__)
 
-    def send_cmd_event(self, ctx):
+    def send_cmd_event(self, event):
+        event.dstModule = self.uuid
+        ctx = event.ctx
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
 
 
@@ -84,6 +85,7 @@ class Node(ControllableUnit):
         self.info = None
         self.nodeManager = None
         self.local = True  # Local or remote
+        self.all_modules = {}
         self.apps = {}
         self.modules = {}
         self.devices = {}
@@ -133,7 +135,8 @@ class Node(ControllableUnit):
                 moduleDesc.services.append(str(service.name))
 
             if module.type == msgs.Module.APPLICATION:
-                node.apps[moduleDesc.module_name] = moduleDesc
+                node.apps[moduleDesc.uuid] = moduleDesc
+                node.all_modules[moduleDesc.uuid] = moduleDesc
 
             elif module.type == msgs.Module.DEVICE:
                 if module.HasField('device'):
@@ -141,8 +144,10 @@ class Node(ControllableUnit):
                     moduleDesc.name = module.device.name
 
                 node.devices[moduleDesc._id] = moduleDesc
+                node.all_modules[moduleDesc.uuid] = moduleDesc
             else:
-                node.modules[moduleDesc.module_name] = moduleDesc
+                node.modules[moduleDesc.uuid] = moduleDesc
+                node.all_modules[moduleDesc.uuid] = moduleDesc
 
         return node
 
@@ -219,24 +224,22 @@ class Node(ControllableUnit):
     def send_event(self, event):
         self.log.debug()
 
-    def send_cmd_event(self, ctx):
+    def send_cmd_event(self, event):
+        event.dstNode = self.uuid
+        ctx = event.ctx
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
         if ctx._callback:
             app = ctx._callback.__self__
             app._register_callback(ctx)
 
-        ctxCopy = copy.copy(ctx)
-        self._clear_call_context()
-
-        event = upis.mgmt.CommandEvent(ctx=ctxCopy)
-        if ctxCopy._blocking:
+        if ctx._blocking:
             event.responseQueue = Queue()
 
         response = self.nodeManager.send_event_cmd(event, self)
 
-        if ctxCopy._blocking:
+        if ctx._blocking:
             self.log.debug("Waiting for return value for {}:{}"
-                           .format(ctxCopy._upi_type, ctxCopy._upi))
+                           .format(ctx._upi_type, ctx._upi))
             returnValue = event.responseQueue.get()
             if issubclass(returnValue.__class__, Exception):
                 raise returnValue
@@ -251,13 +254,3 @@ class NodeGroup(object):
 
     def __init__(self):
         super(NodeGroup, self).__init__()
-
-    def is_upi_supported(self, device, upiType, upiName):
-        self.log.debug("Checking call: {}.{} for device {} in node {}"
-                       .format(upiType, upiName, device, self.name))
-
-    def send_event(self, event):
-        self.log.debug()
-
-    def send_cmd_event(self, ctx):
-        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))

@@ -59,34 +59,13 @@ class CommandExecutor(wishful_module.CoreModule):
         for handler in handlers:
             try:
                 module = handler.__self__
-                mdevice = module.get_device_obj()
-                mdevName = None
-                if mdevice:
-                    mdevName = mdevice.name
-                self.log.debug("Execute function: {} in module: {}"
-                               " handler: {}; mdev: {}, cdev: {}"
-                               .format(ctx._upi, module.__class__.__name__,
-                                       handler.__name__, mdevName,
-                                       ctx._device))
-
-                # filter based on device present:
-                # if device is not required execute function
-                execute = False
-                if (mdevice is None and ctx._device is None):
-                    self.log.debug("Execute function: {} in module: {}"
-                                   " without device; handler: {}"
-                                   .format(ctx._upi, module.__class__.__name__,
-                                           handler.__name__))
-                    execute = True
-                # if devices match execute function
-                elif mdevName == ctx._device:
-                    self.log.debug("Execute function: {} in module: {}"
+                # filter based on module uuid
+                if event.dstModule == module.uuid:
+                    self.log.info("Execute function: {} in module: {}"
                                    " with device: {} ; handler: {}"
                                    .format(ctx._upi, module.__class__.__name__,
                                            ctx._device, handler.__name__))
-                    execute = True
 
-                if execute:
                     # if there is function that has to be
                     # called before UPI function, call
                     if hasattr(handler, '_before_call_'):
@@ -115,9 +94,12 @@ class CommandExecutor(wishful_module.CoreModule):
                         event.responseQueue.put(returnValue)
                     else:
                         self.log.debug("asynchronous call")
-                        event = upis.mgmt.ReturnValueEvent(event.node.uuid,
+                        event = upis.mgmt.ReturnValueEvent(event.srcNode.uuid,
                                                            ctx, returnValue)
-                        event.device = module.deviceObj
+                        event.srcNode = self.agent.nodeManager.get_local_node()
+                        event.srcModule = module
+                        #event.dstNode = event.srcNode.uuid
+                        #event.dstModule = event.srcModule.uuid
                         self.send_event(event)
 
                 else:
@@ -125,6 +107,7 @@ class CommandExecutor(wishful_module.CoreModule):
                                    " handler: {} was not executed"
                                    .format(ctx._upi, module.__class__.__name__,
                                            handler.__name__))
+                    raise
                     # go to check next module
                     continue
 

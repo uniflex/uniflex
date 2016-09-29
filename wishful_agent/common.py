@@ -1,4 +1,6 @@
 import inspect
+import copy
+import threading
 import logging
 import datetime
 import netifaces as ni
@@ -78,6 +80,8 @@ class ControllableUnit(object):
 
         self._callingCtx = CallingContext()
         self._clear_call_context()
+        self._currentNode = None
+
         # UPIs
         builder = upis_builder.UpiBuilder(self)
         self.radio = builder.create_upi(upis.radio.Radio, "radio")
@@ -95,7 +99,8 @@ class ControllableUnit(object):
     def __str__(self):
         string = ("  Module: {}\n"
                   "    ID: {} \n"
-                  .format(self.module_name, self.module_id))
+                  "    UUID: {} \n"
+                  .format(self.module_name, self.module_id, self.uuid))
 
         string = string + "    Attributes:\n"
         for k in self.attributes:
@@ -152,18 +157,20 @@ class ControllableUnit(object):
         self._callingCtx._timeout = None
         self._callingCtx._callback = None
 
+    def is_enabled(self):
+        return True
+
+    def start(self):
+        pass
+
+    def stop(self):
+        pass
+
     def send_event(self, event):
         self.log.info("{}".format(event.__class__.__name__))
 
     def send_cmd_event(self, ctx):
         self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
-
-    def cmd_wrapper(self, upi_type, fname, *args, **kwargs):
-        self._callingCtx._upi_type = "function"
-        self._callingCtx._upi = fname
-        self._callingCtx._args = args
-        self._callingCtx._kwargs = kwargs
-        return self.send_cmd_event(self._callingCtx)
 
     def get_upi_string(self, event):
         className = None
@@ -174,19 +181,47 @@ class ControllableUnit(object):
 
         return event.__module__ + '.' + className
 
+    def cmd_wrapper(self, upi_type, fname, *args, **kwargs):
+        self._callingCtx._upi_type = "function"
+        self._callingCtx._upi = fname
+        self._callingCtx._args = args
+        self._callingCtx._kwargs = kwargs
+
+        ctxCopy = copy.copy(self._callingCtx)
+        self._clear_call_context()
+        cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
+        cmdEvent.srcModule = threading.currentThread().module
+        cmdEvent.srcNode = self._currentNode
+
+        return self.send_cmd_event(cmdEvent)
+
     def enable_event(self, event, *args, **kwargs):
         self._callingCtx._upi_type = "event_enable"
         self._callingCtx._upi = self.get_upi_string(event)
         self._callingCtx._args = args
         self._callingCtx._kwargs = kwargs
-        return self.send_cmd_event(self._callingCtx)
+
+        ctxCopy = copy.copy(self._callingCtx)
+        self._clear_call_context()
+        cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
+        cmdEvent.srcModule = threading.currentThread().module
+        cmdEvent.srcNode = self._currentNode
+
+        return self.send_cmd_event(cmdEvent)
 
     def disable_event(self, event):
         self._callingCtx._upi_type = "event_disable"
         self._callingCtx._upi = self.get_upi_string(event)
         self._callingCtx._args = []
         self._callingCtx._kwargs = {}
-        return self.send_cmd_event(self._callingCtx)
+
+        ctxCopy = copy.copy(self._callingCtx)
+        self._clear_call_context()
+        cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
+        cmdEvent.srcModule = threading.currentThread().module
+        cmdEvent.srcNode = self._currentNode
+
+        return self.send_cmd_event(cmdEvent)
 
     def is_event_enabled(self, event):
         pass
@@ -196,14 +231,28 @@ class ControllableUnit(object):
         self._callingCtx._upi = self.get_upi_string(service)
         self._callingCtx._args = args
         self._callingCtx._kwargs = kwargs
-        return self.send_cmd_event(self._callingCtx)
+
+        ctxCopy = copy.copy(self._callingCtx)
+        self._clear_call_context()
+        cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
+        cmdEvent.srcModule = threading.currentThread().module
+        cmdEvent.srcNode = self._currentNode
+
+        return self.send_cmd_event(cmdEvent)
 
     def stop_service(self, service):
         self._callingCtx._upi_type = "service_stop"
         self._callingCtx._upi = self.get_upi_string(service)
         self._callingCtx._args = []
         self._callingCtx._kwargs = {}
-        return self.send_cmd_event(self._callingCtx)
+
+        ctxCopy = copy.copy(self._callingCtx)
+        self._clear_call_context()
+        cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
+        cmdEvent.srcModule = threading.currentThread().module
+        cmdEvent.srcNode = self._currentNode
+
+        return self.send_cmd_event(cmdEvent)
 
     def is_service_enabled(self, service):
         pass

@@ -141,17 +141,9 @@ class ModuleManager(object):
         return handlers
 
     def send_event_locally(self, event):
-        # stamp event with node if not present
-        # if event from transport channel, then node is present
-        if not event.node:
-            event.node = self.agent.nodeManager.get_local_node()
         self.eventQueue.put(event)
 
     def send_event(self, event):
-        # stamp event with node if not present
-        # if event from transport channel, then node is present
-        if not event.node:
-            event.node = self.agent.nodeManager.get_local_node()
         self.eventQueue.put(event)
         # quick hack to sent events also through transport channel
         # TODO: improve it
@@ -187,9 +179,9 @@ class ModuleManager(object):
                         self.log.debug("Add task: {} to worker"
                                        .format(handler.__name__))
                         if len(inspect.getargspec(handler)[0]) == 1:
-                            module.worker.add_task(handler, [], {})
+                            module.worker.add_task(handler, None)
                         else:
-                            module.worker.add_task(handler, [event], {})
+                            module.worker.add_task(handler, event)
                 except:
                     self.log.exception('Exception occurred during handler '
                                        'processing. Backtrace from offending '

@@ -14,7 +14,7 @@ import wishful_agent.msgs as msgs
 from .timer import TimerEventSender
 from .core import wishful_module
 from .common import get_inheritors
-from .node import Node, Device
+from .node import Node
 import wishful_upis as upis
 
 __author__ = "Piotr Gawlowicz"
@@ -373,6 +373,7 @@ class TransportChannel(wishful_module.CoreModule):
                             msg = pickle.loads(msg)
                         except:
                             msg = dill.loads(msg)
+
                     elif msgDesc.serializationType == msgs.SerializationType.PROTOBUF:
                         # TODO: move all protobuf serialization here
                         pass
@@ -384,8 +385,8 @@ class TransportChannel(wishful_module.CoreModule):
                         myClass = self.eventClasses.get(eventType, None)
                         if myClass and hasattr(myClass, 'parse'):
                             myEvent = myClass.parse(msg)
-                            myEvent.node = msgDesc.sourceUuid
-                            myEvent.device = None
+                            myEvent.srcNode = msgDesc.sourceUuid
+                            myEvent.srcModule = "TEST"
                             msg = myEvent
                         else:
                             # discard message that cannot be parsed
@@ -412,16 +413,18 @@ class TransportChannel(wishful_module.CoreModule):
 
         # flatten event
         self.log.debug("Event name: {}".format(event.__class__.__name__))
-        if event.node and isinstance(event.node, Node):
-            event.node = event.node.uuid
-        if event.device and isinstance(event.device, Device):
-            event.device = event.device._id
+        if event.srcNode and isinstance(event.srcNode, Node):
+            event.srcNode = event.srcNode.uuid
+            event.node = None
+        if event.srcModule and isinstance(event.srcModule,
+                                          wishful_module.WishfulModule):
+            event.srcModule = event.srcModule.uuid
 
         topic = event.__class__.__name__
 
         # TODO: improve below, call function with dstNode!!!
         if event.__class__.__name__ == 'ReturnValueEvent':
-            topic = event.dest
+            topic = event.dstNode
 
         if dstNode:
             topic = dstNode.uuid

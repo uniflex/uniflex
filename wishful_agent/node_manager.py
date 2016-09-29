@@ -100,6 +100,10 @@ class NodeManager(wishful_module.CoreModule):
 
         node = Node.create_node_from_msg(msg)
         node.nodeManager = self
+        node._currentNode = self.local_node
+        for m in node.all_modules.values():
+            m._currentNode = self.local_node
+
         self.nodes.append(node)
         self.log.debug("New node with UUID: {}, Name: {},"
                        " Info: {}".format(agentUuid, agentName, agentInfo))
@@ -193,8 +197,6 @@ class NodeManager(wishful_module.CoreModule):
     def send_event_cmd(self, event, dstNode):
         self.log.debug("{}:{}".format(event.ctx._upi_type, event.ctx._upi))
 
-        event.node = self.agent.nodeManager.get_local_node()
-
         responseQueue = None
         callback = None
         if dstNode.local:
@@ -215,12 +217,6 @@ class NodeManager(wishful_module.CoreModule):
                 self.callCallbacks[callId] = callback
                 event.ctx._callback = None
 
-            # flatten event
-            if event.node and isinstance(event.node, Node):
-                event.node = event.node.uuid
-            if event.device and isinstance(event.device, Device):
-                event.device = event.device._id
-
             self._transportChannel.send_event_outside(event, dstNode)
             if event.ctx._blocking:
                 event.responseQueue = responseQueue
@@ -229,21 +225,31 @@ class NodeManager(wishful_module.CoreModule):
 
     def serve_event_msg(self, msgContainer):
         event = msgContainer[2]
-        srcNodeUuid = event.node
-        node = self.get_node_by_uuid(event.node)
+        srcNodeUuid = event.srcNode
+        srcModuleUuid = event.srcModule
+        event.srcNode = self.get_node_by_uuid(event.srcNode)
+        # alias
+        event.node = event.srcNode
 
-        # TODO: uncomment it!! but find solution for support for node-red
-        #if node is None:
-        #    self.log.debug("Unknown node: {}"
-        #                   .format(srcNodeUuid))
-        #    self._transportChannel.send_node_info_request(srcNodeUuid)
-        #    return
+        if event.srcNode is None:
+            self.log.debug("Unknown node: {}"
+                           .format(srcNodeUuid))
+            self._transportChannel.send_node_info_request(srcNodeUuid)
+            return
 
-        self.log.debug("received event from node: {}".format(event.node))
-        event.node = node
+        self.log.debug("received event from node: {}, module: {}"
+                       .format(srcNodeUuid, srcModuleUuid))
 
-        if event.device is not None and isinstance(event.device, int):
-            event.device = event.node.get_device(event.device)
+        if event.srcModule is not None and isinstance(event.srcModule, str):
+            event.srcModule = event.node.all_modules.get(event.srcModule, None)
+            # alias
+            event.device = event.srcModule
+
+        if not event.srcModule:
+            return
+
+        self.log.debug("received event from node: {}, module: {}"
+                       .format(event.srcNode.uuid, event.srcModule.uuid))
 
         if isinstance(event, upis.mgmt.CommandEvent):
             if event.ctx._blocking:
@@ -252,8 +258,8 @@ class NodeManager(wishful_module.CoreModule):
                 response = event.responseQueue.get()
                 retEvent = upis.mgmt.ReturnValueEvent(srcNodeUuid,
                                                       event.ctx, response)
-                retEvent.node = self.agent.nodeManager.get_local_node()
-                retEvent.device = event.device
+                retEvent.srcNode = self.agent.nodeManager.get_local_node()
+                retEvent.srcModule = event.dstModule
                 self.log.debug("send response for blocking call")
                 self._transportChannel.send_event_outside(retEvent)
             else:

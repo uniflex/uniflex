@@ -36,11 +36,6 @@ def classes_in_module(module):
     ]
 
 
-def device_func(self, device):
-    self._obj.device(device)
-    return self
-
-
 def copy_functions_from_subclasses_to_base_class(myclass):
     for subclass in myclass.__subclasses__():
         for f in functions_in_class(subclass):
@@ -54,7 +49,6 @@ class UpiBuilder(object):
     def create_upi(self, upiClass, upiType):
         setattr(upiClass, "_obj", None)
         setattr(upiClass, "_msg_type", None)
-        upiClass.device = device_func
 
         # flatten UPIs, i.e. wifiRadioUpis -> radioUpis
         copy_functions_from_subclasses_to_base_class(upiClass)

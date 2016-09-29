@@ -144,10 +144,14 @@ class ModuleWorker(Thread):
     def run(self):
         while self.running:
             try:
-                (func, args, kargs) = self.taskQueue.get(0.2)
+                (func, event) = self.taskQueue.get(0.2)
                 if not self.running:
                     break
-                func(*args, **kargs)
+
+                if event:
+                    func(event)
+                else:
+                    func()
             except Empty:
                 continue
             except:
@@ -158,8 +162,8 @@ class ModuleWorker(Thread):
     def stop(self):
         self.running = False
 
-    def add_task(self, func, args, kargs):
-        self.taskQueue.put((func, args, kargs))
+    def add_task(self, func, event):
+        self.taskQueue.put((func, event))
 
 
 class WishfulModule(object):
@@ -179,15 +183,16 @@ class WishfulModule(object):
         self.callIdGen = 0
         self.callbacks = {}
 
-        # TODO: move to AgentModule (DeviceModule)
-        self.device = None  # used for filtering of commands
-        self.deviceObj = None  # used for filtering of commands
         self.attributes = []
         self.functions = []
         self.in_events = []
         self.out_events = []
         self.services = []
         self.firstCallToModule = False
+
+        # TODO: move to DeviceModule
+        self.device = None
+        self.deviceObj = None
 
         # TODO: move to ControllerModule (ControllerApp)
         # node container
@@ -200,12 +205,15 @@ class WishfulModule(object):
         self.moduleManager = mm
 
     def send_event(self, event):
-        # stamp event with device
-        if not event.device:
-            event.device = self.deviceObj
+        # stamp event with module
+        if not event.srcModule:
+            event.srcModule = self
+        # stamp event with node
+        if not event.srcNode:
+            event.srcNode = self.agent.nodeManager.get_local_node()
         self.moduleManager.send_event(event)
 
-    # TODO: move to AgentModule (DeviceModule)
+    # TODO: move to DeviceModule
     def set_device(self, dev):
         self.deviceObj = dev
         self.device = dev.name
@@ -245,10 +253,13 @@ class WishfulModule(object):
     def get_nodes(self):
         return list(self._nodes.values())
 
-    def _get_node_by_uuid(self, uuid, ):
+    def get_node(self, idx):
+        return list(self._nodes.values())[idx]
+
+    def get_node_by_uuid(self, uuid):
         return self._nodes.get(uuid, None)
 
-    def _get_node_by_hostname(self, hostname):
+    def get_node_by_hostname(self, hostname):
         for n in self._nodes:
             if n.hostname == hostname:
                 return n
