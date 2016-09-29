@@ -201,6 +201,7 @@ class ModuleProxy(object):
         self._callingCtx._upi = self.get_upi_string(event)
         self._callingCtx._args = args
         self._callingCtx._kwargs = kwargs
+        self._callingCtx._blocking = False
 
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
@@ -211,6 +212,7 @@ class ModuleProxy(object):
         self._callingCtx._upi = self.get_upi_string(event)
         self._callingCtx._args = []
         self._callingCtx._kwargs = {}
+        self._callingCtx._blocking = False
 
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
@@ -224,6 +226,7 @@ class ModuleProxy(object):
         self._callingCtx._upi = self.get_upi_string(service)
         self._callingCtx._args = args
         self._callingCtx._kwargs = kwargs
+        self._callingCtx._blocking = False
 
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
@@ -234,6 +237,7 @@ class ModuleProxy(object):
         self._callingCtx._upi = self.get_upi_string(service)
         self._callingCtx._args = []
         self._callingCtx._kwargs = {}
+        self._callingCtx._blocking = False
 
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
