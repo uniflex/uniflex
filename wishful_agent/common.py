@@ -54,7 +54,6 @@ class CallingContext(object):
         # function call context
         self._src = None
         self._dst = None
-        self._device = None
         self._upi_type = None
         self._upi = None
         self._args = None
@@ -146,7 +145,6 @@ class ControllableUnit(object):
     def _clear_call_context(self):
         self._callingCtx._src = None
         self._callingCtx._dst = None
-        self._callingCtx._device = None
         self._callingCtx._upi_type = None
         self._callingCtx._upi = None
         self._callingCtx._args = None
@@ -192,8 +190,9 @@ class ControllableUnit(object):
         cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
         cmdEvent.srcModule = threading.currentThread().module
         cmdEvent.srcNode = self._currentNode
+        cmdEvent.dstModule = self.uuid
 
-        return self.send_cmd_event(cmdEvent)
+        return self.node.send_cmd_event(cmdEvent)
 
     def enable_event(self, event, *args, **kwargs):
         self._callingCtx._upi_type = "event_enable"
@@ -206,8 +205,9 @@ class ControllableUnit(object):
         cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
         cmdEvent.srcModule = threading.currentThread().module
         cmdEvent.srcNode = self._currentNode
+        cmdEvent.dstModule = self.uuid
 
-        return self.send_cmd_event(cmdEvent)
+        return self.node.send_cmd_event(cmdEvent)
 
     def disable_event(self, event):
         self._callingCtx._upi_type = "event_disable"
@@ -220,8 +220,9 @@ class ControllableUnit(object):
         cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
         cmdEvent.srcModule = threading.currentThread().module
         cmdEvent.srcNode = self._currentNode
+        cmdEvent.dstModule = self.uuid
 
-        return self.send_cmd_event(cmdEvent)
+        return self.node.send_cmd_event(cmdEvent)
 
     def is_event_enabled(self, event):
         pass
@@ -237,8 +238,9 @@ class ControllableUnit(object):
         cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
         cmdEvent.srcModule = threading.currentThread().module
         cmdEvent.srcNode = self._currentNode
+        cmdEvent.dstModule = self.uuid
 
-        return self.send_cmd_event(cmdEvent)
+        return self.node.send_cmd_event(cmdEvent)
 
     def stop_service(self, service):
         self._callingCtx._upi_type = "service_stop"
@@ -251,8 +253,9 @@ class ControllableUnit(object):
         cmdEvent = upis.mgmt.CommandEvent(ctx=ctxCopy)
         cmdEvent.srcModule = threading.currentThread().module
         cmdEvent.srcNode = self._currentNode
+        cmdEvent.dstModule = self.uuid
 
-        return self.send_cmd_event(cmdEvent)
+        return self.node.send_cmd_event(cmdEvent)
 
     def is_service_enabled(self, service):
         pass

@@ -61,10 +61,9 @@ class CommandExecutor(wishful_module.CoreModule):
                 module = handler.__self__
                 # filter based on module uuid
                 if event.dstModule == module.uuid:
-                    self.log.info("Execute function: {} in module: {}"
-                                   " with device: {} ; handler: {}"
-                                   .format(ctx._upi, module.__class__.__name__,
-                                           ctx._device, handler.__name__))
+                    self.log.info("Execute function: {} module: {} handler: {}"
+                                  .format(ctx._upi, module.__class__.__name__,
+                                          handler.__name__))
 
                     # if there is function that has to be
                     # called before UPI function, call

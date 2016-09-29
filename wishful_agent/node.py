@@ -16,14 +16,6 @@ class Module(ControllableUnit):
     def __init__(self):
         super(Module, self).__init__()
 
-    def send_event(self, event):
-        self.log.debug()
-
-    def send_cmd_event(self, event):
-        event.dstModule = self.uuid
-        ctx = event.ctx
-        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
-
 
 class Device(ControllableUnit):
     def __init__(self):
@@ -40,36 +32,12 @@ class Device(ControllableUnit):
         string = string + desc
         return string
 
-    def send_event(self, event):
-        self.log.debug()
-
-    def send_cmd_event(self, event):
-        event.dstModule = self.uuid
-        ctx = event.ctx
-        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
-        ctx._device = self.name
-        upiName = ctx._upi
-        upiName = upiName.split(".")[-1]
-
-        # chech if UPI is supported
-        # if not self.is_upi_supported(ctx._upi_type, upiName):
-        #     raise
-        return self.node.send_cmd_event(event)
-
 
 class Application(ControllableUnit):
     """docstring for Application"""
 
     def __init__(self):
         super(Application, self).__init__()
-
-    def send_event(self, event):
-        self.log.info(event.__class__.__name__)
-
-    def send_cmd_event(self, event):
-        event.dstModule = self.uuid
-        ctx = event.ctx
-        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
 
 
 # TODO: node is not controllable, only modules devs and apps
