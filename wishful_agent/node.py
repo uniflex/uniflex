@@ -1,7 +1,7 @@
 import time
 import logging
 from queue import Queue
-from .common import ControllableUnit
+from .common import ModuleProxy
 import wishful_agent.msgs as msgs
 
 __author__ = "Piotr Gawlowicz"
@@ -10,14 +10,14 @@ __version__ = "0.1.0"
 __email__ = "{gawlowicz}@tkn.tu-berlin.de"
 
 
-class Module(ControllableUnit):
+class Module(ModuleProxy):
     """docstring for Module"""
 
     def __init__(self):
         super(Module, self).__init__()
 
 
-class Device(ControllableUnit):
+class Device(ModuleProxy):
     def __init__(self):
         super().__init__()
         self.log = logging.getLogger("{module}.{name}".format(
@@ -33,7 +33,7 @@ class Device(ControllableUnit):
         return string
 
 
-class Application(ControllableUnit):
+class Application(ModuleProxy):
     """docstring for Application"""
 
     def __init__(self):
@@ -41,7 +41,7 @@ class Application(ControllableUnit):
 
 
 # TODO: node is not controllable, only modules devs and apps
-class Node(ControllableUnit):
+class Node(object):
     def __init__(self, uuid):
         super().__init__()
         self.log = logging.getLogger("{module}.{name}".format(

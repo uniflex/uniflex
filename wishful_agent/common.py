@@ -65,7 +65,7 @@ class CallingContext(object):
         self._callback = None
 
 
-class ControllableUnit(object):
+class ModuleProxy(object):
     def __init__(self):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
