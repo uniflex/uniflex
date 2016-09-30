@@ -208,13 +208,9 @@ class WishfulModule(object):
         # stamp event with module
         if not event.srcModule:
             event.srcModule = self
-            # alias
-            event.device = self
         # stamp event with node
         if not event.srcNode:
             event.srcNode = self.agent.nodeManager.get_local_node()
-            # alias
-            event.node = event.srcNode
         self.moduleManager.send_event(event)
 
     def get_device(self):
