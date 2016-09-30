@@ -41,21 +41,6 @@ class Agent(object):
         self.moduleManager._nodeManager = self.nodeManager
         self.nodeManager._moduleManager = self.moduleManager
 
-    def set_agent_info(self, name=None, info=None, iface=None, ip=None):
-        self.name = name
-        self.info = info
-        self.iface = iface
-        self.ip = ip
-
-        if self.ip is None and self.iface:
-            self.ip = get_ip_address(self.iface)
-
-    def add_module(self, moduleName, pyModule, className,
-                   device=None, kwargs={}):
-
-        return self.moduleManager.register_module(
-            moduleName, pyModule, className, device, kwargs)
-
     def load_config(self, config, configPath=None):
         self.log.debug("Config: {}, path: {}".format(config, configPath))
 
