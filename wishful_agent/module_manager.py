@@ -4,6 +4,7 @@ import inspect
 import threading
 from importlib import import_module
 from queue import Queue, Empty
+from .executor import CommandExecutor
 import wishful_upis as upis
 
 __author__ = "Piotr Gawlowicz"
@@ -20,6 +21,10 @@ class ModuleManager(object):
         self.agent = agent
         self._transportChannel = None
         self._nodeManager = None
+
+        self.commandExecutor = CommandExecutor(agent, self)
+        self.synchronousCalls = {}
+        self.callCallbacks = {}
 
         self.moduleIdGen = 0
         self.deviceIdGen = 0
@@ -94,7 +99,7 @@ class ModuleManager(object):
 
     def start(self):
         self.log.debug("Notify START to modules".format())
-        self.send_event(upis.mgmt.AgentStartEvent())
+        self.send_event_locally(upis.mgmt.AgentStartEvent())
         # send new node event to interested control programs
         self.eventServeThread = threading.Thread(target=self.serve_event_queue)
         self.eventServeThread.setDaemon(True)
@@ -104,11 +109,12 @@ class ModuleManager(object):
         self.log.debug("Notify EXIT to modules".format())
         event = upis.mgmt.AgentExitEvent()
         event.node = self.agent.nodeManager.get_local_node()
-        self.send_event(event)
+        self.send_event_locally(event)
+
         # send node exit event to all interested control programs
         event = upis.mgmt.NodeExitEvent(0)
         event.node = self.agent.nodeManager.get_local_node()
-        self.send_event(event)
+        self.send_event_outside(event)
 
     def register_event_handlers(self, i):
         for _k, handler in inspect.getmembers(i, inspect.ismethod):
@@ -146,6 +152,12 @@ class ModuleManager(object):
 
     def send_event_locally(self, event):
         self.eventQueue.put(event)
+
+    def send_event_outside(self, event):
+        if self.agent.transport:
+            # do not change original event that was sent to event queue
+            eventCopy = copy.copy(event)
+            self.agent.transport.send_event_outside(eventCopy)
 
     def send_event(self, event):
         self.eventQueue.put(event)
@@ -259,3 +271,64 @@ class ModuleManager(object):
     def get_service_stop_handlers(self, service, state=None):
         handlers = self._service_stop_handlers.get(service, [])
         return handlers
+
+    def send_cmd_event(self, event, dstNode):
+        if dstNode.local:
+            if event.ctx._blocking:
+                event.responseQueue = Queue()
+            self.commandExecutor.serve_ctx_command_event(event, True)
+        else:
+            if event.ctx._blocking:
+                # save reference to response queue
+                self.synchronousCalls[event.ctx._callId] = Queue()
+            elif event.ctx._callback:
+                # save reference to callback
+                self.callCallbacks[event.ctx._callId] = event.ctx._callback
+                event.ctx._callback = None
+
+            self._transportChannel.send_event_outside(event, dstNode)
+
+            if event.ctx._blocking:
+                event.responseQueue = self.synchronousCalls[event.ctx._callId]
+
+    def serve_event_msg(self, event):
+        srcNodeUuid = event.srcNode
+        srcModuleUuid = event.srcModule
+        event.srcNode = self._nodeManager.get_node_by_uuid(event.srcNode)
+        # alias
+        event.node = event.srcNode
+
+        if event.srcNode is None:
+            self.log.debug("Unknown node: {}"
+                           .format(srcNodeUuid))
+            self._transportChannel.send_node_info_request(srcNodeUuid)
+            return
+
+        self.log.debug("received event from node: {}, module: {}"
+                       .format(srcNodeUuid, srcModuleUuid))
+
+        if event.srcModule is not None and isinstance(event.srcModule, str):
+            event.srcModule = event.node.all_modules.get(event.srcModule, None)
+            # alias
+            event.device = event.srcModule
+
+        if not event.srcModule:
+            return
+
+        self.log.debug("received event {} from node: {}, module: {}"
+                       .format(event.__class__.__name__, event.srcNode.uuid,
+                               event.srcModule.uuid))
+
+        if isinstance(event, upis.mgmt.CommandEvent):
+            self.commandExecutor.serve_ctx_command_event(event)
+
+        elif isinstance(event, upis.mgmt.ReturnValueEvent):
+            if event.ctx._callId in self.synchronousCalls:
+                queue = self.synchronousCalls[event.ctx._callId]
+                queue.put(event.msg)
+            elif event.ctx._callId in self.callCallbacks:
+                self.log.debug("received cmd: {}".format(event.ctx._upi))
+                callback = self.callCallbacks[event.ctx._callId]
+                callback(event)
+        else:
+            self.send_event_locally(event)

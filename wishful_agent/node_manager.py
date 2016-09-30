@@ -6,7 +6,6 @@ import threading
 import wishful_upis as upis
 from .msgs import messages_pb2 as msgs
 from .node import Node
-from .executor import CommandExecutor
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -21,7 +20,6 @@ class NodeManager(object):
             module=self.__class__.__module__, name=self.__class__.__name__))
 
         self.agent = agent
-        self.commandExecutor = CommandExecutor(agent, self)
         self._transportChannel = None
         self._moduleManager = None
 
@@ -29,16 +27,8 @@ class NodeManager(object):
         self.nodes = []
         self.receivedAddNotifications = []
 
-        self._callIdGen = 0
-        self.synchronousCalls = {}
-        self.callCallbacks = {}
-
         self.helloMsgInterval = 3
         self.helloTimeout = 3 * self.helloMsgInterval
-
-    def generate_call_id(self):
-        self._callIdGen = self._callIdGen + 1
-        return self._callIdGen
 
     def get_node_by_uuid(self, uuid):
         if self.local_node:
@@ -52,29 +42,9 @@ class NodeManager(object):
                 break
         return node
 
-    def get_node_by_ip(self, ip):
-        node = None
-        for n in self.nodes:
-            if n.ip == ip:
-                node = n
-                break
-        return node
-
-    def get_node_by_str(self, string):
-        if isinstance(string, Node):
-            return string
-
-        node = None
-        node = self.get_node_by_ip(string)
-        if node:
-            return node
-
-        node = self.get_node_by_uuid(string)
-        return node
-
     def create_local_node(self, agent):
         self.local_node = Node(agent.uuid)
-        self.nodes.append(self.local_node)  # do we need it in nodes?
+        self.nodes.append(self.local_node)
         self.local_node.hostname = socket.gethostname()
         self.local_node.nodeManager = self
 
@@ -134,7 +104,7 @@ class NodeManager(object):
     def notify_new_node_event(self, node):
         event = upis.mgmt.NewNodeEvent()
         event.node = node
-        self.send_event(event)
+        self._moduleManager.send_event(event)
         self.log.info("New node event sent")
 
     def remove_node_hello_timer(self, node):
@@ -147,7 +117,7 @@ class NodeManager(object):
 
             event = upis.mgmt.NodeLostEvent(reason)
             event.node = node
-            self.send_event(event)
+            self._moduleManager.send_event(event)
 
     def serve_node_exit_msg(self, msgContainer):
         msg = msgs.NodeExitMsg()
@@ -168,7 +138,7 @@ class NodeManager(object):
 
             event = upis.mgmt.NodeExitEvent(reason)
             event.node = node
-            self.send_event(event)
+            self._moduleManager.send_event(event)
 
     def serve_hello_msg(self, msgContainer):
         msgDesc = msgContainer[1]
@@ -192,69 +162,4 @@ class NodeManager(object):
         node.refresh_hello_timer()
 
     def send_event_cmd(self, event, dstNode):
-        self.log.debug("{}:{}".format(event.ctx._upi_type, event.ctx._upi))
-
-        callId = self.generate_call_id()
-        event.ctx._callId = callId
-
-        if dstNode.local:
-            if event.ctx._blocking:
-                event.responseQueue = Queue()
-
-            self.commandExecutor.serve_ctx_command_event(event, True)
-        else:
-            if event.ctx._blocking:
-                # save reference to response queue
-                self.synchronousCalls[callId] = Queue()
-            elif event.ctx._callback:
-                # save reference to callback
-                self.callCallbacks[callId] = event.ctx._callback
-                event.ctx._callback = None
-
-            self._transportChannel.send_event_outside(event, dstNode)
-
-            if event.ctx._blocking:
-                event.responseQueue = self.synchronousCalls[callId]
-
-    def serve_event_msg(self, msgContainer):
-        event = msgContainer[2]
-        srcNodeUuid = event.srcNode
-        srcModuleUuid = event.srcModule
-        event.srcNode = self.get_node_by_uuid(event.srcNode)
-        # alias
-        event.node = event.srcNode
-
-        if event.srcNode is None:
-            self.log.debug("Unknown node: {}"
-                           .format(srcNodeUuid))
-            self._transportChannel.send_node_info_request(srcNodeUuid)
-            return
-
-        self.log.debug("received event from node: {}, module: {}"
-                       .format(srcNodeUuid, srcModuleUuid))
-
-        if event.srcModule is not None and isinstance(event.srcModule, str):
-            event.srcModule = event.node.all_modules.get(event.srcModule, None)
-            # alias
-            event.device = event.srcModule
-
-        if not event.srcModule:
-            return
-
-        self.log.debug("received event {} from node: {}, module: {}"
-                       .format(event.__class__.__name__, event.srcNode.uuid,
-                               event.srcModule.uuid))
-
-        if isinstance(event, upis.mgmt.CommandEvent):
-            self.commandExecutor.serve_ctx_command_event(event)
-
-        elif isinstance(event, upis.mgmt.ReturnValueEvent):
-            if event.ctx._callId in self.synchronousCalls:
-                queue = self.synchronousCalls[event.ctx._callId]
-                queue.put(event.msg)
-            elif event.ctx._callId in self.callCallbacks:
-                self.log.debug("received cmd: {}".format(event.ctx._upi))
-                callback = self.callCallbacks[event.ctx._callId]
-                callback(event)
-        else:
-            self.moduleManager.send_event_locally(event)
+        self._moduleManager.send_cmd_event(event, dstNode)

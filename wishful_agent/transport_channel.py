@@ -354,7 +354,8 @@ class TransportChannel(wishful_module.CoreModule):
             self._nodeManager.serve_hello_msg(msgContainer)
 
         else:
-            self._nodeManager.serve_event_msg(msgContainer)
+            event = msgContainer[2]
+            self._moduleManager.serve_event_msg(event)
 
     def recv_msgs(self):
         while not self.forceStop:

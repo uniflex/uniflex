@@ -12,14 +12,13 @@ __email__ = "gawlowicz@tkn.tu-berlin.de"
 
 
 class CommandExecutor(object):
-    def __init__(self, agent, nodeManager):
+    def __init__(self, agent, moduleManager):
         super().__init__()
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
 
         self.agent = agent
-        self.nodeManager = nodeManager
-        self.moduleManager = agent.moduleManager
+        self.moduleManager = moduleManager
         apscheduler_logger = logging.getLogger('apscheduler')
         apscheduler_logger.setLevel(logging.CRITICAL)
         self.jobScheduler = BackgroundScheduler()

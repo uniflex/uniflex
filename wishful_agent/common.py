@@ -75,6 +75,8 @@ class ModuleProxy(object):
         self.module_name = None
         self.node = None
 
+        self._callIdGen = 0
+
         self._callingCtx = CallingContext()
         self._clear_call_context()
         self._currentNode = None
@@ -151,6 +153,10 @@ class ModuleProxy(object):
         self._callingCtx._timeout = None
         self._callingCtx._callback = None
 
+    def generate_call_id(self):
+        self._callIdGen = self._callIdGen + 1
+        return self._callIdGen
+
     def is_enabled(self):
         return True
 
@@ -187,6 +193,7 @@ class ModuleProxy(object):
         self._callingCtx._upi = fname
         self._callingCtx._args = args
         self._callingCtx._kwargs = kwargs
+        self._callingCtx._callId = self.generate_call_id()
 
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
@@ -198,6 +205,7 @@ class ModuleProxy(object):
         self._callingCtx._args = args
         self._callingCtx._kwargs = kwargs
         self._callingCtx._blocking = False
+        self._callingCtx._callId = self.generate_call_id()
 
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
@@ -209,6 +217,7 @@ class ModuleProxy(object):
         self._callingCtx._args = []
         self._callingCtx._kwargs = {}
         self._callingCtx._blocking = False
+        self._callingCtx._callId = self.generate_call_id()
 
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
@@ -223,6 +232,7 @@ class ModuleProxy(object):
         self._callingCtx._args = args
         self._callingCtx._kwargs = kwargs
         self._callingCtx._blocking = False
+        self._callingCtx._callId = self.generate_call_id()
 
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
@@ -234,6 +244,7 @@ class ModuleProxy(object):
         self._callingCtx._args = []
         self._callingCtx._kwargs = {}
         self._callingCtx._blocking = False
+        self._callingCtx._callId = self.generate_call_id()
 
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
