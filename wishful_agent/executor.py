@@ -70,7 +70,7 @@ class CommandExecutor(object):
             after_func = getattr(handler, "_after_call_")
             after_func(module)
 
-    def _serve_ctx_command_event(self, event):
+    def _serve_ctx_command_event(self, event, local):
         ctx = event.ctx
         handlers = []
         runInThread = False
@@ -111,13 +111,28 @@ class CommandExecutor(object):
                     else:
                         retValue = self._execute_command(module, handler,
                                                          args, kwargs)
-
-                        retEvent = upis.mgmt.ReturnValueEvent(event.ctx, retValue)
-                        retEvent.srcNode = self.agent.nodeManager.get_local_node()
-                        retEvent.srcModule = event.dstModule
-                        self.log.debug("send response")
-                        self.agent.transport.send_event_outside(retEvent,
-                                                                event.srcNode)
+                        if local:
+                            if event.ctx._blocking:
+                                event.node = event.srcNode
+                                event.device = event.srcModule
+                                event.responseQueue.put(retValue)
+                            elif event.ctx._callback:
+                                retEvent = upis.mgmt.ReturnValueEvent(event.ctx, retValue)
+                                retEvent.srcNode = event.srcNode
+                                retEvent.srcModule = module
+                                # alias
+                                retEvent.node = event.srcNode
+                                retEvent.device = module
+                                event.ctx._callback(retEvent)
+                            else:
+                                pass
+                        else:
+                            retEvent = upis.mgmt.ReturnValueEvent(event.ctx, retValue)
+                            retEvent.srcNode = self.agent.nodeManager.get_local_node()
+                            retEvent.srcModule = event.dstModule
+                            self.log.debug("send response")
+                            self.agent.transport.send_event_outside(retEvent,
+                                                                    event.srcNode)
 
                 else:
                     self.log.debug("UPI: {} in module: {}"
@@ -133,21 +148,37 @@ class CommandExecutor(object):
                                'handler [%s] servicing UPI function '
                                '[%s] follows [%s]',
                                handler.__name__, ctx._upi, e)
-                retEvent = upis.mgmt.ReturnValueEvent(event.ctx, e)
-                retEvent.srcNode = self.agent.nodeManager.get_local_node()
-                retEvent.srcModule = event.dstModule
-                self.log.debug("send response")
-                self.agent.transport.send_event_outside(retEvent,
-                                                        event.srcNode)
+                if local:
+                    if event.ctx._blocking:
+                        event.node = event.srcNode
+                        event.device = event.srcModule
+                        event.responseQueue.put(e)
+                    elif event.ctx._callback:
+                        retEvent = upis.mgmt.ReturnValueEvent(event.ctx, e)
+                        retEvent.srcNode = event.srcNode
+                        retEvent.srcModule = module
+                        # alias
+                        retEvent.node = event.srcNode
+                        retEvent.device = module
+                        event.ctx._callback(retEvent)
+                    else:
+                        pass
+                else:
+                    retEvent = upis.mgmt.ReturnValueEvent(event.ctx, e)
+                    retEvent.srcNode = self.agent.nodeManager.get_local_node()
+                    retEvent.srcModule = event.dstModule
+                    self.log.debug("send response")
+                    self.agent.transport.send_event_outside(retEvent,
+                                                            event.srcNode)
 
-    def serve_ctx_command_event(self, event):
+    def serve_ctx_command_event(self, event, local=False):
         ctx = event.ctx
 
         if not ctx._exec_time or ctx._exec_time == 0:
             # execute now
             self.log.debug("Serves Cmd Event: Type: {} UPI: {}".format(
                            ctx._upi_type, ctx._upi))
-            self._serve_ctx_command_event(event)
+            self._serve_ctx_command_event(event, local)
         else:
             # schedule in future
             if isinstance(ctx._exec_time, str):
@@ -164,4 +195,5 @@ class CommandExecutor(object):
                            .format(ctx._upi_type, ctx._upi, execTime))
             self.jobScheduler.add_job(self._serve_ctx_command_event,
                                       'date', run_date=execTime,
-                                      kwargs={"event": event})
+                                      kwargs={"event": event,
+                                              "local": local})

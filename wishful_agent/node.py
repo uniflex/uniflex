@@ -164,6 +164,8 @@ class Node(object):
         moduleProxy.in_events = module.in_events
         moduleProxy.out_events = module.out_events
         moduleProxy.services = module.services
+
+        moduleProxy._currentNode = self
         self.all_modules[module.uuid] = moduleProxy
 
     def get_devices(self):

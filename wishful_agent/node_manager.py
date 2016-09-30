@@ -193,12 +193,15 @@ class NodeManager(wishful_module.CoreModule):
     def send_event_cmd(self, event, dstNode):
         self.log.debug("{}:{}".format(event.ctx._upi_type, event.ctx._upi))
 
+        callId = self.generate_call_id()
+        event.ctx._callId = callId
+
         if dstNode.local:
-            # TODO: add callback and queue for blocking
-            self.send_event(event)
+            if event.ctx._blocking:
+                event.responseQueue = Queue()
+
+            self.commandExecutor.serve_ctx_command_event(event, True)
         else:
-            callId = self.generate_call_id()
-            event.ctx._callId = callId
             if event.ctx._blocking:
                 # save reference to response queue
                 self.synchronousCalls[callId] = Queue()
