@@ -59,10 +59,10 @@ class ModuleManager(object):
             wishfulModule.deviceId = self.generate_new_device_id()
 
         wishfulModule = self.add_module_obj(moduleName, wishfulModule)
-        node = self.agent.nodeManager.get_local_node()
-        wishfulModule.localNode = node
+        localNode = self.agent.nodeManager.get_local_node()
+        wishfulModule.localNode = localNode
 
-        node.add_module_proxy(wishfulModule)
+        localNode.add_module_proxy(wishfulModule)
 
         return wishfulModule
 

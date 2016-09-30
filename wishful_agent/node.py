@@ -1,6 +1,7 @@
 import time
 import logging
 from .common import ModuleProxy
+from .core import DeviceModule, ControllerModule, Application
 import wishful_agent.msgs as msgs
 
 __author__ = "Piotr Gawlowicz"
@@ -9,14 +10,7 @@ __version__ = "0.1.0"
 __email__ = "{gawlowicz}@tkn.tu-berlin.de"
 
 
-class Module(ModuleProxy):
-    """docstring for Module"""
-
-    def __init__(self):
-        super(Module, self).__init__()
-
-
-class Device(ModuleProxy):
+class DeviceProxy(ModuleProxy):
     def __init__(self):
         super().__init__()
         self.log = logging.getLogger("{module}.{name}".format(
@@ -32,11 +26,11 @@ class Device(ModuleProxy):
         return string
 
 
-class Application(ModuleProxy):
-    """docstring for Application"""
+class ApplicationProxy(ModuleProxy):
+    """docstring for ApplicationProxy"""
 
     def __init__(self):
-        super(Application, self).__init__()
+        super().__init__()
 
 
 class Node(object):
@@ -72,11 +66,11 @@ class Node(object):
         for module in msg.modules:
             moduleDesc = None
             if module.type == msgs.Module.APPLICATION:
-                moduleDesc = Application()
+                moduleDesc = ApplicationProxy()
             elif module.type == msgs.Module.DEVICE:
-                moduleDesc = Device()
+                moduleDesc = DeviceProxy()
             else:
-                moduleDesc = Module()
+                moduleDesc = ModuleProxy()
 
             moduleDesc.node = node
             moduleDesc.uuid = module.uuid
@@ -140,6 +134,12 @@ class Node(object):
             string = string + appString
 
         return string
+
+    def add_module_proxy(self, module):
+        if isinstance(module, DeviceModule) or module.device:
+            pass
+        elif isinstance(module, ControllerModule) or isinstance(module, Application):
+            pass
 
     def get_devices(self):
         return self.devices.values()
