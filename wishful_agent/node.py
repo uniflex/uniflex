@@ -222,10 +222,3 @@ class Node(object):
                 return returnValue
 
         return response
-
-
-class NodeGroup(object):
-    """docstring for NodeGroup"""
-
-    def __init__(self):
-        super(NodeGroup, self).__init__()
