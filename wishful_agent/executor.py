@@ -112,20 +112,20 @@ class CommandExecutor(object):
                         retValue = self._execute_command(module, handler,
                                                          args, kwargs)
                         if local:
+                            moduleProxy = event.srcNode.get_module_by_uuid(module.uuid)
+                            retEvent = upis.mgmt.ReturnValueEvent(event.ctx, retValue)
+                            retEvent.srcNode = event.srcNode
+                            retEvent.srcModule = moduleProxy
+                            retEvent.dstNode = event.srcNode
+                            retEvent.dstModule = event.srcModule
+                            # alias
+                            retEvent.node = event.srcNode
+                            #print("SRC NODE", module.uuid, event.srcNode, moduleProxy)
+                            retEvent.device = moduleProxy
                             if event.ctx._blocking:
-                                event.node = event.srcNode
-                                event.device = event.srcModule
-                                event.responseQueue.put(retValue)
+                                event.responseQueue.put(retEvent.msg)
                             elif event.ctx._callback:
-                                retEvent = upis.mgmt.ReturnValueEvent(event.ctx, retValue)
-                                retEvent.srcNode = event.srcNode
-                                retEvent.srcModule = module
-                                # alias
-                                retEvent.node = event.srcNode
-                                retEvent.device = module
                                 event.ctx._callback(retEvent)
-                            else:
-                                pass
                         else:
                             retEvent = upis.mgmt.ReturnValueEvent(event.ctx, retValue)
                             retEvent.srcNode = self.agent.nodeManager.get_local_node()
@@ -149,20 +149,19 @@ class CommandExecutor(object):
                                '[%s] follows [%s]',
                                handler.__name__, ctx._upi, e)
                 if local:
+                    moduleProxy = event.srcNode.get_module_by_uuid(module.uuid)
+                    retEvent = upis.mgmt.ReturnValueEvent(event.ctx, retValue)
+                    retEvent.srcNode = event.srcNode
+                    retEvent.srcModule = moduleProxy
+                    retEvent.dstNode = event.srcNode
+                    retEvent.dstModule = event.srcModule
+                    # alias
+                    retEvent.node = event.srcNode
+                    retEvent.device = moduleProxy
                     if event.ctx._blocking:
-                        event.node = event.srcNode
-                        event.device = event.srcModule
                         event.responseQueue.put(e)
                     elif event.ctx._callback:
-                        retEvent = upis.mgmt.ReturnValueEvent(event.ctx, e)
-                        retEvent.srcNode = event.srcNode
-                        retEvent.srcModule = module
-                        # alias
-                        retEvent.node = event.srcNode
-                        retEvent.device = module
-                        event.ctx._callback(retEvent)
-                    else:
-                        pass
+                        event.ctx._callback(e)
                 else:
                     retEvent = upis.mgmt.ReturnValueEvent(event.ctx, e)
                     retEvent.srcNode = self.agent.nodeManager.get_local_node()

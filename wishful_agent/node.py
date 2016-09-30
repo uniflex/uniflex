@@ -183,6 +183,9 @@ class Node(object):
     def get_modules(self):
         return self.modules.values()
 
+    def get_module_by_uuid(self, uuid):
+        return self.all_modules.get(uuid, None)
+
     def get_apps(self):
         return self.apps.values()
 
