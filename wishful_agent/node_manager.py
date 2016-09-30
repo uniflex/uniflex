@@ -76,12 +76,6 @@ class NodeManager(wishful_module.CoreModule):
         self.nodes.append(self.local_node)  # do we need it in nodes?
         self.local_node.hostname = socket.gethostname()
         self.local_node.nodeManager = self
-        # TODO: fill info about modules, etc
-
-        # set localNode variable in each app
-        modules = self.agent.moduleManager.modules.values()
-        for m in modules:
-            m.localNode = self.local_node
 
     def get_local_node(self):
         return self.local_node
