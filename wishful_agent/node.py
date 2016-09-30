@@ -64,50 +64,50 @@ class Node(object):
         node._timerCallback = None
 
         for module in msg.modules:
-            moduleDesc = None
+            moduleProxy = None
             if module.type == msgs.Module.APPLICATION:
-                moduleDesc = ApplicationProxy()
+                moduleProxy = ApplicationProxy()
             elif module.type == msgs.Module.DEVICE:
-                moduleDesc = DeviceProxy()
+                moduleProxy = DeviceProxy()
             else:
-                moduleDesc = ModuleProxy()
+                moduleProxy = ModuleProxy()
 
-            moduleDesc.node = node
-            moduleDesc.uuid = module.uuid
-            moduleDesc.id = module.id
-            moduleDesc.module_id = module.id
-            moduleDesc.name = str(module.name)
-            moduleDesc.module_name = str(module.name)
+            moduleProxy.node = node
+            moduleProxy.uuid = module.uuid
+            moduleProxy.id = module.id
+            moduleProxy.module_id = module.id
+            moduleProxy.name = str(module.name)
+            moduleProxy.module_name = str(module.name)
 
             for attr in module.attributes:
-                moduleDesc.attributes.append(str(attr.name))
+                moduleProxy.attributes.append(str(attr.name))
 
             for func in module.functions:
-                moduleDesc.functions.append(str(func.name))
+                moduleProxy.functions.append(str(func.name))
 
             for event in module.in_events:
-                moduleDesc.in_events.append(str(event.name))
+                moduleProxy.in_events.append(str(event.name))
 
             for event in module.out_events:
-                moduleDesc.out_events.append(str(event.name))
+                moduleProxy.out_events.append(str(event.name))
 
             for service in module.services:
-                moduleDesc.services.append(str(service.name))
+                moduleProxy.services.append(str(service.name))
 
             if module.type == msgs.Module.APPLICATION:
-                node.apps[moduleDesc.uuid] = moduleDesc
-                node.all_modules[moduleDesc.uuid] = moduleDesc
+                node.apps[moduleProxy.uuid] = moduleProxy
+                node.all_modules[moduleProxy.uuid] = moduleProxy
 
             elif module.type == msgs.Module.DEVICE:
                 if module.HasField('device'):
-                    moduleDesc._id = module.device.id
-                    moduleDesc.name = module.device.name
+                    moduleProxy._id = module.device.id
+                    moduleProxy.name = module.device.name
 
-                node.devices[moduleDesc._id] = moduleDesc
-                node.all_modules[moduleDesc.uuid] = moduleDesc
+                node.devices[moduleProxy._id] = moduleProxy
+                node.all_modules[moduleProxy.uuid] = moduleProxy
             else:
-                node.modules[moduleDesc.uuid] = moduleDesc
-                node.all_modules[moduleDesc.uuid] = moduleDesc
+                node.modules[moduleProxy.uuid] = moduleProxy
+                node.all_modules[moduleProxy.uuid] = moduleProxy
 
         return node
 
@@ -136,10 +136,35 @@ class Node(object):
         return string
 
     def add_module_proxy(self, module):
+        moduleProxy = None
         if isinstance(module, DeviceModule) or module.device:
-            pass
-        elif isinstance(module, ControllerModule) or isinstance(module, Application):
-            pass
+            moduleProxy = DeviceProxy()
+            moduleProxy._id = module.deviceId
+            moduleProxy.name = module.device
+            self.devices[moduleProxy._id] = moduleProxy
+
+        elif (isinstance(module, ControllerModule) or
+              isinstance(module, Application)):
+            moduleProxy = ApplicationProxy()
+            self.apps[module.uuid] = moduleProxy
+            moduleProxy.name = module.name
+        else:
+            moduleProxy = ModuleProxy()
+            self.modules[module.uuid] = moduleProxy
+            moduleProxy.name = module.name
+
+        moduleProxy.node = self
+        moduleProxy.uuid = module.uuid
+        moduleProxy.id = module.id
+        moduleProxy.module_id = module.id
+        moduleProxy.module_name = module.name
+
+        moduleProxy.attributes = module.attributes
+        moduleProxy.functions = module.functions
+        moduleProxy.in_events = module.in_events
+        moduleProxy.out_events = module.out_events
+        moduleProxy.services = module.services
+        self.all_modules[module.uuid] = moduleProxy
 
     def get_devices(self):
         return self.devices.values()
