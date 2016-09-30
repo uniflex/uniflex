@@ -18,6 +18,9 @@ class ModuleManager(object):
             module=self.__class__.__module__, name=self.__class__.__name__))
 
         self.agent = agent
+        self._transportChannel = None
+        self._nodeManager = None
+
         self.moduleIdGen = 0
         self.deviceIdGen = 0
         self.eventQueue = Queue()

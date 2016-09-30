@@ -5,7 +5,6 @@ import threading
 
 import wishful_upis as upis
 from .msgs import messages_pb2 as msgs
-from .core import wishful_module
 from .node import Node
 from .executor import CommandExecutor
 
@@ -15,7 +14,7 @@ __version__ = "0.1.0"
 __email__ = "gawlowicz@tkn.tu-berlin.de"
 
 
-class NodeManager(wishful_module.CoreModule):
+class NodeManager(object):
     def __init__(self, agent):
         super().__init__()
         self.log = logging.getLogger("{module}.{name}".format(
@@ -24,6 +23,8 @@ class NodeManager(wishful_module.CoreModule):
         self.agent = agent
         self.commandExecutor = CommandExecutor(agent, self)
         self._transportChannel = None
+        self._moduleManager = None
+
         self.local_node = None
         self.nodes = []
         self.receivedAddNotifications = []

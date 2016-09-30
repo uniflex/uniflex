@@ -42,6 +42,7 @@ class TransportChannel(wishful_module.CoreModule):
 
         self.agent = agent
         self._nodeManager = None
+        self._moduleManager = None
         self.xpub_url = None
         self.xsub_url = None
         self.timeout = 500  # ms

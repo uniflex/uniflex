@@ -28,15 +28,18 @@ class Agent(object):
         self.ip = None
 
         self.broker = None
+
         # extention of event bus
         self.transport = None
 
+        # module manager
         self.moduleManager = ModuleManager(self)
 
         # node manager
         self.nodeManager = NodeManager(self)
-        self.moduleManager.add_module_obj(
-            "node_manager", self.nodeManager)
+
+        self.moduleManager._nodeManager = self.nodeManager
+        self.nodeManager._moduleManager = self.moduleManager
 
     def set_agent_info(self, name=None, info=None, iface=None, ip=None):
         self.name = name
@@ -103,8 +106,11 @@ class Agent(object):
                 "transport_channel", self.transport)
             self.transport.set_downlink(dl)
             self.transport.set_uplink(ul)
+
             self.transport._nodeManager = self.nodeManager
+            self.transport._moduleManager = self.moduleManager
             self.nodeManager._transportChannel = self.transport
+            self.moduleManager._transportChannel = self.transport
 
         self.nodeManager.create_local_node(self)
 
