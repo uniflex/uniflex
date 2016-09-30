@@ -192,7 +192,7 @@ class WishfulModule(object):
 
         # TODO: move to DeviceModule
         self.device = None
-        self.deviceObj = None
+        self.deviceId = None
 
         # TODO: move to ControllerModule (ControllerApp)
         # node container
@@ -213,16 +213,8 @@ class WishfulModule(object):
             event.srcNode = self.agent.nodeManager.get_local_node()
         self.moduleManager.send_event(event)
 
-    # TODO: move to DeviceModule
-    def set_device(self, dev):
-        self.deviceObj = dev
-        self.device = dev.name
-
     def get_device(self):
         return self.device
-
-    def get_device_obj(self):
-        return self.deviceObj
 
     def get_attributes(self):
         return self.attributes

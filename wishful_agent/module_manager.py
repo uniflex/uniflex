@@ -4,7 +4,6 @@ import inspect
 import threading
 from importlib import import_module
 from queue import Queue, Empty
-from .node import Device
 import wishful_upis as upis
 
 __author__ = "Piotr Gawlowicz"
@@ -55,18 +54,16 @@ class ModuleManager(object):
         wishful_module_class = getattr(pyModule, className)
         wishfulModule = wishful_module_class(**kwargs)
 
+        if device:
+            wishfulModule.device = device
+            wishfulModule.deviceId = self.generate_new_device_id()
+
         wishfulModule = self.add_module_obj(moduleName, wishfulModule)
         node = self.agent.nodeManager.get_local_node()
         wishfulModule.localNode = node
-        node.modules[wishfulModule.id] = wishfulModule
-        if device:
-            devId = self.generate_new_device_id()
-            dev = Device()
-            dev._id = devId
-            dev.name = device
-            dev.node = node
-            wishfulModule.set_device(dev)
-            node.devices[devId] = dev
+
+        node.add_module_proxy(wishfulModule)
+
         return wishfulModule
 
     def add_module_obj(self, moduleName, wishfulModule):

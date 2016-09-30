@@ -193,8 +193,8 @@ class TransportChannel(wishful_module.CoreModule):
             if module.device:
                 moduleMsg.type = msgs.Module.DEVICE
                 deviceDesc = msgs.Device()
-                deviceDesc.id = module.deviceObj._id
-                deviceDesc.name = module.deviceObj.name
+                deviceDesc.id = module.deviceId
+                deviceDesc.name = module.device
                 moduleMsg.device.CopyFrom(deviceDesc)
 
             for name in module.get_attributes():
