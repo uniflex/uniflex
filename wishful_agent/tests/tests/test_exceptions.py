@@ -20,27 +20,27 @@ def main():
     log.info('%s' % str(dir()))
     try:
         raise exceptions.AgentNotAvailable(id='123')
-    except exceptions.WishfulException as we:
+    except exceptions.UniFlexException as we:
         print(we)
 
     try:
         raise exceptions.InvalidArgumentException(func_name='radio.get_noise')
-    except exceptions.WishfulException as we:
+    except exceptions.UniFlexException as we:
         print(we)
 
     try:
-        raise exceptions.UnsupportedUPIFunctionException(func_name='radio.get_noise', conn_module='wifi_ath9k')
-    except exceptions.WishfulException as we:
+        raise exceptions.UnsupportedFunctionException(func_name='radio.get_noise', conn_module='wifi_ath9k')
+    except exceptions.UniFlexException as we:
         print(we)
 
     try:
         raise exceptions.SchedulingFunctionCallsInThePastException(func_name='radio.get_noise')
-    except exceptions.WishfulException as we:
+    except exceptions.UniFlexException as we:
         print(we)
 
     try:
-        raise exceptions.UPIFunctionExecutionFailedException(func_name='radio.get_noise', err_msg='wrong iw version')
-    except exceptions.WishfulException as we:
+        raise exceptions.FunctionExecutionFailedException(func_name='radio.get_noise', err_msg='wrong iw version')
+    except exceptions.UniFlexException as we:
         print(we)
 
 
