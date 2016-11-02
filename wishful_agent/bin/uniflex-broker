@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-wishful-broker: First implementation of WiSHFUL agent
+uniflex-broker: First implementation of UniFlex agent
 
 Usage:
-   wishful-broker [options] [-q | -v]
+   uniflex-broker [options] [-q | -v]
 
 Options:
    --logfile name      Name of the logfile
@@ -13,7 +13,7 @@ Options:
    --xsub sub_url      Subscriber URL
 
 Example:
-   wishful-broker --xpub tcp://127.0.0.1:8990 --xsub tcp://127.0.0.1:8989
+   uniflex-broker --xpub tcp://127.0.0.1:8990 --xsub tcp://127.0.0.1:8989
 
 Other options:
    -h, --help          show this help message and exit
@@ -30,7 +30,7 @@ __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
 __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
-log = logging.getLogger('wishful-broker')
+log = logging.getLogger('uniflex-broker')
 
 if __name__ == "__main__":
     try:

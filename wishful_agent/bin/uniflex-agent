@@ -2,17 +2,17 @@
 # -*- coding: utf-8 -*-
 
 """
-wishful-agent: First implementation of WiSHFUL agent
+uniflex-agent: First implementation of UniFlex agent
 
 Usage:
-   wishful-agent [options] [-q | -v]
+   uniflex-agent [options] [-q | -v]
 
 Options:
    --logfile name      Name of the logfile
    --config configFile Config file path
 
 Example:
-   wishful-agent -v --config ./config.yaml
+   uniflex-agent -v --config ./config.yaml
 
 Other options:
    -h, --help          show this help message and exit
@@ -31,7 +31,7 @@ __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
 __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
-log = logging.getLogger('wishful_agent.main')
+log = logging.getLogger('uniflexl_agent.main')
 agent = wishful_agent.Agent()
 
 
@@ -40,7 +40,7 @@ def main(args):
 
     config_file_path = args['--config']
     if not config_file_path:
-        log.error("Please run wishful-agent with config file")
+        log.error("Please run uniflex-agent with config file")
         return
 
     configPath = os.path.dirname(os.path.abspath(config_file_path))
