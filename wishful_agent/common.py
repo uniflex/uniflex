@@ -7,6 +7,7 @@ import netifaces as ni
 from netifaces import AF_INET
 import wishful_upis as upis
 from .core import upis_builder
+from .core import events
 
 __author__ = "Piotr Gawlowicz, Anatolij Zubow"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -182,7 +183,7 @@ class ModuleProxy(object):
         return event.__module__ + '.' + className
 
     def _send_cmd_event(self, ctx):
-        cmdEvent = upis.mgmt.CommandEvent(ctx=ctx)
+        cmdEvent = events.CommandEvent(ctx=ctx)
         cmdEvent.srcModule = threading.currentThread().module
         cmdEvent.srcNode = self._currentNode
         cmdEvent.dstModule = self.uuid

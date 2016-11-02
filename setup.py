@@ -16,8 +16,8 @@ setup(
     license='',
     author='Piotr Gawlowicz, Mikolaj Chwalisz',
     author_email='{gawlowicz, chwalisz}@tkn.tu-berlin.de',
-    description='WiSHFUL Agent Implementation Framework',
-    long_description='Implementation of a wireless agent using the unified programming interfaces (UPIs) of the Wishful project.',
+    description='UniFlex Framework',
+    long_description='Implementation of UniFlex Framework',
     keywords='wireless control',
     install_requires=['apscheduler', 'pyzmq', 'dill', 'protobuf', 'decorator'],
 )

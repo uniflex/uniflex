@@ -3,7 +3,7 @@ import datetime
 import threading
 from apscheduler.schedulers.background import BackgroundScheduler
 
-import wishful_upis as upis
+from .core import events
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -112,7 +112,7 @@ class CommandExecutor(object):
                                                          args, kwargs)
                         if local:
                             moduleProxy = event.srcNode.get_module_by_uuid(module.uuid)
-                            retEvent = upis.mgmt.ReturnValueEvent(event.ctx, retValue)
+                            retEvent = events.ReturnValueEvent(event.ctx, retValue)
                             retEvent.srcNode = event.srcNode
                             retEvent.srcModule = moduleProxy
                             retEvent.dstNode = event.srcNode
@@ -126,7 +126,7 @@ class CommandExecutor(object):
                             elif event.ctx._callback:
                                 event.ctx._callback(retEvent)
                         else:
-                            retEvent = upis.mgmt.ReturnValueEvent(event.ctx, retValue)
+                            retEvent = events.ReturnValueEvent(event.ctx, retValue)
                             retEvent.srcNode = self.agent.nodeManager.get_local_node()
                             retEvent.srcModule = event.dstModule
                             self.log.debug("send response")
@@ -149,7 +149,7 @@ class CommandExecutor(object):
                                handler.__name__, ctx._upi, e)
                 if local:
                     moduleProxy = event.srcNode.get_module_by_uuid(module.uuid)
-                    retEvent = upis.mgmt.ReturnValueEvent(event.ctx, retValue)
+                    retEvent = events.ReturnValueEvent(event.ctx, retValue)
                     retEvent.srcNode = event.srcNode
                     retEvent.srcModule = moduleProxy
                     retEvent.dstNode = event.srcNode
@@ -162,7 +162,7 @@ class CommandExecutor(object):
                     elif event.ctx._callback:
                         event.ctx._callback(e)
                 else:
-                    retEvent = upis.mgmt.ReturnValueEvent(event.ctx, e)
+                    retEvent = events.ReturnValueEvent(event.ctx, e)
                     retEvent.srcNode = self.agent.nodeManager.get_local_node()
                     retEvent.srcModule = event.dstModule
                     self.log.debug("send response")

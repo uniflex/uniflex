@@ -8,7 +8,6 @@ import logging
 import wishful_agent
 import time
 import yaml
-import wishful_upis as upis
 from wishful_framework import TimeEvent, PktEvent, MovAvgFilter, PeakDetector, Match, Action, Permanance, PktMatch, FieldSelector
 
 """

@@ -1,9 +1,7 @@
-WiSHFUL Node Agent Framework
+UniFlex Framework
 ============================
 
-This is a prototypic implementation of a wireless agent providing the Unified
-Programming Interfaces (UPIs) of the Wishful software platform for
-radio and network control.
+This is a prototypic implementation of a UniFlex framework.
 
 ## Acknowledgement
 

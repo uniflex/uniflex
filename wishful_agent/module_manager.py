@@ -5,7 +5,7 @@ import threading
 from importlib import import_module
 from queue import Queue, Empty
 from .executor import CommandExecutor
-import wishful_upis as upis
+from .core import events
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -99,7 +99,7 @@ class ModuleManager(object):
 
     def start(self):
         self.log.debug("Notify START to modules".format())
-        self.send_event_locally(upis.mgmt.AgentStartEvent())
+        self.send_event_locally(events.AgentStartEvent())
         # send new node event to interested control programs
         self.eventServeThread = threading.Thread(target=self.serve_event_queue)
         self.eventServeThread.setDaemon(True)
@@ -107,12 +107,12 @@ class ModuleManager(object):
 
     def exit(self):
         self.log.debug("Notify EXIT to modules".format())
-        event = upis.mgmt.AgentExitEvent()
+        event = events.AgentExitEvent()
         event.node = self.agent.nodeManager.get_local_node()
         self.send_event_locally(event)
 
         # send node exit event to all interested control programs
-        event = upis.mgmt.NodeExitEvent(0)
+        event = events.NodeExitEvent(0)
         event.node = self.agent.nodeManager.get_local_node()
         self.send_event_outside(event)
 
@@ -319,10 +319,10 @@ class ModuleManager(object):
                        .format(event.__class__.__name__, event.srcNode.uuid,
                                event.srcModule.uuid))
 
-        if isinstance(event, upis.mgmt.CommandEvent):
+        if isinstance(event, events.CommandEvent):
             self.commandExecutor.serve_ctx_command_event(event)
 
-        elif isinstance(event, upis.mgmt.ReturnValueEvent):
+        elif isinstance(event, events.ReturnValueEvent):
             if event.ctx._callId in self.synchronousCalls:
                 queue = self.synchronousCalls[event.ctx._callId]
                 queue.put(event.msg)

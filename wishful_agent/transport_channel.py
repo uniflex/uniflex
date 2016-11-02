@@ -15,7 +15,8 @@ from .timer import TimerEventSender
 from .core import wishful_module
 from .common import get_inheritors
 from .node import Node
-import wishful_upis as upis
+from .core import events
+
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
@@ -23,12 +24,12 @@ __version__ = "0.1.0"
 __email__ = "gawlowicz@tkn.tu-berlin.de"
 
 
-class SendHelloMsgTimeEvent(upis.mgmt.TimeEvent):
+class SendHelloMsgTimeEvent(events.TimeEvent):
     def __init__(self):
         super().__init__()
 
 
-class HelloMsgTimeoutEvent(upis.mgmt.TimeEvent):
+class HelloMsgTimeoutEvent(events.TimeEvent):
     def __init__(self):
         super().__init__()
 
@@ -102,7 +103,7 @@ class TransportChannel(wishful_module.CoreModule):
         thread.setDaemon(True)
         thread.start()
 
-        self.eventClasses = get_inheritors(upis.upi.EventBase)
+        self.eventClasses = get_inheritors(events.EventBase)
 
     @wishful_module.on_exit()
     def stop_module(self):
@@ -117,7 +118,7 @@ class TransportChannel(wishful_module.CoreModule):
         except:
             pass
 
-    @wishful_module.on_event(upis.mgmt.BrokerDiscoveredEvent)
+    @wishful_module.on_event(events.BrokerDiscoveredEvent)
     def connect_to_broker(self, event):
         if self.connected or self.forceStop:
             self.log.debug("Agent already connected to broker".format())
@@ -154,7 +155,7 @@ class TransportChannel(wishful_module.CoreModule):
         # stop discovery module
         # and notify CONNECTED to modules
         self.log.debug("Notify connection estabilished")
-        event = upis.mgmt.ConnectionEstablishedEvent()
+        event = events.ConnectionEstablishedEvent()
         self.send_event(event)
 
         # start sending hello msgs
@@ -309,7 +310,7 @@ class TransportChannel(wishful_module.CoreModule):
         self.helloMsgTimer.cancel()
 
         # notify Connection Lost
-        event = upis.mgmt.ConnectionLostEvent(0)
+        event = events.ConnectionLostEvent(0)
         self.send_event(event)
         self.disconnect()
 

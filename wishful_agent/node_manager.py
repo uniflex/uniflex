@@ -1,9 +1,8 @@
 import logging
 import socket
-from queue import Queue
 import threading
 
-import wishful_upis as upis
+from .core import events
 from .msgs import messages_pb2 as msgs
 from .node import Node
 
@@ -102,7 +101,7 @@ class NodeManager(object):
         self.notify_new_node_event(node)
 
     def notify_new_node_event(self, node):
-        event = upis.mgmt.NewNodeEvent()
+        event = events.NewNodeEvent()
         event.node = node
         self._moduleManager.send_event(event)
         self.log.info("New node event sent")
@@ -115,7 +114,7 @@ class NodeManager(object):
         if node and node in self.nodes:
             self.nodes.remove(node)
 
-            event = upis.mgmt.NodeLostEvent(reason)
+            event = events.NodeLostEvent(reason)
             event.node = node
             self._moduleManager.send_event(event)
 
@@ -136,7 +135,7 @@ class NodeManager(object):
         if node and node in self.nodes:
             self.nodes.remove(node)
 
-            event = upis.mgmt.NodeExitEvent(reason)
+            event = events.NodeExitEvent(reason)
             event.node = node
             self._moduleManager.send_event(event)
 

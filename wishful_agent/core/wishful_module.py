@@ -4,7 +4,7 @@ import inspect
 from queue import Queue, Empty
 from threading import Thread
 from functools import partial
-import wishful_upis as upis
+from . import events
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
@@ -34,10 +34,10 @@ def on_event(ev_cls, dispatchers=None):
     return _set_ev_cls_dec
 
 
-on_start = partial(on_event, upis.mgmt.AgentStartEvent)
-on_exit = partial(on_event, upis.mgmt.AgentExitEvent)
-on_connected = partial(on_event, upis.mgmt.ConnectionEstablishedEvent)
-on_disconnected = partial(on_event, upis.mgmt.ConnectionLostEvent)
+on_start = partial(on_event, events.AgentStartEvent)
+on_exit = partial(on_event, events.AgentExitEvent)
+on_connected = partial(on_event, events.ConnectionEstablishedEvent)
+on_disconnected = partial(on_event, events.ConnectionLostEvent)
 
 
 def run_in_thread():

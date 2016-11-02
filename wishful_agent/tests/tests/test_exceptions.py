@@ -5,7 +5,6 @@ import sys
 import datetime
 import logging
 import wishful_controller
-import wishful_upis as upis
 from wishful_framework.classes import exceptions
 
 __author__ = "Zubow"
