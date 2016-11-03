@@ -17,8 +17,8 @@ _sym_db = _symbol_database.Default()
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='messages.proto',
-  package='wishful_framework',
-  serialized_pb=_b('\n\x0emessages.proto\x12\x11wishful_framework\"\x19\n\tAttribute\x12\x0c\n\x04name\x18\x01 \x02(\t\"\x18\n\x08\x46unction\x12\x0c\n\x04name\x18\x01 \x02(\t\"\x15\n\x05\x45vent\x12\x0c\n\x04name\x18\x01 \x02(\t\"\x17\n\x07Service\x12\x0c\n\x04name\x18\x01 \x02(\t\"\"\n\x06\x44\x65vice\x12\n\n\x02id\x18\x01 \x02(\r\x12\x0c\n\x04name\x18\x02 \x02(\t\"\xb1\x03\n\x06Module\x12\x0c\n\x04uuid\x18\x01 \x02(\t\x12\n\n\x02id\x18\x02 \x02(\r\x12\x0c\n\x04name\x18\x03 \x02(\t\x12\x32\n\x04type\x18\x04 \x02(\x0e\x32$.wishful_framework.Module.ModuleType\x12)\n\x06\x64\x65vice\x18\x05 \x01(\x0b\x32\x19.wishful_framework.Device\x12\x30\n\nattributes\x18\x06 \x03(\x0b\x32\x1c.wishful_framework.Attribute\x12.\n\tfunctions\x18\x07 \x03(\x0b\x32\x1b.wishful_framework.Function\x12+\n\tin_events\x18\x08 \x03(\x0b\x32\x18.wishful_framework.Event\x12,\n\nout_events\x18\t \x03(\x0b\x32\x18.wishful_framework.Event\x12,\n\x08services\x18\n \x03(\x0b\x32\x1a.wishful_framework.Service\"5\n\nModuleType\x12\n\n\x06MODULE\x10\x00\x12\n\n\x06\x44\x45VICE\x10\x01\x12\x0f\n\x0b\x41PPLICATION\x10\x02\"\xe4\x01\n\x0bNodeInfoMsg\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\x12\n\n\x02ip\x18\x02 \x02(\t\x12\x0c\n\x04name\x18\x03 \x02(\t\x12\x10\n\x08hostname\x18\x04 \x02(\t\x12\x0c\n\x04info\x18\x05 \x01(\t\x12*\n\x07\x64\x65vices\x18\x06 \x03(\x0b\x32\x19.wishful_framework.Module\x12*\n\x07modules\x18\x07 \x03(\x0b\x32\x19.wishful_framework.Module\x12/\n\x0c\x61pplications\x18\x08 \x03(\x0b\x32\x19.wishful_framework.Module\"%\n\x0fNodeInfoRequest\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\")\n\x13NodeAddNotification\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\"1\n\x0bNodeExitMsg\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\x12\x0e\n\x06reason\x18\x02 \x01(\t\")\n\x08HelloMsg\x12\x0c\n\x04uuid\x18\x01 \x02(\t\x12\x0f\n\x07timeout\x18\x02 \x02(\r')
+  package='uniflex_framework',
+  serialized_pb=_b('\n\x0emessages.proto\x12\x11uniflex_framework\"\x19\n\tAttribute\x12\x0c\n\x04name\x18\x01 \x02(\t\"\x18\n\x08\x46unction\x12\x0c\n\x04name\x18\x01 \x02(\t\"\x15\n\x05\x45vent\x12\x0c\n\x04name\x18\x01 \x02(\t\"\x17\n\x07Service\x12\x0c\n\x04name\x18\x01 \x02(\t\"\"\n\x06\x44\x65vice\x12\n\n\x02id\x18\x01 \x02(\r\x12\x0c\n\x04name\x18\x02 \x02(\t\"\xb1\x03\n\x06Module\x12\x0c\n\x04uuid\x18\x01 \x02(\t\x12\n\n\x02id\x18\x02 \x02(\r\x12\x0c\n\x04name\x18\x03 \x02(\t\x12\x32\n\x04type\x18\x04 \x02(\x0e\x32$.uniflex_framework.Module.ModuleType\x12)\n\x06\x64\x65vice\x18\x05 \x01(\x0b\x32\x19.uniflex_framework.Device\x12\x30\n\nattributes\x18\x06 \x03(\x0b\x32\x1c.uniflex_framework.Attribute\x12.\n\tfunctions\x18\x07 \x03(\x0b\x32\x1b.uniflex_framework.Function\x12+\n\tin_events\x18\x08 \x03(\x0b\x32\x18.uniflex_framework.Event\x12,\n\nout_events\x18\t \x03(\x0b\x32\x18.uniflex_framework.Event\x12,\n\x08services\x18\n \x03(\x0b\x32\x1a.uniflex_framework.Service\"5\n\nModuleType\x12\n\n\x06MODULE\x10\x00\x12\n\n\x06\x44\x45VICE\x10\x01\x12\x0f\n\x0b\x41PPLICATION\x10\x02\"\xe4\x01\n\x0bNodeInfoMsg\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\x12\n\n\x02ip\x18\x02 \x02(\t\x12\x0c\n\x04name\x18\x03 \x02(\t\x12\x10\n\x08hostname\x18\x04 \x02(\t\x12\x0c\n\x04info\x18\x05 \x01(\t\x12*\n\x07\x64\x65vices\x18\x06 \x03(\x0b\x32\x19.uniflex_framework.Module\x12*\n\x07modules\x18\x07 \x03(\x0b\x32\x19.uniflex_framework.Module\x12/\n\x0c\x61pplications\x18\x08 \x03(\x0b\x32\x19.uniflex_framework.Module\"%\n\x0fNodeInfoRequest\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\")\n\x13NodeAddNotification\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\"1\n\x0bNodeExitMsg\x12\x12\n\nagent_uuid\x18\x01 \x02(\t\x12\x0e\n\x06reason\x18\x02 \x01(\t\")\n\x08HelloMsg\x12\x0c\n\x04uuid\x18\x01 \x02(\t\x12\x0f\n\x07timeout\x18\x02 \x02(\r')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -26,7 +26,7 @@ _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 _MODULE_MODULETYPE = _descriptor.EnumDescriptor(
   name='ModuleType',
-  full_name='wishful_framework.Module.ModuleType',
+  full_name='uniflex_framework.Module.ModuleType',
   filename=None,
   file=DESCRIPTOR,
   values=[
@@ -53,13 +53,13 @@ _sym_db.RegisterEnumDescriptor(_MODULE_MODULETYPE)
 
 _ATTRIBUTE = _descriptor.Descriptor(
   name='Attribute',
-  full_name='wishful_framework.Attribute',
+  full_name='uniflex_framework.Attribute',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='name', full_name='wishful_framework.Attribute.name', index=0,
+      name='name', full_name='uniflex_framework.Attribute.name', index=0,
       number=1, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -83,13 +83,13 @@ _ATTRIBUTE = _descriptor.Descriptor(
 
 _FUNCTION = _descriptor.Descriptor(
   name='Function',
-  full_name='wishful_framework.Function',
+  full_name='uniflex_framework.Function',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='name', full_name='wishful_framework.Function.name', index=0,
+      name='name', full_name='uniflex_framework.Function.name', index=0,
       number=1, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -113,13 +113,13 @@ _FUNCTION = _descriptor.Descriptor(
 
 _EVENT = _descriptor.Descriptor(
   name='Event',
-  full_name='wishful_framework.Event',
+  full_name='uniflex_framework.Event',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='name', full_name='wishful_framework.Event.name', index=0,
+      name='name', full_name='uniflex_framework.Event.name', index=0,
       number=1, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -143,13 +143,13 @@ _EVENT = _descriptor.Descriptor(
 
 _SERVICE = _descriptor.Descriptor(
   name='Service',
-  full_name='wishful_framework.Service',
+  full_name='uniflex_framework.Service',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='name', full_name='wishful_framework.Service.name', index=0,
+      name='name', full_name='uniflex_framework.Service.name', index=0,
       number=1, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -173,20 +173,20 @@ _SERVICE = _descriptor.Descriptor(
 
 _DEVICE = _descriptor.Descriptor(
   name='Device',
-  full_name='wishful_framework.Device',
+  full_name='uniflex_framework.Device',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='id', full_name='wishful_framework.Device.id', index=0,
+      name='id', full_name='uniflex_framework.Device.id', index=0,
       number=1, type=13, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='name', full_name='wishful_framework.Device.name', index=1,
+      name='name', full_name='uniflex_framework.Device.name', index=1,
       number=2, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -210,76 +210,76 @@ _DEVICE = _descriptor.Descriptor(
 
 _MODULE = _descriptor.Descriptor(
   name='Module',
-  full_name='wishful_framework.Module',
+  full_name='uniflex_framework.Module',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='uuid', full_name='wishful_framework.Module.uuid', index=0,
+      name='uuid', full_name='uniflex_framework.Module.uuid', index=0,
       number=1, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='id', full_name='wishful_framework.Module.id', index=1,
+      name='id', full_name='uniflex_framework.Module.id', index=1,
       number=2, type=13, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='name', full_name='wishful_framework.Module.name', index=2,
+      name='name', full_name='uniflex_framework.Module.name', index=2,
       number=3, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='type', full_name='wishful_framework.Module.type', index=3,
+      name='type', full_name='uniflex_framework.Module.type', index=3,
       number=4, type=14, cpp_type=8, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='device', full_name='wishful_framework.Module.device', index=4,
+      name='device', full_name='uniflex_framework.Module.device', index=4,
       number=5, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='attributes', full_name='wishful_framework.Module.attributes', index=5,
+      name='attributes', full_name='uniflex_framework.Module.attributes', index=5,
       number=6, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='functions', full_name='wishful_framework.Module.functions', index=6,
+      name='functions', full_name='uniflex_framework.Module.functions', index=6,
       number=7, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='in_events', full_name='wishful_framework.Module.in_events', index=7,
+      name='in_events', full_name='uniflex_framework.Module.in_events', index=7,
       number=8, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='out_events', full_name='wishful_framework.Module.out_events', index=8,
+      name='out_events', full_name='uniflex_framework.Module.out_events', index=8,
       number=9, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='services', full_name='wishful_framework.Module.services', index=9,
+      name='services', full_name='uniflex_framework.Module.services', index=9,
       number=10, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -304,62 +304,62 @@ _MODULE = _descriptor.Descriptor(
 
 _NODEINFOMSG = _descriptor.Descriptor(
   name='NodeInfoMsg',
-  full_name='wishful_framework.NodeInfoMsg',
+  full_name='uniflex_framework.NodeInfoMsg',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='agent_uuid', full_name='wishful_framework.NodeInfoMsg.agent_uuid', index=0,
+      name='agent_uuid', full_name='uniflex_framework.NodeInfoMsg.agent_uuid', index=0,
       number=1, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='ip', full_name='wishful_framework.NodeInfoMsg.ip', index=1,
+      name='ip', full_name='uniflex_framework.NodeInfoMsg.ip', index=1,
       number=2, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='name', full_name='wishful_framework.NodeInfoMsg.name', index=2,
+      name='name', full_name='uniflex_framework.NodeInfoMsg.name', index=2,
       number=3, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='hostname', full_name='wishful_framework.NodeInfoMsg.hostname', index=3,
+      name='hostname', full_name='uniflex_framework.NodeInfoMsg.hostname', index=3,
       number=4, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='info', full_name='wishful_framework.NodeInfoMsg.info', index=4,
+      name='info', full_name='uniflex_framework.NodeInfoMsg.info', index=4,
       number=5, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='devices', full_name='wishful_framework.NodeInfoMsg.devices', index=5,
+      name='devices', full_name='uniflex_framework.NodeInfoMsg.devices', index=5,
       number=6, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='modules', full_name='wishful_framework.NodeInfoMsg.modules', index=6,
+      name='modules', full_name='uniflex_framework.NodeInfoMsg.modules', index=6,
       number=7, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='applications', full_name='wishful_framework.NodeInfoMsg.applications', index=7,
+      name='applications', full_name='uniflex_framework.NodeInfoMsg.applications', index=7,
       number=8, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -383,13 +383,13 @@ _NODEINFOMSG = _descriptor.Descriptor(
 
 _NODEINFOREQUEST = _descriptor.Descriptor(
   name='NodeInfoRequest',
-  full_name='wishful_framework.NodeInfoRequest',
+  full_name='uniflex_framework.NodeInfoRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='agent_uuid', full_name='wishful_framework.NodeInfoRequest.agent_uuid', index=0,
+      name='agent_uuid', full_name='uniflex_framework.NodeInfoRequest.agent_uuid', index=0,
       number=1, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -413,13 +413,13 @@ _NODEINFOREQUEST = _descriptor.Descriptor(
 
 _NODEADDNOTIFICATION = _descriptor.Descriptor(
   name='NodeAddNotification',
-  full_name='wishful_framework.NodeAddNotification',
+  full_name='uniflex_framework.NodeAddNotification',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='agent_uuid', full_name='wishful_framework.NodeAddNotification.agent_uuid', index=0,
+      name='agent_uuid', full_name='uniflex_framework.NodeAddNotification.agent_uuid', index=0,
       number=1, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -443,20 +443,20 @@ _NODEADDNOTIFICATION = _descriptor.Descriptor(
 
 _NODEEXITMSG = _descriptor.Descriptor(
   name='NodeExitMsg',
-  full_name='wishful_framework.NodeExitMsg',
+  full_name='uniflex_framework.NodeExitMsg',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='agent_uuid', full_name='wishful_framework.NodeExitMsg.agent_uuid', index=0,
+      name='agent_uuid', full_name='uniflex_framework.NodeExitMsg.agent_uuid', index=0,
       number=1, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='reason', full_name='wishful_framework.NodeExitMsg.reason', index=1,
+      name='reason', full_name='uniflex_framework.NodeExitMsg.reason', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -480,20 +480,20 @@ _NODEEXITMSG = _descriptor.Descriptor(
 
 _HELLOMSG = _descriptor.Descriptor(
   name='HelloMsg',
-  full_name='wishful_framework.HelloMsg',
+  full_name='uniflex_framework.HelloMsg',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='uuid', full_name='wishful_framework.HelloMsg.uuid', index=0,
+      name='uuid', full_name='uniflex_framework.HelloMsg.uuid', index=0,
       number=1, type=9, cpp_type=9, label=2,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='timeout', full_name='wishful_framework.HelloMsg.timeout', index=1,
+      name='timeout', full_name='uniflex_framework.HelloMsg.timeout', index=1,
       number=2, type=13, cpp_type=3, label=2,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -540,77 +540,77 @@ DESCRIPTOR.message_types_by_name['HelloMsg'] = _HELLOMSG
 Attribute = _reflection.GeneratedProtocolMessageType('Attribute', (_message.Message,), dict(
   DESCRIPTOR = _ATTRIBUTE,
   __module__ = 'messages_pb2'
-  # @@protoc_insertion_point(class_scope:wishful_framework.Attribute)
+  # @@protoc_insertion_point(class_scope:uniflex_framework.Attribute)
   ))
 _sym_db.RegisterMessage(Attribute)
 
 Function = _reflection.GeneratedProtocolMessageType('Function', (_message.Message,), dict(
   DESCRIPTOR = _FUNCTION,
   __module__ = 'messages_pb2'
-  # @@protoc_insertion_point(class_scope:wishful_framework.Function)
+  # @@protoc_insertion_point(class_scope:uniflex_framework.Function)
   ))
 _sym_db.RegisterMessage(Function)
 
 Event = _reflection.GeneratedProtocolMessageType('Event', (_message.Message,), dict(
   DESCRIPTOR = _EVENT,
   __module__ = 'messages_pb2'
-  # @@protoc_insertion_point(class_scope:wishful_framework.Event)
+  # @@protoc_insertion_point(class_scope:uniflex_framework.Event)
   ))
 _sym_db.RegisterMessage(Event)
 
 Service = _reflection.GeneratedProtocolMessageType('Service', (_message.Message,), dict(
   DESCRIPTOR = _SERVICE,
   __module__ = 'messages_pb2'
-  # @@protoc_insertion_point(class_scope:wishful_framework.Service)
+  # @@protoc_insertion_point(class_scope:uniflex_framework.Service)
   ))
 _sym_db.RegisterMessage(Service)
 
 Device = _reflection.GeneratedProtocolMessageType('Device', (_message.Message,), dict(
   DESCRIPTOR = _DEVICE,
   __module__ = 'messages_pb2'
-  # @@protoc_insertion_point(class_scope:wishful_framework.Device)
+  # @@protoc_insertion_point(class_scope:uniflex_framework.Device)
   ))
 _sym_db.RegisterMessage(Device)
 
 Module = _reflection.GeneratedProtocolMessageType('Module', (_message.Message,), dict(
   DESCRIPTOR = _MODULE,
   __module__ = 'messages_pb2'
-  # @@protoc_insertion_point(class_scope:wishful_framework.Module)
+  # @@protoc_insertion_point(class_scope:uniflex_framework.Module)
   ))
 _sym_db.RegisterMessage(Module)
 
 NodeInfoMsg = _reflection.GeneratedProtocolMessageType('NodeInfoMsg', (_message.Message,), dict(
   DESCRIPTOR = _NODEINFOMSG,
   __module__ = 'messages_pb2'
-  # @@protoc_insertion_point(class_scope:wishful_framework.NodeInfoMsg)
+  # @@protoc_insertion_point(class_scope:uniflex_framework.NodeInfoMsg)
   ))
 _sym_db.RegisterMessage(NodeInfoMsg)
 
 NodeInfoRequest = _reflection.GeneratedProtocolMessageType('NodeInfoRequest', (_message.Message,), dict(
   DESCRIPTOR = _NODEINFOREQUEST,
   __module__ = 'messages_pb2'
-  # @@protoc_insertion_point(class_scope:wishful_framework.NodeInfoRequest)
+  # @@protoc_insertion_point(class_scope:uniflex_framework.NodeInfoRequest)
   ))
 _sym_db.RegisterMessage(NodeInfoRequest)
 
 NodeAddNotification = _reflection.GeneratedProtocolMessageType('NodeAddNotification', (_message.Message,), dict(
   DESCRIPTOR = _NODEADDNOTIFICATION,
   __module__ = 'messages_pb2'
-  # @@protoc_insertion_point(class_scope:wishful_framework.NodeAddNotification)
+  # @@protoc_insertion_point(class_scope:uniflex_framework.NodeAddNotification)
   ))
 _sym_db.RegisterMessage(NodeAddNotification)
 
 NodeExitMsg = _reflection.GeneratedProtocolMessageType('NodeExitMsg', (_message.Message,), dict(
   DESCRIPTOR = _NODEEXITMSG,
   __module__ = 'messages_pb2'
-  # @@protoc_insertion_point(class_scope:wishful_framework.NodeExitMsg)
+  # @@protoc_insertion_point(class_scope:uniflex_framework.NodeExitMsg)
   ))
 _sym_db.RegisterMessage(NodeExitMsg)
 
 HelloMsg = _reflection.GeneratedProtocolMessageType('HelloMsg', (_message.Message,), dict(
   DESCRIPTOR = _HELLOMSG,
   __module__ = 'messages_pb2'
-  # @@protoc_insertion_point(class_scope:wishful_framework.HelloMsg)
+  # @@protoc_insertion_point(class_scope:uniflex_framework.HelloMsg)
   ))
 _sym_db.RegisterMessage(HelloMsg)
 

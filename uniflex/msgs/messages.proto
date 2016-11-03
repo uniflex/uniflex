@@ -1,4 +1,4 @@
-package wishful_framework;
+package uniflex_framework;
 
 message Attribute {
     required string name = 1;

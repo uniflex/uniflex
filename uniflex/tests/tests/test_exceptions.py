@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import sys
-import datetime
+
 import logging
-import wishful_controller
-from wishful_framework.classes import exceptions
+from uniflex.core import exceptions
 
 __author__ = "Zubow"
 __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
 __version__ = "0.1.0"
 __email__ = "{zubow}@tkn.tu-berlin.de"
 
-log = logging.getLogger('wishful_test.main')
+log = logging.getLogger('uniflex_test.main')
+
 
 def main():
 
@@ -24,22 +23,26 @@ def main():
         print(we)
 
     try:
-        raise exceptions.InvalidArgumentException(func_name='radio.get_noise')
+        raise exceptions.InvalidArgumentException(
+            func_name='radio.get_noise')
     except exceptions.UniFlexException as we:
         print(we)
 
     try:
-        raise exceptions.UnsupportedFunctionException(func_name='radio.get_noise', conn_module='wifi_ath9k')
+        raise exceptions.UnsupportedFunctionException(
+            func_name='radio.get_noise', conn_module='wifi_ath9k')
     except exceptions.UniFlexException as we:
         print(we)
 
     try:
-        raise exceptions.SchedulingFunctionCallsInThePastException(func_name='radio.get_noise')
+        raise exceptions.SchedulingFunctionCallsInThePastException(
+            func_name='radio.get_noise')
     except exceptions.UniFlexException as we:
         print(we)
 
     try:
-        raise exceptions.FunctionExecutionFailedException(func_name='radio.get_noise', err_msg='wrong iw version')
+        raise exceptions.FunctionExecutionFailedException(
+            func_name='radio.get_noise', err_msg='wrong iw version')
     except exceptions.UniFlexException as we:
         print(we)
 
@@ -55,4 +58,3 @@ if __name__ == "__main__":
         log.error(e)
     finally:
         log.debug("Exit")
-

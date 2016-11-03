@@ -166,7 +166,7 @@ class ModuleWorker(Thread):
         self.taskQueue.put((func, event))
 
 
-class WishfulModule(object):
+class UniFlexModule(object):
     def __init__(self):
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
@@ -258,22 +258,22 @@ class WishfulModule(object):
         return None
 
 
-class CoreModule(WishfulModule):
+class CoreModule(UniFlexModule):
     def __init__(self):
         super(CoreModule, self).__init__()
 
 
-class AgentModule(WishfulModule):
+class AgentModule(UniFlexModule):
     def __init__(self):
         super(AgentModule, self).__init__()
 
 
-class DeviceModule(WishfulModule):
+class DeviceModule(UniFlexModule):
     def __init__(self):
         super(DeviceModule, self).__init__()
 
 
-class ControllerModule(WishfulModule):
+class ControllerModule(UniFlexModule):
     def __init__(self):
         super(ControllerModule, self).__init__()
 

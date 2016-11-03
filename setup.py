@@ -7,13 +7,13 @@ def readme():
 
 
 setup(
-    name='wishful_agent',
+    name='uniflex',
     version='0.1.0',
     packages=find_packages(),
-    scripts=['wishful_agent/bin/uniflex-agent',
-             'wishful_agent/bin/uniflex-broker'],
-    url='http://www.wishful-project.eu/software',
-    license='',
+    scripts=['uniflex/bin/uniflex-agent',
+             'uniflex/bin/uniflex-broker'],
+    url='https://github.com/uniflex',
+    license='MIT',
     author='Piotr Gawlowicz, Mikolaj Chwalisz',
     author_email='{gawlowicz, chwalisz}@tkn.tu-berlin.de',
     description='UniFlex Framework',

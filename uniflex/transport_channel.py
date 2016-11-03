@@ -10,9 +10,9 @@ try:
 except:
     import pickle
 
-import wishful_agent.msgs as msgs
+import uniflex.msgs as msgs
 from .timer import TimerEventSender
-from .core import wishful_module
+from .core import modules
 from .common import get_inheritors
 from .node import Node
 from .core import events
@@ -34,8 +34,8 @@ class HelloMsgTimeoutEvent(events.TimeEvent):
         super().__init__()
 
 
-@wishful_module.build_module
-class TransportChannel(wishful_module.CoreModule):
+@modules.build_module
+class TransportChannel(modules.CoreModule):
     def __init__(self, agent):
         super().__init__()
         self.log = logging.getLogger("{module}.{name}".format(
@@ -94,7 +94,7 @@ class TransportChannel(wishful_module.CoreModule):
         else:
             self.sub.setsockopt(zmq.SUBSCRIBE, str(topic))
 
-    @wishful_module.on_start()
+    @modules.on_start()
     def start_module(self):
         if self.xpub_url and self.xsub_url:
             self.connect(self.xpub_url, self.xsub_url)
@@ -105,7 +105,7 @@ class TransportChannel(wishful_module.CoreModule):
 
         self.eventClasses = get_inheritors(events.EventBase)
 
-    @wishful_module.on_exit()
+    @modules.on_exit()
     def stop_module(self):
         self.forceStop = True
         self.notify_node_exit()
@@ -118,7 +118,7 @@ class TransportChannel(wishful_module.CoreModule):
         except:
             pass
 
-    @wishful_module.on_event(events.BrokerDiscoveredEvent)
+    @modules.on_event(events.BrokerDiscoveredEvent)
     def connect_to_broker(self, event):
         if self.connected or self.forceStop:
             self.log.debug("Agent already connected to broker".format())
@@ -178,7 +178,7 @@ class TransportChannel(wishful_module.CoreModule):
         msg.info = self.agent.info
 
         for mid, module in self.agent.moduleManager.modules.items():
-            if isinstance(module, wishful_module.CoreModule):
+            if isinstance(module, modules.CoreModule):
                 continue
 
             moduleMsg = msg.modules.add()
@@ -187,7 +187,7 @@ class TransportChannel(wishful_module.CoreModule):
             moduleMsg.name = module.name
             moduleMsg.type = msgs.Module.MODULE
 
-            if isinstance(module, wishful_module.Application):
+            if isinstance(module, modules.Application):
                 moduleMsg.type = msgs.Module.APPLICATION
             else:
                 moduleMsg.type = msgs.Module.MODULE
@@ -286,7 +286,7 @@ class TransportChannel(wishful_module.CoreModule):
         finally:
             self.pubSocketLock.release()
 
-    @wishful_module.on_event(SendHelloMsgTimeEvent)
+    @modules.on_event(SendHelloMsgTimeEvent)
     def send_hello_msg(self, event):
         self.log.debug("Agent sends HelloMsg")
         topic = "HELLO_MSG"
@@ -303,7 +303,7 @@ class TransportChannel(wishful_module.CoreModule):
         # reschedule hello msg
         self.helloMsgTimer.start(self.helloMsgInterval)
 
-    @wishful_module.on_event(HelloMsgTimeoutEvent)
+    @modules.on_event(HelloMsgTimeoutEvent)
     def connection_with_broker_lost(self, event):
         self.log.debug(
             "Agent lost connection with broker".format())
@@ -420,7 +420,7 @@ class TransportChannel(wishful_module.CoreModule):
             event.srcNode = event.srcNode.uuid
             event.node = None
         if event.srcModule and isinstance(event.srcModule,
-                                          wishful_module.WishfulModule):
+                                          modules.UniFlexModule):
             event.srcModule = event.srcModule.uuid
 
         topic = event.__class__.__name__

@@ -2,7 +2,7 @@ import time
 import logging
 from .common import ModuleProxy
 from .core import DeviceModule, ControllerModule, Application
-import wishful_agent.msgs as msgs
+import uniflex.msgs as msgs
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"

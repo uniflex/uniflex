@@ -59,43 +59,43 @@ class ModuleManager(object):
             moduleName, pyModuleName, className, device))
 
         pyModule = self.my_import(pyModuleName)
-        wishful_module_class = getattr(pyModule, className)
-        wishfulModule = wishful_module_class(**kwargs)
+        uniflex_module_class = getattr(pyModule, className)
+        uniflexModule = uniflex_module_class(**kwargs)
 
         if device:
-            wishfulModule.device = device
-            wishfulModule.deviceId = self.generate_new_device_id()
+            uniflexModule.device = device
+            uniflexModule.deviceId = self.generate_new_device_id()
 
-        wishfulModule = self.add_module_obj(moduleName, wishfulModule)
+        uniflexModule = self.add_module_obj(moduleName, uniflexModule)
         localNode = self.agent.nodeManager.get_local_node()
-        wishfulModule.localNode = localNode
+        uniflexModule.localNode = localNode
 
-        localNode.add_module_proxy(wishfulModule)
+        localNode.add_module_proxy(uniflexModule)
 
-        return wishfulModule
+        return uniflexModule
 
-    def add_module_obj(self, moduleName, wishfulModule):
+    def add_module_obj(self, moduleName, uniflexModule):
         self.log.debug("Add new module: {}:{}"
-                       .format(moduleName, wishfulModule))
+                       .format(moduleName, uniflexModule))
 
         moduleId = self.generate_new_module_id()
-        wishfulModule.id = moduleId
-        wishfulModule.set_module_manager(self)
-        wishfulModule.set_agent(self.agent)
+        uniflexModule.id = moduleId
+        uniflexModule.set_module_manager(self)
+        uniflexModule.set_agent(self.agent)
 
-        self.subscribe_for_event(wishfulModule)
+        self.subscribe_for_event(uniflexModule)
 
-        self.register_event_handlers(wishfulModule)
-        self.register_function_handlers(wishfulModule)
+        self.register_event_handlers(uniflexModule)
+        self.register_function_handlers(uniflexModule)
 
-        self.register_event_enable_handlers(wishfulModule)
-        self.register_event_disable_handlers(wishfulModule)
+        self.register_event_enable_handlers(uniflexModule)
+        self.register_event_disable_handlers(uniflexModule)
 
-        self.register_service_start_handlers(wishfulModule)
-        self.register_service_stop_handlers(wishfulModule)
+        self.register_service_start_handlers(uniflexModule)
+        self.register_service_stop_handlers(uniflexModule)
 
-        self.modules[moduleId] = wishfulModule
-        return wishfulModule
+        self.modules[moduleId] = uniflexModule
+        return uniflexModule
 
     def start(self):
         self.log.debug("Notify START to modules".format())
