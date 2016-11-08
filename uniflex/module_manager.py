@@ -97,6 +97,9 @@ class ModuleManager(object):
         self.modules[moduleId] = uniflexModule
         return uniflexModule
 
+    def get_module_by_uuid(self, uuid):
+        return self.modules.get(uuid, None)
+
     def start(self):
         self.log.debug("Notify START to modules".format())
         self.send_event_locally(events.AgentStartEvent())
@@ -208,14 +211,15 @@ class ModuleManager(object):
 
     def register_function_handlers(self, i):
         for _k, handler in inspect.getmembers(i, inspect.ismethod):
-            if hasattr(handler, '_upiFunc_'):
-                if handler._upiFunc_:
-                    self._function_handlers.setdefault(handler._upiFunc_, [])
-                    self._function_handlers[handler._upiFunc_].append(handler)
-                    i.functions.append(handler._upiFunc_)
+            if hasattr(handler, '_mask_func_'):
+                if handler._mask_func_:
+                    print(handler._mask_func_)
+                    self._function_handlers.setdefault(handler._mask_func_, [])
+                    self._function_handlers[handler._mask_func_].append(handler)
+                    i.functions.append(handler._mask_func_)
 
-    def get_function_handlers(self, upiFunc, state=None):
-        handlers = self._function_handlers.get(upiFunc, [])
+    def get_function_handlers(self, func, state=None):
+        handlers = self._function_handlers.get(func, [])
         return handlers
 
     def register_event_enable_handlers(self, i):
@@ -327,7 +331,7 @@ class ModuleManager(object):
                 queue = self.synchronousCalls[event.ctx._callId]
                 queue.put(event.msg)
             elif event.ctx._callId in self.callCallbacks:
-                self.log.debug("received cmd: {}".format(event.ctx._upi))
+                self.log.debug("received cmd: {}".format(event.ctx._name))
                 callback = self.callCallbacks[event.ctx._callId]
                 callback(event)
         else:

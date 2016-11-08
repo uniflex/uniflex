@@ -5,8 +5,6 @@ import logging
 import datetime
 import netifaces as ni
 from netifaces import AF_INET
-import wishful_upis as upis
-from .core import upis_builder
 from .core import events
 
 __author__ = "Piotr Gawlowicz, Anatolij Zubow"
@@ -53,8 +51,8 @@ def get_ip_address(ifname):
 class CallingContext(object):
     def __init__(self):
         # function call context
-        self._upi_type = None
-        self._upi = None
+        self._type = None
+        self._name = None
         self._args = None
         self._kwargs = None
         self._callId = None
@@ -66,6 +64,10 @@ class CallingContext(object):
 
 class ModuleProxy(object):
     def __init__(self):
+        '''
+        Module proxy does not contain any functions of remote object,
+        they are created at runtime upon reception of remote object description
+        '''
         self.log = logging.getLogger("{module}.{name}".format(
             module=self.__class__.__module__, name=self.__class__.__name__))
 
@@ -82,19 +84,22 @@ class ModuleProxy(object):
         self._clear_call_context()
         self._currentNode = None
 
-        # UPIs
-        builder = upis_builder.UpiBuilder(self)
-        self.radio = builder.create_upi(upis.radio.Radio, "radio")
-        self.net = builder.create_upi(upis.net.Network, "net")
-        self.mgmt = builder.create_upi(upis.mgmt.Mgmt, "mgmt")
-        self.context = builder.create_upi(upis.context.Context, "context")
-
         # containers for unit description
         self.attributes = []
         self.functions = []
         self.in_events = []
         self.out_events = []
         self.services = []
+
+    def __call__(self, method, *args, **kwargs):
+        # some magis is here :)
+        print(method, args, kwargs)
+        return self.cmd_wrapper(ftype="function",
+                                fname=method, args=args, kwargs=kwargs)
+
+    def __getattr__(self, method):
+        # but most magic is here :)
+        return lambda *args, **kwargs: self(method, *args, **kwargs)
 
     def __str__(self):
         string = ("  Module: {}\n"
@@ -144,8 +149,8 @@ class ModuleProxy(object):
         return self
 
     def _clear_call_context(self):
-        self._callingCtx._upi_type = None
-        self._callingCtx._upi = None
+        self._callingCtx._type = None
+        self._callingCtx._name = None
         self._callingCtx._args = None
         self._callingCtx._kwargs = None
         self._callingCtx._callId = None
@@ -171,9 +176,9 @@ class ModuleProxy(object):
         self.log.info("{}".format(event.__class__.__name__))
 
     def send_cmd_event(self, ctx):
-        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
+        self.log.debug("{}:{}".format(ctx._type, ctx._name))
 
-    def get_upi_string(self, event):
+    def get_name_string(self, event):
         className = None
         if inspect.isclass(event):
             className = event.__name__
@@ -189,9 +194,9 @@ class ModuleProxy(object):
         cmdEvent.dstModule = self.uuid
         return self.node.send_cmd_event(cmdEvent)
 
-    def cmd_wrapper(self, upi_type, fname, *args, **kwargs):
-        self._callingCtx._upi_type = "function"
-        self._callingCtx._upi = fname
+    def cmd_wrapper(self, ftype, fname, *args, **kwargs):
+        self._callingCtx._type = "function"
+        self._callingCtx._name = fname
         self._callingCtx._args = args
         self._callingCtx._kwargs = kwargs
         self._callingCtx._callId = self.generate_call_id()
@@ -201,8 +206,8 @@ class ModuleProxy(object):
         return self._send_cmd_event(ctxCopy)
 
     def enable_event(self, event, *args, **kwargs):
-        self._callingCtx._upi_type = "event_enable"
-        self._callingCtx._upi = self.get_upi_string(event)
+        self._callingCtx._type = "event_enable"
+        self._callingCtx._name = self.get_name_string(event)
         self._callingCtx._args = args
         self._callingCtx._kwargs = kwargs
         self._callingCtx._blocking = False
@@ -213,8 +218,8 @@ class ModuleProxy(object):
         return self._send_cmd_event(ctxCopy)
 
     def disable_event(self, event):
-        self._callingCtx._upi_type = "event_disable"
-        self._callingCtx._upi = self.get_upi_string(event)
+        self._callingCtx._type = "event_disable"
+        self._callingCtx._name = self.get_name_string(event)
         self._callingCtx._args = []
         self._callingCtx._kwargs = {}
         self._callingCtx._blocking = False
@@ -228,8 +233,8 @@ class ModuleProxy(object):
         pass
 
     def start_service(self, service, *args, **kwargs):
-        self._callingCtx._upi_type = "service_start"
-        self._callingCtx._upi = self.get_upi_string(service)
+        self._callingCtx._type = "service_start"
+        self._callingCtx._name = self.get_name_string(service)
         self._callingCtx._args = args
         self._callingCtx._kwargs = kwargs
         self._callingCtx._blocking = False
@@ -240,8 +245,8 @@ class ModuleProxy(object):
         return self._send_cmd_event(ctxCopy)
 
     def stop_service(self, service):
-        self._callingCtx._upi_type = "service_stop"
-        self._callingCtx._upi = self.get_upi_string(service)
+        self._callingCtx._type = "service_stop"
+        self._callingCtx._name = self.get_name_string(service)
         self._callingCtx._args = []
         self._callingCtx._kwargs = {}
         self._callingCtx._blocking = False
@@ -254,17 +259,17 @@ class ModuleProxy(object):
     def is_service_enabled(self, service):
         pass
 
-    def is_upi_supported(self, upiType, upiName):
+    def is_func_supported(self, ftype, fName):
         self.log.info("Checking call: {}.{} for device {} in node {}"
-                      .format(upiType, upiName, self.name, self.node.hostname))
+                      .format(ftype, fName, self.name, self.node.hostname))
 
         return True
         myModule = self._module
 
-        if upiType == "function":
-            if upiName in myModule.functions:
+        if ftype == "function":
+            if fName in myModule.functions:
                 return True
-        elif upiType == "event_enable":
+        elif ftype == "event_enable":
             return True
         else:
             return True

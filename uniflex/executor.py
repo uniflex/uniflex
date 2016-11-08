@@ -33,7 +33,7 @@ class CommandExecutor(object):
                                handler.__name__))
         returnValue = None
         # if there is function that has to be
-        # called before UPI function, call
+        # called before function, call
         if hasattr(handler, '_before_call_'):
             before_func = getattr(handler, "_before_call_")
             before_func(module)
@@ -41,7 +41,7 @@ class CommandExecutor(object):
         returnValue = handler(*args, **kwargs)
 
         # if there is function that has to be
-        # called after UPI function, call
+        # called after function, call
         if hasattr(handler, '_after_call_'):
             after_func = getattr(handler, "_after_call_")
             after_func(module)
@@ -50,7 +50,7 @@ class CommandExecutor(object):
 
     def _execute_thread(self, module, handler, args, kwargs):
         # if there is function that has to be
-        # called before UPI function, call
+        # called before function, call
         self.log.debug("Thread: {} {}".format(module.__class__.__name__,
                                               handler.__name__))
 
@@ -64,7 +64,7 @@ class CommandExecutor(object):
         thread.start()
 
         # if there is function that has to be
-        # called after UPI function, call
+        # called after function, call
         if hasattr(handler, '_after_call_'):
             after_func = getattr(handler, "_after_call_")
             after_func(module)
@@ -75,23 +75,28 @@ class CommandExecutor(object):
         runInThread = False
         retValue = None
 
-        if ctx._upi_type == "function":
-            handlers = self.moduleManager.get_function_handlers(ctx._upi)
-        elif ctx._upi_type == "event_enable":
-            handlers = self.moduleManager.get_event_enable_handlers(ctx._upi)
-            runInThread = True
-        elif ctx._upi_type == "event_disable":
-            handlers = self.moduleManager.get_event_disable_handlers(ctx._upi)
-        elif ctx._upi_type == "service_start":
-            handlers = self.moduleManager.get_service_start_handlers(ctx._upi)
-            runInThread = True
-        elif ctx._upi_type == "service_stop":
-            handlers = self.moduleManager.get_service_stop_handlers(ctx._upi)
-        else:
-            self.log.debug("UPI Type not supported")
+        print("Get module with UUID: {}".format(event.dstModule))
+        my_module = self.moduleManager.get_module_by_uuid(event.dstModule)
+        print(my_module)
 
-        self.log.debug("UPI: {} {} THREAD:{}".format(ctx._upi, ctx._upi_type,
-                                                     runInThread))
+        if ctx._type == "function":
+            handlers = self.moduleManager.get_function_handlers(ctx._name)
+        elif ctx._type == "event_enable":
+            handlers = self.moduleManager.get_event_enable_handlers(ctx._name)
+            runInThread = True
+        elif ctx._type == "event_disable":
+            handlers = self.moduleManager.get_event_disable_handlers(ctx._name)
+        elif ctx._type == "service_start":
+            handlers = self.moduleManager.get_service_start_handlers(ctx._name)
+            runInThread = True
+        elif ctx._type == "service_stop":
+            handlers = self.moduleManager.get_service_stop_handlers(ctx._name)
+        else:
+            self.log.debug("Type not supported")
+
+        self.log.info("Serving: {} {} THREAD:{}".format(ctx._type,
+                                                        ctx._name,
+                                                        runInThread))
 
         args = ()
         kwargs = {}
@@ -100,6 +105,7 @@ class CommandExecutor(object):
             kwargs = ctx._kwargs["kwargs"]
 
         for handler in handlers:
+            print(handler)
             try:
                 module = handler.__self__
                 # filter based on module uuid
@@ -134,9 +140,9 @@ class CommandExecutor(object):
                                                                     event.srcNode)
 
                 else:
-                    self.log.debug("UPI: {} in module: {}"
+                    self.log.debug("Func: {} in module: {}"
                                    " handler: {} was not executed"
-                                   .format(ctx._upi, module.__class__.__name__,
+                                   .format(ctx._name, module.__class__.__name__,
                                            handler.__name__))
                     # go to check next module
                     continue
@@ -144,9 +150,9 @@ class CommandExecutor(object):
             except Exception as e:
                 self.log.debug('Exception occurred during handler '
                                'processing. Backtrace from offending '
-                               'handler [%s] servicing UPI function '
+                               'handler [%s] servicing function '
                                '[%s] follows [%s]',
-                               handler.__name__, ctx._upi, e)
+                               handler.__name__, ctx._name, e)
                 if local:
                     moduleProxy = event.srcNode.get_module_by_uuid(module.uuid)
                     retEvent = events.ReturnValueEvent(event.ctx, retValue)
@@ -174,8 +180,8 @@ class CommandExecutor(object):
 
         if not ctx._exec_time or ctx._exec_time == 0:
             # execute now
-            self.log.debug("Serves Cmd Event: Type: {} UPI: {}".format(
-                           ctx._upi_type, ctx._upi))
+            self.log.debug("Serves Cmd Event: Type: {} Func: {}".format(
+                           ctx._type, ctx._name))
             self._serve_ctx_command_event(event, local)
         else:
             # schedule in future
@@ -190,7 +196,7 @@ class CommandExecutor(object):
                 return
 
             self.log.debug("Schedule task for Cmd Event: {}:{} at {}"
-                           .format(ctx._upi_type, ctx._upi, execTime))
+                           .format(ctx._type, ctx._name, execTime))
             self.jobScheduler.add_job(self._serve_ctx_command_event,
                                       'date', run_date=execTime,
                                       kwargs={"event": event,

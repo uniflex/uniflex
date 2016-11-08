@@ -26,6 +26,13 @@ class DeviceProxy(ModuleProxy):
         return string
 
 
+class ProtocolProxy(ModuleProxy):
+    """docstring for ProtocolProxy"""
+
+    def __init__(self):
+        super().__init__()
+
+
 class ApplicationProxy(ModuleProxy):
     """docstring for ApplicationProxy"""
 
@@ -208,13 +215,13 @@ class Node(object):
     def send_cmd_event(self, event):
         event.dstNode = self.uuid
         ctx = event.ctx
-        self.log.debug("{}:{}".format(ctx._upi_type, ctx._upi))
+        self.log.debug("{}:{}".format(ctx._type, ctx._name))
 
         response = self.nodeManager.send_event_cmd(event, self)
 
         if ctx._blocking:
             self.log.debug("Waiting for return value for {}:{}"
-                           .format(ctx._upi_type, ctx._upi))
+                           .format(ctx._type, ctx._name))
             returnValue = event.responseQueue.get()
             if issubclass(returnValue.__class__, Exception):
                 raise returnValue

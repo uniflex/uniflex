@@ -72,11 +72,11 @@ def after_call(func):
     return _set_ev_cls_dec
 
 
-def on_function(upiFunc):
+def on_function(func):
     def _set_ev_cls_dec(handler):
-        if '_upiFunc_' not in dir(handler):
-            handler._upiFunc_ = None
-        handler._upiFunc_ = upiFunc.__module__ + "." + upiFunc.__name__
+        if '_mask_func_' not in dir(handler):
+            handler._mask_func_ = None
+        handler._mask_func_ = func.__module__ + "." + func.__name__
         return handler
     return _set_ev_cls_dec
 
@@ -123,9 +123,9 @@ def service_stop(service):
 def build_module(module_class):
     original_methods = module_class.__dict__.copy()
     for name, method in original_methods.items():
-        if hasattr(method, '_upi_fname'):
-            # add UPI alias for the function
-            for falias in method._upi_fname - set(original_methods):
+        if hasattr(method, '_fname'):
+            # add alias for the function
+            for falias in method._fname - set(original_methods):
                 setattr(module_class, falias, method)
     return module_class
 
@@ -273,6 +273,11 @@ class DeviceModule(UniFlexModule):
         super(DeviceModule, self).__init__()
 
 
+class ProtocolModule(UniFlexModule):
+    def __init__(self):
+        super(ProtocolModule, self).__init__()
+
+
 class ControllerModule(UniFlexModule):
     def __init__(self):
         super(ControllerModule, self).__init__()
@@ -281,3 +286,7 @@ class ControllerModule(UniFlexModule):
 class Application(ControllerModule):
     def __init__(self):
         super(Application, self).__init__()
+
+class ControlApplication(ControllerModule):
+    def __init__(self):
+        super(ControlApplication, self).__init__()
