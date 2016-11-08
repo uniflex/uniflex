@@ -93,7 +93,6 @@ class ModuleProxy(object):
 
     def __call__(self, method, *args, **kwargs):
         # some magis is here :)
-        print(method, args, kwargs)
         return self.cmd_wrapper(ftype="function",
                                 fname=method, args=args, kwargs=kwargs)
 

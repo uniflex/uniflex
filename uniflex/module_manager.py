@@ -86,19 +86,15 @@ class ModuleManager(object):
         self.subscribe_for_event(uniflexModule)
 
         self.register_event_handlers(uniflexModule)
-        self.register_function_handlers(uniflexModule)
-
-        self.register_event_enable_handlers(uniflexModule)
-        self.register_event_disable_handlers(uniflexModule)
-
-        self.register_service_start_handlers(uniflexModule)
-        self.register_service_stop_handlers(uniflexModule)
 
         self.modules[moduleId] = uniflexModule
         return uniflexModule
 
     def get_module_by_uuid(self, uuid):
-        return self.modules.get(uuid, None)
+        for m in self.modules.values():
+            if m.uuid == uuid:
+                return m
+        return None
 
     def start(self):
         self.log.debug("Notify START to modules".format())
@@ -208,73 +204,6 @@ class ModuleManager(object):
                                    'follows',
                                    handler.__name__,
                                    event.__class__.__name__)
-
-    def register_function_handlers(self, i):
-        for _k, handler in inspect.getmembers(i, inspect.ismethod):
-            if hasattr(handler, '_mask_func_'):
-                if handler._mask_func_:
-                    print(handler._mask_func_)
-                    self._function_handlers.setdefault(handler._mask_func_, [])
-                    self._function_handlers[handler._mask_func_].append(handler)
-                    i.functions.append(handler._mask_func_)
-
-    def get_function_handlers(self, func, state=None):
-        handlers = self._function_handlers.get(func, [])
-        return handlers
-
-    def register_event_enable_handlers(self, i):
-        for _k, handler in inspect.getmembers(i, inspect.ismethod):
-            if hasattr(handler, '_event_enable_'):
-                if handler._event_enable_:
-                    self._event_enable_handlers.setdefault(
-                        handler._event_enable_, [])
-                    self._event_enable_handlers[handler._event_enable_].append(
-                        handler)
-                    i.out_events.append(handler._event_enable_)
-
-    def get_event_enable_handlers(self, event, state=None):
-        handlers = self._event_enable_handlers.get(event, [])
-        return handlers
-
-    def register_event_disable_handlers(self, i):
-        for _k, handler in inspect.getmembers(i, inspect.ismethod):
-            if hasattr(handler, '_event_disable_'):
-                if handler._event_disable_:
-                    self._event_disable_handlers.setdefault(
-                        handler._event_disable_, [])
-                    self._event_disable_handlers[handler._event_disable_].append(
-                        handler)
-
-    def get_event_disable_handlers(self, event, state=None):
-        handlers = self._event_disable_handlers.get(event, [])
-        return handlers
-
-    def register_service_start_handlers(self, i):
-        for _k, handler in inspect.getmembers(i, inspect.ismethod):
-            if hasattr(handler, '_service_start_'):
-                if handler._service_start_:
-                    self._service_start_handlers.setdefault(
-                        handler._service_start_, [])
-                    self._service_start_handlers[handler._service_start_].append(
-                        handler)
-                    i.services.append(handler._service_start_)
-
-    def get_service_start_handlers(self, service, state=None):
-        handlers = self._service_start_handlers.get(service, [])
-        return handlers
-
-    def register_service_stop_handlers(self, i):
-        for _k, handler in inspect.getmembers(i, inspect.ismethod):
-            if hasattr(handler, '_service_stop_'):
-                if handler._service_stop_:
-                    self._service_stop_handlers.setdefault(
-                        handler._service_stop_, [])
-                    self._service_stop_handlers[handler._service_stop_].append(
-                        handler)
-
-    def get_service_stop_handlers(self, service, state=None):
-        handlers = self._service_stop_handlers.get(service, [])
-        return handlers
 
     def send_cmd_event(self, event, dstNode):
         if dstNode.local:

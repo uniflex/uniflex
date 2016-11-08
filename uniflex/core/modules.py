@@ -76,7 +76,7 @@ def on_function(func):
     def _set_ev_cls_dec(handler):
         if '_mask_func_' not in dir(handler):
             handler._mask_func_ = None
-        handler._mask_func_ = func.__module__ + "." + func.__name__
+        handler._mask_func_ = func.__name__
         return handler
     return _set_ev_cls_dec
 
@@ -88,7 +88,7 @@ def event_enable(event):
     def _set_ev_cls_dec(handler):
         if '_event_enable_' not in dir(handler):
             handler._event_enable_ = None
-        handler._event_enable_ = event.__module__ + "." + event.__name__
+        handler._event_enable_ = event.__name__
         return handler
     return _set_ev_cls_dec
 
@@ -97,7 +97,7 @@ def event_disable(event):
     def _set_ev_cls_dec(handler):
         if '_event_disable_' not in dir(handler):
             handler._event_disable_ = None
-        handler._event_disable_ = event.__module__ + "." + event.__name__
+        handler._event_disable_ = event.__name__
         return handler
     return _set_ev_cls_dec
 
@@ -106,7 +106,7 @@ def service_start(service):
     def _set_ev_cls_dec(handler):
         if '_service_start_' not in dir(handler):
             handler._service_start_ = None
-        handler._service_start_ = service.__module__ + "." + service.__name__
+        handler._service_start_ = service.__name__
         return handler
     return _set_ev_cls_dec
 
@@ -115,7 +115,7 @@ def service_stop(service):
     def _set_ev_cls_dec(handler):
         if '_service_stop_' not in dir(handler):
             handler._service_stop_ = None
-        handler._service_stop_ = service.__module__ + "." + service.__name__
+        handler._service_stop_ = service.__name__
         return handler
     return _set_ev_cls_dec
 

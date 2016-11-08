@@ -71,109 +71,90 @@ class CommandExecutor(object):
 
     def _serve_ctx_command_event(self, event, local):
         ctx = event.ctx
-        handlers = []
-        runInThread = False
         retValue = None
 
-        print("Get module with UUID: {}".format(event.dstModule))
-        my_module = self.moduleManager.get_module_by_uuid(event.dstModule)
-        print(my_module)
-
-        if ctx._type == "function":
-            handlers = self.moduleManager.get_function_handlers(ctx._name)
-        elif ctx._type == "event_enable":
-            handlers = self.moduleManager.get_event_enable_handlers(ctx._name)
+        runInThread = False
+        if ctx._type == "event_enable":
             runInThread = True
-        elif ctx._type == "event_disable":
-            handlers = self.moduleManager.get_event_disable_handlers(ctx._name)
         elif ctx._type == "service_start":
-            handlers = self.moduleManager.get_service_start_handlers(ctx._name)
             runInThread = True
-        elif ctx._type == "service_stop":
-            handlers = self.moduleManager.get_service_stop_handlers(ctx._name)
-        else:
-            self.log.debug("Type not supported")
 
-        self.log.info("Serving: {} {} THREAD:{}".format(ctx._type,
-                                                        ctx._name,
-                                                        runInThread))
+        self.log.debug("Get module with UUID: {}".format(event.dstModule))
+        module = self.moduleManager.get_module_by_uuid(event.dstModule)
 
+        self.log.debug("Serving: {} {} THREAD:{}".format(ctx._type,
+                                                         ctx._name,
+                                                         runInThread))
         args = ()
         kwargs = {}
         if ctx._kwargs:
             args = ctx._kwargs["args"]
             kwargs = ctx._kwargs["kwargs"]
 
-        for handler in handlers:
-            print(handler)
-            try:
-                module = handler.__self__
-                # filter based on module uuid
-                if event.dstModule == module.uuid:
-                    if runInThread:
-                        self._execute_thread(module, handler,
-                                             args, kwargs)
+        try:
+            handler = getattr(module, ctx._name)
+            # filter based on module uuid
+            if event.dstModule == module.uuid:
+                if runInThread:
+                    self._execute_thread(module, handler,
+                                         args, kwargs)
+                else:
+                    retValue = self._execute_command(module, handler,
+                                                     args, kwargs)
+                    if local:
+                        moduleProxy = event.srcNode.get_module_by_uuid(module.uuid)
+                        retEvent = events.ReturnValueEvent(event.ctx, retValue)
+                        retEvent.srcNode = event.srcNode
+                        retEvent.srcModule = moduleProxy
+                        retEvent.dstNode = event.srcNode
+                        retEvent.dstModule = event.srcModule
+                        # alias
+                        retEvent.node = event.srcNode
+                        retEvent.device = moduleProxy
+                        if event.ctx._blocking:
+                            event.responseQueue.put(retEvent.msg)
+                        elif event.ctx._callback:
+                            event.ctx._callback(retEvent)
                     else:
-                        retValue = self._execute_command(module, handler,
-                                                         args, kwargs)
-                        if local:
-                            moduleProxy = event.srcNode.get_module_by_uuid(module.uuid)
-                            retEvent = events.ReturnValueEvent(event.ctx, retValue)
-                            retEvent.srcNode = event.srcNode
-                            retEvent.srcModule = moduleProxy
-                            retEvent.dstNode = event.srcNode
-                            retEvent.dstModule = event.srcModule
-                            # alias
-                            retEvent.node = event.srcNode
-                            #print("SRC NODE", module.uuid, event.srcNode, moduleProxy)
-                            retEvent.device = moduleProxy
-                            if event.ctx._blocking:
-                                event.responseQueue.put(retEvent.msg)
-                            elif event.ctx._callback:
-                                event.ctx._callback(retEvent)
-                        else:
-                            retEvent = events.ReturnValueEvent(event.ctx, retValue)
-                            retEvent.srcNode = self.agent.nodeManager.get_local_node()
-                            retEvent.srcModule = event.dstModule
-                            self.log.debug("send response")
-                            self.agent.transport.send_event_outside(retEvent,
-                                                                    event.srcNode)
+                        retEvent = events.ReturnValueEvent(event.ctx, retValue)
+                        retEvent.srcNode = self.agent.nodeManager.get_local_node()
+                        retEvent.srcModule = event.dstModule
+                        self.log.debug("send response")
+                        self.agent.transport.send_event_outside(retEvent,
+                                                                event.srcNode)
 
-                else:
-                    self.log.debug("Func: {} in module: {}"
-                                   " handler: {} was not executed"
-                                   .format(ctx._name, module.__class__.__name__,
-                                           handler.__name__))
-                    # go to check next module
-                    continue
+            else:
+                self.log.debug("Func: {} in module: {}"
+                               "was not executed"
+                               .format(ctx._name, module.__class__.__name__))
 
-            except Exception as e:
-                self.log.debug('Exception occurred during handler '
-                               'processing. Backtrace from offending '
-                               'handler [%s] servicing function '
-                               '[%s] follows [%s]',
-                               handler.__name__, ctx._name, e)
-                if local:
-                    moduleProxy = event.srcNode.get_module_by_uuid(module.uuid)
-                    retEvent = events.ReturnValueEvent(event.ctx, retValue)
-                    retEvent.srcNode = event.srcNode
-                    retEvent.srcModule = moduleProxy
-                    retEvent.dstNode = event.srcNode
-                    retEvent.dstModule = event.srcModule
-                    # alias
-                    retEvent.node = event.srcNode
-                    retEvent.device = moduleProxy
-                    if event.ctx._blocking:
-                        event.responseQueue.put(e)
-                    elif event.ctx._callback:
-                        event.ctx._callback(e)
-                else:
-                    retEvent = events.ReturnValueEvent(event.ctx, e)
-                    retEvent.srcNode = self.agent.nodeManager.get_local_node()
-                    retEvent.srcModule = event.dstModule
-                    self.log.debug("send response")
-                    self.agent.transport.send_event_outside(retEvent,
-                                                            event.srcNode)
+        except Exception as e:
+            self.log.debug('Exception occurred during handler '
+                           'processing. Backtrace from offending '
+                           'handler servicing function '
+                           '[%s] follows [%s]', ctx._name, e)
+
+            if local:
+                moduleProxy = event.srcNode.get_module_by_uuid(module.uuid)
+                retEvent = events.ReturnValueEvent(event.ctx, retValue)
+                retEvent.srcNode = event.srcNode
+                retEvent.srcModule = moduleProxy
+                retEvent.dstNode = event.srcNode
+                retEvent.dstModule = event.srcModule
+                # alias
+                retEvent.node = event.srcNode
+                retEvent.device = moduleProxy
+                if event.ctx._blocking:
+                    event.responseQueue.put(e)
+                elif event.ctx._callback:
+                    event.ctx._callback(e)
+            else:
+                retEvent = events.ReturnValueEvent(event.ctx, e)
+                retEvent.srcNode = self.agent.nodeManager.get_local_node()
+                retEvent.srcModule = event.dstModule
+                self.log.debug("send response")
+                self.agent.transport.send_event_outside(retEvent,
+                                                        event.srcNode)
 
     def serve_ctx_command_event(self, event, local=False):
         ctx = event.ctx
