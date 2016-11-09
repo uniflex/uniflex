@@ -47,11 +47,9 @@ class Agent(object):
         if configPath:
             sys.path.append(configPath)
 
-        agent_config = config['agent_config']
+        agent_config = config.get('agent_config', None)
         if not agent_config:
-            agent_config = config['agent_info']
-        if not agent_config:
-            agent_config = config['config']
+            agent_config = config.get('config', None)
 
         if not agent_config:
             self.log.error("Config file not provided!")
@@ -65,23 +63,15 @@ class Agent(object):
 
         self.agentType = agent_config.get('type', None)
 
-        dl = agent_config.get('sub', None)
-        ul = agent_config.get('pub', None)
-        if "dl" in agent_config:
-            dl = agent_config["dl"]
-        if "downlink" in agent_config:
-            dl = agent_config["downlink"]
-        if "ul" in agent_config:
-            ul = agent_config["ul"]
-        if "uplink" in agent_config:
-            ul = agent_config["uplink"]
+        sub = agent_config.get('sub', None)
+        pub = agent_config.get('pub', None)
 
         if self.agentType != 'local':
             self.transport = TransportChannel(self)
             self.moduleManager.add_module_obj(
                 "transport_channel", self.transport)
-            self.transport.set_downlink(dl)
-            self.transport.set_uplink(ul)
+            self.transport.set_downlink(sub)
+            self.transport.set_uplink(pub)
 
             self.transport._nodeManager = self.nodeManager
             self.transport._moduleManager = self.moduleManager
@@ -97,44 +87,43 @@ class Agent(object):
             self.log.info("Start Broker with XPUB: {}, XSUB: {}"
                           .format(xpub, xsub))
             self.broker = Broker(xpub, xsub)
+            # TODO: start broker in separate process
             self.broker.setDaemon(True)
             self.broker.start()
 
         # load control programs
-        if "controllers" in config:
-            controllers = config['controllers']
-            for controllerName, params in controllers.items():
-                pyModuleName = params.get('module', None)
-                if not pyModuleName:
-                    myfile = params.get('file', None)
-                    pyModuleName = myfile.split('.')[0]
+        controllers = config.get('controllers', {})
+        for controllerName, params in controllers.items():
+            pyModuleName = params.get('module', None)
+            if not pyModuleName:
+                myfile = params.get('file', None)
+                pyModuleName = myfile.split('.')[0]
 
-                pyClassName = params['class_name']
-                kwargs = params.get('kwargs', {})
+            pyClassName = params.get('class_name', None)
+            kwargs = params.get('kwargs', {})
 
-                self.moduleManager.register_module(
-                    controllerName, pyModuleName, pyClassName,
-                    None, kwargs)
+            self.moduleManager.register_module(
+                controllerName, pyModuleName, pyClassName,
+                None, kwargs)
 
         # load modules
-        if "modules" in config:
-            moduleDesc = config['modules']
-            for moduleName, m_params in moduleDesc.items():
+        modules = config.get('modules', {})
+        for moduleName, m_params in modules.items():
 
-                controlled_devices = m_params.get('devices', [])
-                kwargs = m_params.get('kwargs', {})
-                pyModuleName = m_params['module']
-                className = m_params['class_name']
+            devices = m_params.get('devices', [])
+            kwargs = m_params.get('kwargs', {})
+            pyModuleName = m_params.get('module', None)
+            className = m_params.get('class_name', None)
 
-                if controlled_devices:
-                    for device in controlled_devices:
-                        self.moduleManager.register_module(
-                            moduleName, pyModuleName, className,
-                            device, kwargs)
-                else:
+            if devices:
+                for device in devices:
                     self.moduleManager.register_module(
                         moduleName, pyModuleName, className,
-                        None, kwargs)
+                        device, kwargs)
+            else:
+                self.moduleManager.register_module(
+                    moduleName, pyModuleName, className,
+                    None, kwargs)
 
     def run(self):
         self.log.debug("Agent starts all modules".format())
