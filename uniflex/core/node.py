@@ -1,6 +1,6 @@
 import time
 import logging
-from .modules import DeviceModule, ControllerModule, Application
+from .modules import DeviceModule, ControlApplication
 from .module_proxy import ModuleProxy, DeviceProxy, ApplicationProxy
 import uniflex.msgs as msgs
 
@@ -26,6 +26,42 @@ class Node(object):
         self.apps = {}
         self.modules = {}
         self.devices = {}
+
+    def _set_timer_callback(self, cb):
+        self._timerCallback = cb
+
+    def _hello_timer(self):
+        while not self._stop and self._helloTimeout:
+            time.sleep(1)
+            self._helloTimeout = self._helloTimeout - 1
+        # remove node
+        self._timerCallback(self)
+
+    def _refresh_hello_timer(self):
+        self._helloTimeout = 9
+
+    def __str__(self):
+        string = ("\nNode Description:\n" +
+                  " UUID:{}\n"
+                  " Hostname:{}\n"
+                  " IP:{}\n"
+                  .format(self.uuid, self.hostname, self.ip))
+
+        string = string + " Devices:\n"
+        for uuid, device in self.devices.items():
+            string = string + "  {}\n".format(device)
+
+        string = string + " Modules:\n"
+        for uuid, module in self.modules.items():
+            moduleString = module.__str__()
+            string = string + moduleString
+
+        string = string + " Applications:\n"
+        for uuid, app in self.apps.items():
+            appString = app.__str__()
+            string = string + appString
+
+        return string
 
     @staticmethod
     def create_node_from_msg(msg):
@@ -61,6 +97,7 @@ class Node(object):
             moduleProxy.uuid = module.uuid
             moduleProxy.type = str(module.name)
 
+            print(module.attributes)
             for attr in module.attributes:
                 moduleProxy.attributes.append(str(attr.name))
 
@@ -78,38 +115,13 @@ class Node(object):
 
         return node
 
-    def __str__(self):
-        string = ("\nNode Description:\n" +
-                  " UUID:{}\n"
-                  " Hostname:{}\n"
-                  " Type:{}\n"
-                  " IP:{}\n"
-                  .format(self.uuid, self.hostname, self.type, self.ip))
-
-        string = string + " Devices:\n"
-        for uuid, device in self.devices.items():
-            string = string + "  {}\n".format(device)
-
-        string = string + " Modules:\n"
-        for uuid, module in self.modules.items():
-            moduleString = module.__str__()
-            string = string + moduleString
-
-        string = string + " Applications:\n"
-        for uuid, app in self.apps.items():
-            appString = app.__str__()
-            string = string + appString
-
-        return string
-
     def add_module_proxy(self, module):
         moduleProxy = None
         if isinstance(module, DeviceModule) or module.device:
             moduleProxy = DeviceProxy()
             moduleProxy.deviceName = module.device
             self.devices[module.uuid] = moduleProxy
-        elif (isinstance(module, ControllerModule) or
-              isinstance(module, Application)):
+        elif isinstance(module, ControlApplication):
             moduleProxy = ApplicationProxy()
             self.apps[module.uuid] = moduleProxy
         else:
@@ -150,19 +162,6 @@ class Node(object):
 
     def get_apps(self):
         return self.apps.values()
-
-    def set_timer_callback(self, cb):
-        self._timerCallback = cb
-
-    def _hello_timer(self):
-        while not self._stop and self._helloTimeout:
-            time.sleep(1)
-            self._helloTimeout = self._helloTimeout - 1
-        # remove node
-        self._timerCallback(self)
-
-    def _refresh_hello_timer(self):
-        self._helloTimeout = 9
 
     def send_event(self, event):
         self.log.debug()

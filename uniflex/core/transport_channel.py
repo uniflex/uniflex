@@ -185,7 +185,7 @@ class TransportChannel(modules.CoreModule):
             moduleMsg.name = module.name
             moduleMsg.type = msgs.Module.MODULE
 
-            if isinstance(module, modules.Application):
+            if isinstance(module, modules.ControlApplication):
                 moduleMsg.type = msgs.Module.APPLICATION
             else:
                 moduleMsg.type = msgs.Module.MODULE

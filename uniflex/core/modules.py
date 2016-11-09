@@ -256,11 +256,6 @@ class CoreModule(UniFlexModule):
         super(CoreModule, self).__init__()
 
 
-class AgentModule(UniFlexModule):
-    def __init__(self):
-        super(AgentModule, self).__init__()
-
-
 class DeviceModule(UniFlexModule):
     def __init__(self):
         super(DeviceModule, self).__init__()
@@ -271,16 +266,6 @@ class ProtocolModule(UniFlexModule):
         super(ProtocolModule, self).__init__()
 
 
-class ControllerModule(UniFlexModule):
-    def __init__(self):
-        super(ControllerModule, self).__init__()
-
-
-class Application(ControllerModule):
-    def __init__(self):
-        super(Application, self).__init__()
-
-
-class ControlApplication(ControllerModule):
+class ControlApplication(UniFlexModule):
     def __init__(self):
         super(ControlApplication, self).__init__()

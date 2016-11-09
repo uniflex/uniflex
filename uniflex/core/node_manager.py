@@ -70,7 +70,7 @@ class NodeManager(object):
         self.log.debug("New node with UUID: {}, Name: {},"
                        " Info: {}".format(agentUuid, agentName, agentInfo))
         # start hello timeout timer
-        node.set_timer_callback(self.remove_node_hello_timer)
+        node._set_timer_callback(self.remove_node_hello_timer)
         d = threading.Thread(target=node._hello_timer)
         d.setDaemon(True)
         d.start()
