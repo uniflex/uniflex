@@ -57,33 +57,24 @@ class Agent(object):
             self.log.error("Config file not provided!")
             return
 
-        if 'name' in agent_config:
-            self.name = agent_config['name']
-
-        if 'info' in agent_config:
-            self.info = agent_config['info']
-
-        if 'iface' in agent_config:
-            self.iface = agent_config['iface']
+        self.name = agent_config.get('name', None)
+        self.info = agent_config.get('info', None)
+        self.iface = agent_config.get('iface', None)
+        if self.iface:
             self.ip = get_ip_address(self.iface)
 
-        if 'type' in agent_config:
-            self.agentType = agent_config['type']
+        self.agentType = agent_config.get('type', None)
 
-        dl = None
-        ul = None
+        dl = agent_config.get('sub', None)
+        ul = agent_config.get('pub', None)
         if "dl" in agent_config:
             dl = agent_config["dl"]
         if "downlink" in agent_config:
             dl = agent_config["downlink"]
-        if "sub" in agent_config:
-            dl = agent_config["sub"]
         if "ul" in agent_config:
             ul = agent_config["ul"]
         if "uplink" in agent_config:
             ul = agent_config["uplink"]
-        if "pub" in agent_config:
-            ul = agent_config["pub"]
 
         if self.agentType != 'local':
             self.transport = TransportChannel(self)
@@ -117,10 +108,9 @@ class Agent(object):
                 if not pyModuleName:
                     myfile = params.get('file', None)
                     pyModuleName = myfile.split('.')[0]
+
                 pyClassName = params['class_name']
-                kwargs = {}
-                if 'kwargs' in params:
-                    kwargs = params['kwargs']
+                kwargs = params.get('kwargs', {})
 
                 self.moduleManager.register_module(
                     controllerName, pyModuleName, pyClassName,
@@ -131,14 +121,8 @@ class Agent(object):
             moduleDesc = config['modules']
             for moduleName, m_params in moduleDesc.items():
 
-                controlled_devices = []
-                if 'devices' in m_params:
-                    controlled_devices = m_params['devices']
-
-                kwargs = {}
-                if 'kwargs' in m_params:
-                    kwargs = m_params['kwargs']
-
+                controlled_devices = m_params.get('devices', [])
+                kwargs = m_params.get('kwargs', {})
                 pyModuleName = m_params['module']
                 className = m_params['class_name']
 
