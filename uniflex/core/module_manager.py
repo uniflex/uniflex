@@ -5,7 +5,7 @@ import threading
 from importlib import import_module
 from queue import Queue, Empty
 from .executor import CommandExecutor
-from .core import events
+from . import events
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"

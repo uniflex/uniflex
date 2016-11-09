@@ -1,7 +1,7 @@
 import time
 import logging
 from .common import ModuleProxy
-from .core import DeviceModule, ControllerModule, Application
+from .modules import DeviceModule, ControllerModule, Application
 import uniflex.msgs as msgs
 
 __author__ = "Piotr Gawlowicz"

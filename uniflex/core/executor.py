@@ -3,7 +3,7 @@ import datetime
 import threading
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from .core import events
+from . import events
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"

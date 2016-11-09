@@ -1,2 +1,3 @@
-from .agent import *
-from .transport_channel import *
+from . import core
+from . import msgs
+from . import tests

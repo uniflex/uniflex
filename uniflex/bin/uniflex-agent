@@ -24,7 +24,7 @@ Other options:
 import os
 import logging
 import yaml
-import uniflex
+from uniflex.core.agent import Agent
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
@@ -32,7 +32,7 @@ __version__ = "0.1.0"
 __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 
 log = logging.getLogger('uniflexl_agent.main')
-agent = uniflex.Agent()
+agent = Agent()
 
 
 def main(args):

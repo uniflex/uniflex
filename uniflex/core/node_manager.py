@@ -2,8 +2,8 @@ import logging
 import socket
 import threading
 
-from .core import events
-from .msgs import messages_pb2 as msgs
+from . import events
+from uniflex.msgs import messages_pb2 as msgs
 from .node import Node
 
 __author__ = "Piotr Gawlowicz"

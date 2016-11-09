@@ -23,7 +23,7 @@ Other options:
 """
 
 import logging
-import uniflex
+from uniflex.core.broker import Broker
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
 __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     logging.basicConfig(filename=logfile, level=log_level,
                         format='%(asctime)s - %(name)s.%(funcName)s() - %(levelname)s - %(message)s')
     log.info(args)
-    broker = uniflex.Broker(xpub, xsub)
+    broker = Broker(xpub, xsub)
 
     try:
         log.info("Start Broker with XPUB: {}, XSUB: {}".format(xpub, xsub))

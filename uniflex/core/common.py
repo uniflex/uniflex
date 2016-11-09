@@ -5,7 +5,7 @@ import logging
 import datetime
 import netifaces as ni
 from netifaces import AF_INET
-from .core import events
+from . import events
 
 __author__ = "Piotr Gawlowicz, Anatolij Zubow"
 __copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"

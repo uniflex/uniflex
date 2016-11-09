@@ -6,7 +6,7 @@ import logging
 from .common import get_ip_address
 from .module_manager import ModuleManager
 from .transport_channel import TransportChannel
-from .transport_channel import Broker
+from .broker import Broker
 from .node_manager import NodeManager
 
 __author__ = "Piotr Gawlowicz"
