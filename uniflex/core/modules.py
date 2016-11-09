@@ -121,12 +121,7 @@ def service_stop(service):
 
 
 def build_module(module_class):
-    original_methods = module_class.__dict__.copy()
-    for name, method in original_methods.items():
-        if hasattr(method, '_fname'):
-            # add alias for the function
-            for falias in method._fname - set(original_methods):
-                setattr(module_class, falias, method)
+    # TODO: to be completely removed
     return module_class
 
 

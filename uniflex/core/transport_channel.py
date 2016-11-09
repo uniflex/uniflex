@@ -34,7 +34,6 @@ class HelloMsgTimeoutEvent(events.TimeEvent):
         super().__init__()
 
 
-@modules.build_module
 class TransportChannel(modules.CoreModule):
     def __init__(self, agent):
         super().__init__()
