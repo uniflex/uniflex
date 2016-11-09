@@ -1,9 +1,13 @@
-'''
-Base class for all exceptions.
-'''
+__author__ = "Anatolij Zubow, Piotr Gawlowicz"
+__copyright__ = "Copyright (c) 2015, Technische Universitat Berlin"
+__version__ = "0.1.0"
+__email__ = "{zubow, gawlowicz}@tkn.tu-berlin.de"
 
 
 class UniFlexException(Exception):
+    '''
+    Base class for all exceptions.
+    '''
     message = 'An unknown exception'
 
     def __init__(self, msg=None, **kwargs):

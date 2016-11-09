@@ -4,7 +4,7 @@ import inspect
 import threading
 from importlib import import_module
 from queue import Queue, Empty
-from .executor import CommandExecutor
+from .cmd_executor import CommandExecutor
 from . import events
 
 __author__ = "Piotr Gawlowicz"

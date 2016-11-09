@@ -1,32 +1,13 @@
 import time
 import logging
-from .common import ModuleProxy
 from .modules import DeviceModule, ControllerModule, Application
+from .module_proxy import ModuleProxy, DeviceProxy, ApplicationProxy
 import uniflex.msgs as msgs
 
 __author__ = "Piotr Gawlowicz"
 __copyright__ = "Copyright (c) 2015, Technische Universität Berlin"
 __version__ = "0.1.0"
 __email__ = "{gawlowicz}@tkn.tu-berlin.de"
-
-
-class DeviceProxy(ModuleProxy):
-    def __str__(self):
-        string = super().__str__()
-        desc = ("    Device: {} \n"
-                .format(self.name))
-        string = string + desc
-        return string
-
-
-class ProtocolProxy(ModuleProxy):
-    """docstring for ProtocolProxy"""
-    pass
-
-
-class ApplicationProxy(ModuleProxy):
-    """docstring for ApplicationProxy"""
-    pass
 
 
 class Node(object):

@@ -285,6 +285,7 @@ class Application(ControllerModule):
     def __init__(self):
         super(Application, self).__init__()
 
+
 class ControlApplication(ControllerModule):
     def __init__(self):
         super(ControlApplication, self).__init__()
