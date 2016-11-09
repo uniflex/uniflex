@@ -120,11 +120,6 @@ def service_stop(service):
     return _set_ev_cls_dec
 
 
-def build_module(module_class):
-    # TODO: to be completely removed
-    return module_class
-
-
 class ModuleWorker(Thread):
     def __init__(self, module):
         super().__init__()
@@ -187,7 +182,7 @@ class UniFlexModule(object):
         # TODO: move to DeviceModule
         self.device = None
 
-        # TODO: move to ControllerModule (ControllerApp)
+        # TODO: move to ControlApplication
         # node container
         self._nodes = {}
 
@@ -224,7 +219,7 @@ class UniFlexModule(object):
     def get_services(self):
         return self.services
 
-    # TODO: move to ControllerModule (ControllerApp)
+    # TODO: move to ControlApplication
     def _add_node(self, node):
         self._nodes[node.uuid] = node
         return True
@@ -264,6 +259,11 @@ class DeviceModule(UniFlexModule):
 class ProtocolModule(UniFlexModule):
     def __init__(self):
         super(ProtocolModule, self).__init__()
+
+
+class ApplicationModule(UniFlexModule):
+    def __init__(self):
+        super(ApplicationModule, self).__init__()
 
 
 class ControlApplication(UniFlexModule):
