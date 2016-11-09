@@ -11,33 +11,22 @@ __email__ = "{gawlowicz}@tkn.tu-berlin.de"
 
 
 class DeviceProxy(ModuleProxy):
-    def __init__(self):
-        super().__init__()
-        self.log = logging.getLogger("{module}.{name}".format(
-            module=self.__class__.__module__, name=self.__class__.__name__))
-        self._id = None
-        self.name = None
-
     def __str__(self):
         string = super().__str__()
-        desc = ("    Device: {}:{} \n"
-                .format(self._id, self.name))
+        desc = ("    Device: {} \n"
+                .format(self.name))
         string = string + desc
         return string
 
 
 class ProtocolProxy(ModuleProxy):
     """docstring for ProtocolProxy"""
-
-    def __init__(self):
-        super().__init__()
+    pass
 
 
 class ApplicationProxy(ModuleProxy):
     """docstring for ApplicationProxy"""
-
-    def __init__(self):
-        super().__init__()
+    pass
 
 
 class Node(object):
@@ -74,17 +63,22 @@ class Node(object):
             moduleProxy = None
             if module.type == msgs.Module.APPLICATION:
                 moduleProxy = ApplicationProxy()
+                node.apps[module.uuid] = moduleProxy
+                moduleProxy.name = str(module.name)
             elif module.type == msgs.Module.DEVICE:
                 moduleProxy = DeviceProxy()
+                if module.HasField('device'):
+                    moduleProxy.name = module.device.name
+                node.devices[module.uuid] = moduleProxy
             else:
                 moduleProxy = ModuleProxy()
+                node.modules[module.uuid] = moduleProxy
+                moduleProxy.name = str(module.name)
 
+            node.all_modules[module.uuid] = moduleProxy
             moduleProxy.node = node
             moduleProxy.uuid = module.uuid
-            moduleProxy.id = module.id
-            moduleProxy.module_id = module.id
-            moduleProxy.name = str(module.name)
-            moduleProxy.module_name = str(module.name)
+            moduleProxy.type = str(module.name)
 
             for attr in module.attributes:
                 moduleProxy.attributes.append(str(attr.name))
@@ -101,42 +95,27 @@ class Node(object):
             for service in module.services:
                 moduleProxy.services.append(str(service.name))
 
-            if module.type == msgs.Module.APPLICATION:
-                node.apps[moduleProxy.uuid] = moduleProxy
-                node.all_modules[moduleProxy.uuid] = moduleProxy
-
-            elif module.type == msgs.Module.DEVICE:
-                if module.HasField('device'):
-                    moduleProxy._id = module.device.id
-                    moduleProxy.name = module.device.name
-
-                node.devices[moduleProxy._id] = moduleProxy
-                node.all_modules[moduleProxy.uuid] = moduleProxy
-            else:
-                node.modules[moduleProxy.uuid] = moduleProxy
-                node.all_modules[moduleProxy.uuid] = moduleProxy
-
         return node
 
     def __str__(self):
         string = ("\nNode Description:\n" +
                   " UUID:{}\n"
                   " Hostname:{}\n"
-                  " Name:{}\n"
+                  " Type:{}\n"
                   " IP:{}\n"
-                  .format(self.uuid, self.hostname, self.name, self.ip))
+                  .format(self.uuid, self.hostname, self.type, self.ip))
 
         string = string + " Devices:\n"
-        for devId, device in self.devices.items():
-            string = string + "  {}:{}\n".format(devId, device)
+        for uuid, device in self.devices.items():
+            string = string + "  {}\n".format(device)
 
         string = string + " Modules:\n"
-        for name, module in self.modules.items():
+        for uuid, module in self.modules.items():
             moduleString = module.__str__()
             string = string + moduleString
 
         string = string + " Applications:\n"
-        for name, app in self.apps.items():
+        for uuid, app in self.apps.items():
             appString = app.__str__()
             string = string + appString
 
@@ -146,25 +125,21 @@ class Node(object):
         moduleProxy = None
         if isinstance(module, DeviceModule) or module.device:
             moduleProxy = DeviceProxy()
-            moduleProxy._id = module.deviceId
-            moduleProxy.name = module.device
-            self.devices[moduleProxy._id] = moduleProxy
-
+            moduleProxy.deviceName = module.device
+            self.devices[module.uuid] = moduleProxy
         elif (isinstance(module, ControllerModule) or
               isinstance(module, Application)):
             moduleProxy = ApplicationProxy()
             self.apps[module.uuid] = moduleProxy
-            moduleProxy.name = module.name
         else:
             moduleProxy = ModuleProxy()
             self.modules[module.uuid] = moduleProxy
-            moduleProxy.name = module.name
+
+        self.all_modules[module.uuid] = moduleProxy
 
         moduleProxy.node = self
         moduleProxy.uuid = module.uuid
-        moduleProxy.id = module.id
-        moduleProxy.module_id = module.id
-        moduleProxy.module_name = module.name
+        moduleProxy.name = module.name
 
         moduleProxy.attributes = module.attributes
         moduleProxy.functions = module.functions
@@ -173,13 +148,12 @@ class Node(object):
         moduleProxy.services = module.services
 
         moduleProxy._currentNode = self
-        self.all_modules[module.uuid] = moduleProxy
 
     def get_devices(self):
         return self.devices.values()
 
     def get_device(self, devId):
-        return self.devices.get(devId, None)
+        return list(self.devices.values())[devId]
 
     def get_device_by_name(self, name):
         for dev in self.devices:

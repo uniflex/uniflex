@@ -32,26 +32,11 @@ class ModuleManager(object):
 
         self.modules = {}
         self._event_handlers = {}
-        self._function_handlers = {}
-        self._event_enable_handlers = {}
-        self._event_disable_handlers = {}
-        self._service_start_handlers = {}
-        self._service_stop_handlers = {}
 
     def my_import(self, module_name):
         pyModule = import_module(module_name)
         globals()[module_name] = pyModule
         return pyModule
-
-    def generate_new_module_id(self):
-        newId = self.moduleIdGen
-        self.moduleIdGen = self.moduleIdGen + 1
-        return newId
-
-    def generate_new_device_id(self):
-        newId = self.deviceIdGen
-        self.deviceIdGen = self.deviceIdGen + 1
-        return newId
 
     def register_module(self, moduleName, pyModuleName,
                         className, device=None, kwargs={}):
@@ -64,9 +49,9 @@ class ModuleManager(object):
 
         if device:
             uniflexModule.device = device
-            uniflexModule.deviceId = self.generate_new_device_id()
 
         uniflexModule = self.add_module_obj(moduleName, uniflexModule)
+
         localNode = self.agent.nodeManager.get_local_node()
         uniflexModule.localNode = localNode
 
@@ -78,16 +63,13 @@ class ModuleManager(object):
         self.log.debug("Add new module: {}:{}"
                        .format(moduleName, uniflexModule))
 
-        moduleId = self.generate_new_module_id()
-        uniflexModule.id = moduleId
         uniflexModule.set_module_manager(self)
         uniflexModule.set_agent(self.agent)
 
         self.subscribe_for_event(uniflexModule)
-
         self.register_event_handlers(uniflexModule)
 
-        self.modules[moduleId] = uniflexModule
+        self.modules[uniflexModule.uuid] = uniflexModule
         return uniflexModule
 
     def get_module_by_uuid(self, uuid):

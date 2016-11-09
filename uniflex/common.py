@@ -72,10 +72,8 @@ class ModuleProxy(object):
             module=self.__class__.__module__, name=self.__class__.__name__))
 
         self.uuid = None
-        self.id = None
-        self.module_id = None
+        self.type = None
         self.name = None
-        self.module_name = None
         self.node = None
 
         self._callIdGen = 0
@@ -102,9 +100,9 @@ class ModuleProxy(object):
 
     def __str__(self):
         string = ("  Module: {}\n"
-                  "    ID: {} \n"
+                  "    Name: {} \n"
                   "    UUID: {} \n"
-                  .format(self.module_name, self.module_id, self.uuid))
+                  .format(self.type, self.name, self.uuid))
 
         string = string + "    Attributes:\n"
         for k in self.attributes:

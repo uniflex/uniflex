@@ -177,13 +177,12 @@ class TransportChannel(modules.CoreModule):
         msg.hostname = socket.gethostname()
         msg.info = self.agent.info
 
-        for mid, module in self.agent.moduleManager.modules.items():
+        for uuid, module in self.agent.moduleManager.modules.items():
             if isinstance(module, modules.CoreModule):
                 continue
 
             moduleMsg = msg.modules.add()
             moduleMsg.uuid = module.uuid
-            moduleMsg.id = mid
             moduleMsg.name = module.name
             moduleMsg.type = msgs.Module.MODULE
 
@@ -195,7 +194,6 @@ class TransportChannel(modules.CoreModule):
             if module.device:
                 moduleMsg.type = msgs.Module.DEVICE
                 deviceDesc = msgs.Device()
-                deviceDesc.id = module.deviceId
                 deviceDesc.name = module.device
                 moduleMsg.device.CopyFrom(deviceDesc)
 

@@ -15,8 +15,7 @@ message Service {
 
 
 message Device {
-    required uint32 id = 1;
-    required string name = 2;
+    required string name = 1;
 }
 
 message Module {
@@ -26,15 +25,14 @@ message Module {
       APPLICATION = 2;
     }
     required string uuid = 1;
-    required uint32 id = 2;
-    required string name = 3;
-    required ModuleType type = 4;
-    optional Device device = 5;
-    repeated Attribute attributes = 6;
-    repeated Function functions = 7;
-    repeated Event in_events = 8;
-    repeated Event out_events = 9;
-    repeated Service services = 10;
+    required string name = 2;
+    required ModuleType type = 3;
+    optional Device device = 4;
+    repeated Attribute attributes = 5;
+    repeated Function functions = 6;
+    repeated Event in_events = 7;
+    repeated Event out_events = 8;
+    repeated Service services = 9;
 }
 
 message NodeInfoMsg {

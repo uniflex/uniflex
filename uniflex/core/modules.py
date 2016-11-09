@@ -174,7 +174,6 @@ class UniFlexModule(object):
         self._enabled = False
         self.worker = ModuleWorker(self)
         self.uuid = str(uuid.uuid4())
-        self.id = None
         self.name = self.__class__.__name__
         self.agent = None
         self.localNode = None
@@ -192,7 +191,6 @@ class UniFlexModule(object):
 
         # TODO: move to DeviceModule
         self.device = None
-        self.deviceId = None
 
         # TODO: move to ControllerModule (ControllerApp)
         # node container
