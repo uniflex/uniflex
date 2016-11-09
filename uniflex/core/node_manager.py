@@ -30,10 +30,6 @@ class NodeManager(object):
         self.helloTimeout = 3 * self.helloMsgInterval
 
     def get_node_by_uuid(self, uuid):
-        if self.local_node:
-            if self.local_node.uuid == uuid:
-                return self.local_node
-
         node = None
         for n in self.nodes:
             if n.uuid == uuid:
@@ -75,7 +71,7 @@ class NodeManager(object):
                        " Info: {}".format(agentUuid, agentName, agentInfo))
         # start hello timeout timer
         node.set_timer_callback(self.remove_node_hello_timer)
-        d = threading.Thread(target=node.hello_timer)
+        d = threading.Thread(target=node._hello_timer)
         d.setDaemon(True)
         d.start()
 
@@ -158,7 +154,7 @@ class NodeManager(object):
                            .format(sourceUuid))
             self._transportChannel.send_node_info_request(sourceUuid)
             return
-        node.refresh_hello_timer()
+        node._refresh_hello_timer()
 
     def send_event_cmd(self, event, dstNode):
         self._moduleManager.send_cmd_event(event, dstNode)

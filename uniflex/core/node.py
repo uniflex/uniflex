@@ -154,14 +154,14 @@ class Node(object):
     def set_timer_callback(self, cb):
         self._timerCallback = cb
 
-    def hello_timer(self):
+    def _hello_timer(self):
         while not self._stop and self._helloTimeout:
             time.sleep(1)
             self._helloTimeout = self._helloTimeout - 1
         # remove node
         self._timerCallback(self)
 
-    def refresh_hello_timer(self):
+    def _refresh_hello_timer(self):
         self._helloTimeout = 9
 
     def send_event(self, event):
