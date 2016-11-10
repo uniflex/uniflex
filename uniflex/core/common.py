@@ -8,6 +8,19 @@ __version__ = "0.1.0"
 __email__ = "{gawlowicz|zubow}@tkn.tu-berlin.de"
 
 
+def override():
+    '''
+    with this decorator you make sure you are
+    overriding a method form base class
+    '''
+    def overrider(method):
+        # myClass = method.__self__.__class__
+        # interface_class = myClass.__mro__[1]
+        # assert(method.__name__ in dir(interface_class))
+        return method
+    return overrider
+
+
 def get_inheritors(klass):
     subclasses = {}
     work = [klass]
