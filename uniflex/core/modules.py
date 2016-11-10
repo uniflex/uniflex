@@ -182,9 +182,20 @@ class UniFlexModule(object):
         # TODO: move to DeviceModule
         self.device = None
 
-        # TODO: move to ControlApplication
-        # node container
-        self._nodes = {}
+        print(self.__class__.__name__)
+        self.functions = [m for m in dir(self) if _is_method(getattr(self, m))]
+
+        filterFunc = set(["set_agent", "set_module_manager",
+                          "send_event", "get_device", "get_attributes",
+                          "get_functions", "get_in_events",
+                          "get_out_events", "get_services",
+                          "_add_node", "_remove_node",
+                          "get_nodes", "get_node",
+                          "get_node_by_uuid",
+                          "get_node_by_hostname",
+                          "__init__"])
+
+        self.functions = sorted(list(set(self.functions) - filterFunc))
 
     def set_agent(self, agent):
         self.agent = agent
@@ -219,32 +230,6 @@ class UniFlexModule(object):
     def get_services(self):
         return self.services
 
-    # TODO: move to ControlApplication
-    def _add_node(self, node):
-        self._nodes[node.uuid] = node
-        return True
-
-    def _remove_node(self, node):
-        if node.uuid in self._nodes:
-            del self._nodes[node.uuid]
-            return True
-        return False
-
-    def get_nodes(self):
-        return list(self._nodes.values())
-
-    def get_node(self, idx):
-        return list(self._nodes.values())[idx]
-
-    def get_node_by_uuid(self, uuid):
-        return self._nodes.get(uuid, None)
-
-    def get_node_by_hostname(self, hostname):
-        for n in self._nodes:
-            if n.hostname == hostname:
-                return n
-        return None
-
 
 class CoreModule(UniFlexModule):
     def __init__(self):
@@ -269,3 +254,29 @@ class ApplicationModule(UniFlexModule):
 class ControlApplication(UniFlexModule):
     def __init__(self):
         super(ControlApplication, self).__init__()
+        self._nodes = {}
+
+    def _add_node(self, node):
+        self._nodes[node.uuid] = node
+        return True
+
+    def _remove_node(self, node):
+        if node.uuid in self._nodes:
+            del self._nodes[node.uuid]
+            return True
+        return False
+
+    def get_nodes(self):
+        return list(self._nodes.values())
+
+    def get_node(self, idx):
+        return list(self._nodes.values())[idx]
+
+    def get_node_by_uuid(self, uuid):
+        return self._nodes.get(uuid, None)
+
+    def get_node_by_hostname(self, hostname):
+        for n in self._nodes:
+            if n.hostname == hostname:
+                return n
+        return None
