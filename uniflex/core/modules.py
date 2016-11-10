@@ -179,10 +179,6 @@ class UniFlexModule(object):
         self.services = []
         self.firstCallToModule = False
 
-        # TODO: move to DeviceModule
-        self.device = None
-
-        print(self.__class__.__name__)
         self.functions = [m for m in dir(self) if _is_method(getattr(self, m))]
 
         filterFunc = set(["set_agent", "set_module_manager",
@@ -196,6 +192,9 @@ class UniFlexModule(object):
                           "__init__"])
 
         self.functions = sorted(list(set(self.functions) - filterFunc))
+
+        # TODO: move to DeviceModule
+        self.device = None
 
     def set_agent(self, agent):
         self.agent = agent
