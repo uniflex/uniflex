@@ -97,7 +97,6 @@ class Node(object):
             moduleProxy.uuid = module.uuid
             moduleProxy.type = str(module.name)
 
-            print(module.attributes)
             for attr in module.attributes:
                 moduleProxy.attributes.append(str(attr.name))
 
