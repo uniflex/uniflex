@@ -161,24 +161,12 @@ class ModuleManager(object):
             for handler in handlers:
                 module = handler.__self__
                 try:
-                    if hasattr(handler, '_run_in_thread_'):
-                        if handler._run_in_thread_:
-                            t = None
-                            if len(inspect.getargspec(handler)[0]) == 1:
-                                t = threading.Thread(target=handler)
-                            else:
-                                t = threading.Thread(target=handler,
-                                                     args=(event))
-                            t.setDaemon(True)
-                            t.start()
-
+                    self.log.debug("Add task: {} to worker in module {}"
+                                   .format(handler.__name__, module.name))
+                    if len(inspect.getargspec(handler)[0]) == 1:
+                        module.worker.add_task(handler, None)
                     else:
-                        self.log.debug("Add task: {} to worker in module {}"
-                                       .format(handler.__name__, module.name))
-                        if len(inspect.getargspec(handler)[0]) == 1:
-                            module.worker.add_task(handler, None)
-                        else:
-                            module.worker.add_task(handler, event)
+                        module.worker.add_task(handler, event)
                 except:
                     self.log.debug('Exception occurred during handler '
                                    'processing. Backtrace from offending '

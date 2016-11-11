@@ -41,14 +41,6 @@ on_connected = partial(on_event, events.ConnectionEstablishedEvent)
 on_disconnected = partial(on_event, events.ConnectionLostEvent)
 
 
-def run_in_thread():
-    def _set_ev_cls_dec(handler):
-        if '_run_in_thread_' not in dir(handler):
-            handler._run_in_thread_ = True
-        return handler
-    return _set_ev_cls_dec
-
-
 def on_first_call_to_module():
     def _set_ev_cls_dec(handler):
         if '_first_call_' not in dir(handler):
