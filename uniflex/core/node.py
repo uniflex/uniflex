@@ -133,8 +133,35 @@ class Node(object):
 
         moduleProxy._currentNode = self
 
+    def get_modules(self):
+        """
+        Get proxy objects for all modules installed
+        in remote node.
+        Returns list of Module Proxy objects
+        """
+        return self.modules.values()
+
+    def get_module_by_uuid(self, uuid):
+        """
+        Get Module proxy object by its UUID.
+        Returns ModuleProxy object.
+        """
+        return self.all_modules.get(uuid, None)
+
     def get_devices(self):
+        """
+        Get proxy objects for all device modules installed
+        in remote node.
+        Returns list of Device Module Proxy objects
+        """
         return self.devices.values()
+
+    def get_device_by_uuid(self, uuid):
+        """
+        Get Device Module proxy object by its UUID.
+        Returns DeviceModuleProxy object.
+        """
+        pass
 
     def get_device(self, devId):
         return list(self.devices.values())[devId]
@@ -145,32 +172,35 @@ class Node(object):
                 return dev
         return None
 
-    def get_modules(self):
-        return self.modules.values()
+    def get_protocols(self):
+        """
+        Get proxy objects for all protocol modules installed
+        in remote node.
+        Returns list of Protocol Module Proxy objects.
+        """
+        pass
 
-    def get_module_by_uuid(self, uuid):
-        return self.all_modules.get(uuid, None)
+    def get_protocol(self, uuid):
+        """
+        Get Protocol Module proxy object by its UUID.
+        Returns ProtocolModuleProxy object.
+        """
+        pass
 
-    def get_apps(self):
+    def get_control_applications(self):
+        """
+         Get proxy objects for all control
+        applications installed in remote node.
+        Returns list of ControlApplicationProxy objects.
+        """
         return self.apps.values()
 
-    def send_cmd_event(self, event):
-        event.dstNode = self.uuid
-        ctx = event.ctx
-        self.log.debug("{}:{}".format(ctx._type, ctx._name))
-
-        response = self.nodeManager.send_event_cmd(event, self)
-
-        if ctx._blocking:
-            self.log.debug("Waiting for return value for {}:{}"
-                           .format(ctx._type, ctx._name))
-            returnValue = event.responseQueue.get()
-            if issubclass(returnValue.__class__, Exception):
-                raise returnValue
-            else:
-                return returnValue
-
-        return response
+    def get_control_application(self, uuid):
+        """
+        Get Control Application proxy object by its UUID.
+        Returns ControlApplicationProxy object.
+        """
+        pass
 
     def send_event(self, event):
         """
@@ -232,3 +262,21 @@ class Node(object):
         Returns time synchronization accuracy in milliseconds.
         """
         pass
+
+    def send_cmd_event(self, event):
+        event.dstNode = self.uuid
+        ctx = event.ctx
+        self.log.debug("{}:{}".format(ctx._type, ctx._name))
+
+        response = self.nodeManager.send_event_cmd(event, self)
+
+        if ctx._blocking:
+            self.log.debug("Waiting for return value for {}:{}"
+                           .format(ctx._type, ctx._name))
+            returnValue = event.responseQueue.get()
+            if issubclass(returnValue.__class__, Exception):
+                raise returnValue
+            else:
+                return returnValue
+
+        return response

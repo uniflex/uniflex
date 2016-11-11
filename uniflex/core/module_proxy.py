@@ -81,11 +81,30 @@ class ModuleProxy(object):
         return self
 
     def exec_time(self, exec_time):
+        """
+        Schedule execution of operation in remote device
+        module. It will result in non-blocking call. Use
+        callback function to register callback. Absolute
+        time is UNIX time.
+        Returns the same ModuleProxy object -> function
+        chaning.
+        Example:
+        device.exec_time(execTime).set_channel(11).
+        """
         self._callingCtx._exec_time = exec_time
         self._callingCtx._blocking = False
         return self
 
     def delay(self, delay):
+        """
+        Delay execution of operation by given amount of
+        time. It will result in non-blocking call. Use callback
+        function to register callback.
+        Returns the same ModuleProxy object -> function
+        chaning.
+        Example:
+        device.delay(5s).set_channel(11).
+        """
         exec_time = datetime.datetime.now() + datetime.timedelta(seconds=delay)
         self._callingCtx._exec_time = exec_time
         self._callingCtx._blocking = False
@@ -96,6 +115,17 @@ class ModuleProxy(object):
         return self
 
     def callback(self, callback):
+        """
+        Execute operation of device in non-blocking
+        mode and register callback function that will be
+        called upon reception of return value from operation.
+        If callbackFunction is not defined operation will
+        be executed in non-blocking mode.
+        Returns the same ModuleProxy object -> function
+        chaning.
+        Example:
+        device.callback(myCallback).set_channel(11).
+        """
         self._callingCtx._callback = callback
         self._callingCtx._blocking = False
         return self
@@ -115,20 +145,32 @@ class ModuleProxy(object):
         self._callIdGen = self._callIdGen + 1
         return self._callIdGen
 
-    def is_enabled(self):
-        return True
-
-    def start(self):
-        pass
-
-    def stop(self):
-        pass
-
     def send_event(self, event):
         self.log.info("{}".format(event.__class__.__name__))
 
     def send_cmd_event(self, ctx):
         self.log.debug("{}:{}".format(ctx._type, ctx._name))
+
+    def subscribe_for_events(self, eventType, callback):
+        """
+        Subscribe for events of given type generated in
+        remote device module. If event type is not given,
+        subscribe for all events generated in remote device
+        module. The callback function will be called
+        on reception of event.
+        Returns True if succeeded; otherwise False
+        """
+        pass
+
+    def unsubscribe_from_events(self, eventType):
+        """
+        Unsubscribe from events of given type generated
+        in remote device module. If event type is not
+        given unsubscribe from all events generated in remote
+        device module.
+        Returns True if succeeded; otherwise False
+        """
+        pass
 
     def get_name_string(self, event):
         className = None
@@ -191,4 +233,55 @@ class ProtocolProxy(ModuleProxy):
 
 class ApplicationProxy(ModuleProxy):
     """docstring for ApplicationProxy"""
-    pass
+
+    def is_running(self):
+        """
+        Check if remote control application is running.
+        Returns True if remote app is running; otherwise
+        False
+        """
+        return True
+
+    def start(self):
+        """
+        Start remote control application.
+        Returns True if succeeded; otherwise False
+        """
+        pass
+
+    def stop(self):
+        """
+        Stop remote control application.
+        Returns True if succeeded; otherwise False
+        """
+        pass
+
+    def send_event(self, event):
+        """
+        Send event to remote application in unicast mode.
+        Node: event will be delivered only if remote application
+        subscribe for it.
+        Returns True if succeeded; otherwise False
+        """
+        pass
+
+    def subscribe_for_events(self, eventType, callback):
+        """
+        Subscribe for events of given type generated
+        in remote control application. If event type is not
+        given, subscribe for all events generated in remote
+        control application. The callback function
+        will be called on reception of event.
+        Returns True if succeeded; otherwise False
+        """
+        pass
+
+    def unsubscribe_from_events(self, eventType):
+        """
+        Unsubscribe from events of given type generated
+        in remote control application. If event type is not
+        given unsubscribe from all events generated in remote
+        control application.
+        Returns True if succeeded; otherwise False
+        """
+        pass

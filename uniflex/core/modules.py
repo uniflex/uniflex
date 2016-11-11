@@ -154,15 +154,6 @@ class UniFlexModule(object):
     def set_module_manager(self, mm):
         self.moduleManager = mm
 
-    def send_event(self, event):
-        # stamp event with module
-        if not event.srcModule:
-            event.srcModule = self
-        # stamp event with node
-        if not event.srcNode:
-            event.srcNode = self.agent.nodeManager.get_local_node()
-        self.moduleManager.send_event(event)
-
     def get_device(self):
         return self.device
 
@@ -174,6 +165,20 @@ class UniFlexModule(object):
 
     def get_out_events(self):
         return self.out_events
+
+    def send_event(self, event, mode="GLOBAL"):
+        """
+        Sent event using one of two modes: nodebroadcast
+        and global-broadcast.
+        Returns True if succeeded; otherwise False
+        """
+        # stamp event with module
+        if not event.srcModule:
+            event.srcModule = self
+        # stamp event with node
+        if not event.srcNode:
+            event.srcNode = self.agent.nodeManager.get_local_node()
+        self.moduleManager.send_event(event)
 
 
 class CoreModule(UniFlexModule):
@@ -200,6 +205,39 @@ class ControlApplication(UniFlexModule):
     def __init__(self):
         super(ControlApplication, self).__init__()
         self._nodes = {}
+
+    def get_local_node(self):
+        """
+        Get NodeProxy object for local node , i.e. the one
+        that runs Application.
+        Returns NodeProxy object.
+        """
+        return self.localNode
+
+    def subscribe_for_events(self, eventType, callback, mode):
+        """
+        Subscribe for events of specific type using one of
+        two modes:
+        - node-broadcast — subscribe for events of specific
+        type generated on local node
+        - global-broadcast – subscribe for events of specific
+        type generated at any node in network
+        The callback function will be called on reception
+        of event.
+        Note: If event type is not specified, application
+        subscribes for events of all types.
+        Returns True if succeeded; otherwise False
+        """
+        pass
+
+    def unsubscribe_from_events(self, eventType):
+        """
+        Unsubscribe from event from specific type. If
+        event type is not given, unsubscribe from all
+        event types.
+        Returns True if succeeded; otherwise False
+        """
+        pass
 
     def _add_node(self, node):
         self._nodes[node.uuid] = node
