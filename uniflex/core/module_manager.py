@@ -216,7 +216,7 @@ class ModuleManager(object):
         if event.srcNode is None:
             self.log.debug("Unknown node: {}"
                            .format(srcNodeUuid))
-            self._transportChannel.send_node_info_request(srcNodeUuid)
+            self._nodeManager.send_node_info_request(srcNodeUuid)
             return
 
         self.log.debug("received event from node: {}, module: {}"

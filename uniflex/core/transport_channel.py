@@ -1,6 +1,5 @@
 import sys
 import zmq
-import socket
 import logging
 import threading
 import json
@@ -107,7 +106,7 @@ class TransportChannel(modules.CoreModule):
     @modules.on_exit()
     def stop_module(self):
         self.forceStop = True
-        self.notify_node_exit()
+        self._nodeManager.notify_node_exit()
         try:
             self.sub.setsockopt(zmq.LINGER, 0)
             self.pub.setsockopt(zmq.LINGER, 0)
@@ -116,6 +115,25 @@ class TransportChannel(modules.CoreModule):
             self.context.term()
         except:
             pass
+
+    @modules.on_event(SendHelloMsgTimeEvent)
+    def send_hello_msg(self, event):
+        self.log.debug("Time to send HelloMsg")
+        self._nodeManager.send_hello_msg(timeout=self.helloTimeOut)
+
+        # reschedule hello msg
+        self.helloMsgTimer.start(self.helloMsgInterval)
+
+    @modules.on_event(HelloMsgTimeoutEvent)
+    def connection_with_broker_lost(self, event):
+        self.log.debug(
+            "Agent lost connection with broker".format())
+        self.helloMsgTimer.cancel()
+
+        # notify Connection Lost
+        event = events.ConnectionLostEvent(0)
+        self.send_event_locally(event)
+        self.disconnect()
 
     @modules.on_event(events.BrokerDiscoveredEvent)
     def connect_to_broker(self, event):
@@ -160,83 +178,6 @@ class TransportChannel(modules.CoreModule):
         # start sending hello msgs
         self.helloMsgTimer.start(self.helloMsgInterval)
 
-    def send_node_info(self, dest=None):
-        topic = "NODE_INFO"
-        if dest:
-            topic = dest
-
-        msgDesc = msgs.MessageDescription()
-        msgDesc.msgType = msgs.get_msg_type(msgs.NodeInfoMsg)
-        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
-
-        msg = msgs.NodeInfoMsg()
-        msg.agent_uuid = self.agent.uuid
-        msg.ip = self.agent.ip
-        msg.name = self.agent.name
-        msg.hostname = socket.gethostname()
-        msg.info = self.agent.info
-
-        for uuid, module in self.agent.moduleManager.modules.items():
-            if isinstance(module, modules.CoreModule):
-                continue
-
-            moduleMsg = msg.modules.add()
-            moduleMsg.uuid = module.uuid
-            moduleMsg.name = module.name
-            moduleMsg.type = msgs.Module.MODULE
-
-            if isinstance(module, modules.ControlApplication):
-                moduleMsg.type = msgs.Module.APPLICATION
-            else:
-                moduleMsg.type = msgs.Module.MODULE
-
-            if module.device:
-                moduleMsg.type = msgs.Module.DEVICE
-                deviceDesc = msgs.Device()
-                deviceDesc.name = module.device
-                moduleMsg.device.CopyFrom(deviceDesc)
-
-            for name in module.get_functions():
-                function = moduleMsg.functions.add()
-                function.name = name
-            for name in module.get_in_events():
-                event = moduleMsg.in_events.add()
-                event.name = name
-            for name in module.get_out_events():
-                event = moduleMsg.out_events.add()
-                event.name = name
-
-        msgContainer = [topic, msgDesc, msg]
-
-        self.log.debug("Agent sends node info")
-        self.send(msgContainer)
-
-    def send_node_info_request(self, dest=None):
-        topic = "ALL"
-        if dest:
-            topic = dest
-        msgDesc = msgs.MessageDescription()
-        msgDesc.msgType = msgs.get_msg_type(msgs.NodeInfoRequest)
-        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
-
-        msg = msgs.NodeInfoRequest()
-        msg.agent_uuid = self.agent.uuid
-        msgContainer = [topic, msgDesc, msg]
-        self.log.debug("Agent sends node info request")
-        self.send(msgContainer)
-
-    def send_node_add_notification(self, dest):
-        topic = dest
-        msgDesc = msgs.MessageDescription()
-        msgDesc.msgType = msgs.get_msg_type(msgs.NodeAddNotification)
-        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
-
-        msg = msgs.NodeAddNotification()
-        msg.agent_uuid = self.agent.uuid
-        msgContainer = [topic, msgDesc, msg]
-        self.log.debug("Agent sends node add notification")
-        self.send(msgContainer)
-
     def send(self, msgContainer):
         topic = msgContainer[0].encode('utf-8')
         msgDesc = msgContainer[1]
@@ -278,46 +219,40 @@ class TransportChannel(modules.CoreModule):
         finally:
             self.pubSocketLock.release()
 
-    @modules.on_event(SendHelloMsgTimeEvent)
-    def send_hello_msg(self, event):
-        self.log.debug("Agent sends HelloMsg")
-        topic = "HELLO_MSG"
+    def send_event_outside(self, event, dstNode=None):
+        filterEvents = set(["AgentStartEvent", "AgentExitEvent",
+                            "NewNodeEvent", "NodeExitEvent", "NodeLostEvent",
+                            "BrokerDiscoveredEvent",
+                            "ConnectionEstablishedEvent",
+                            "ConnectionLostEvent",
+                            "SendHelloMsgTimeEvent", "HelloMsgTimeoutEvent"])
+
+        if event.__class__.__name__ in filterEvents:
+            return
+
+        # flatten event
+        self.log.debug("Event name: {}".format(event.__class__.__name__))
+        if event.srcNode and isinstance(event.srcNode, Node):
+            event.srcNode = event.srcNode.uuid
+            event.node = None
+        if event.srcModule and isinstance(event.srcModule,
+                                          modules.UniFlexModule):
+            event.srcModule = event.srcModule.uuid
+
+        topic = event.__class__.__name__
+
+        if dstNode:
+            topic = dstNode.uuid
+
+        self.log.debug("sends cmd event : {} on topic: {}"
+                       .format(event.__class__.__name__, topic))
+
         msgDesc = msgs.MessageDescription()
-        msgDesc.msgType = msgs.get_msg_type(msgs.HelloMsg)
-        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
+        msgDesc.msgType = event.__class__.__name__
+        msgDesc.serializationType = msgs.SerializationType.PICKLE
 
-        msg = msgs.HelloMsg()
-        msg.uuid = str(self.agent.uuid)
-        msg.timeout = self.helloTimeOut
-        msgContainer = [topic, msgDesc, msg]
-        self.send(msgContainer)
-
-        # reschedule hello msg
-        self.helloMsgTimer.start(self.helloMsgInterval)
-
-    @modules.on_event(HelloMsgTimeoutEvent)
-    def connection_with_broker_lost(self, event):
-        self.log.debug(
-            "Agent lost connection with broker".format())
-        self.helloMsgTimer.cancel()
-
-        # notify Connection Lost
-        event = events.ConnectionLostEvent(0)
-        self.send_event(event)
-        self.disconnect()
-
-    def notify_node_exit(self):
-        self.log.debug("Agend sends NodeExitMsg".format())
-        topic = "NODE_EXIT"
-        msgDesc = msgs.MessageDescription()
-        msgDesc.msgType = msgs.get_msg_type(msgs.NodeExitMsg)
-        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
-
-        msg = msgs.NodeExitMsg()
-        msg.agent_uuid = self.agent.uuid
-        msg.reason = "Process terminated"
-
-        msgContainer = [topic, msgDesc, msg]
+        data = event
+        msgContainer = [topic, msgDesc, data]
         self.send(msgContainer)
 
     def process_msgs(self, msgContainer):
@@ -335,7 +270,7 @@ class TransportChannel(modules.CoreModule):
             self._nodeManager.serve_node_info_msg(msgContainer)
 
         elif msgDesc.msgType == msgs.get_msg_type(msgs.NodeInfoRequest):
-            self.send_node_info(src)
+            self._nodeManager.send_node_info(src)
 
         elif msgDesc.msgType == msgs.get_msg_type(msgs.NodeAddNotification):
             self._nodeManager.serve_node_add_notification(msgContainer)
@@ -394,39 +329,3 @@ class TransportChannel(modules.CoreModule):
                     self.process_msgs(msgContainer)
             except zmq.error.ZMQError:
                 self.log.debug("ZMQError: Socket operation on non-socket")
-
-    def send_event_outside(self, event, dstNode=None):
-        filterEvents = set(["AgentStartEvent", "AgentExitEvent",
-                            "NewNodeEvent", "NodeExitEvent", "NodeLostEvent",
-                            "BrokerDiscoveredEvent",
-                            "ConnectionEstablishedEvent",
-                            "ConnectionLostEvent",
-                            "SendHelloMsgTimeEvent", "HelloMsgTimeoutEvent"])
-
-        if event.__class__.__name__ in filterEvents:
-            return
-
-        # flatten event
-        self.log.debug("Event name: {}".format(event.__class__.__name__))
-        if event.srcNode and isinstance(event.srcNode, Node):
-            event.srcNode = event.srcNode.uuid
-            event.node = None
-        if event.srcModule and isinstance(event.srcModule,
-                                          modules.UniFlexModule):
-            event.srcModule = event.srcModule.uuid
-
-        topic = event.__class__.__name__
-
-        if dstNode:
-            topic = dstNode.uuid
-
-        self.log.debug("sends cmd event : {} on topic: {}"
-                       .format(event.__class__.__name__, topic))
-
-        msgDesc = msgs.MessageDescription()
-        msgDesc.msgType = event.__class__.__name__
-        msgDesc.serializationType = msgs.SerializationType.PICKLE
-
-        data = event
-        msgContainer = [topic, msgDesc, data]
-        self.send(msgContainer)

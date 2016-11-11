@@ -2,8 +2,10 @@ import logging
 import socket
 import threading
 
+from . import modules
 from . import events
-from uniflex.msgs import messages_pb2 as msgs
+
+import uniflex.msgs as msgs
 from .node import Node
 
 __author__ = "Piotr Gawlowicz"
@@ -80,7 +82,7 @@ class NodeManager(object):
             self.notify_new_node_event(node)
 
         # tell node that I know him
-        self._transportChannel.send_node_add_notification(node.uuid)
+        self.send_node_add_notification(node.uuid)
         return node
 
     def serve_node_add_notification(self, msgContainer):
@@ -152,9 +154,113 @@ class NodeManager(object):
         if node is None:
             self.log.debug("Unknown node: {}"
                            .format(sourceUuid))
-            self._transportChannel.send_node_info_request(sourceUuid)
+            self.send_node_info_request(sourceUuid)
             return
         node._refresh_hello_timer()
 
     def send_event_cmd(self, event, dstNode):
         self._moduleManager.send_cmd_event(event, dstNode)
+
+    def send_hello_msg(self, timeout=10):
+        self.log.debug("Agent sends HelloMsg")
+        topic = "HELLO_MSG"
+        msgDesc = msgs.MessageDescription()
+        msgDesc.msgType = msgs.get_msg_type(msgs.HelloMsg)
+        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
+
+        msg = msgs.HelloMsg()
+        msg.uuid = str(self.agent.uuid)
+        msg.timeout = timeout
+        msgContainer = [topic, msgDesc, msg]
+        self._transportChannel.send(msgContainer)
+
+    def send_node_info_request(self, dest=None):
+        topic = "ALL"
+        if dest:
+            topic = dest
+        msgDesc = msgs.MessageDescription()
+        msgDesc.msgType = msgs.get_msg_type(msgs.NodeInfoRequest)
+        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
+
+        msg = msgs.NodeInfoRequest()
+        msg.agent_uuid = self.agent.uuid
+        msgContainer = [topic, msgDesc, msg]
+        self.log.debug("Agent sends node info request")
+        self._transportChannel.send(msgContainer)
+
+    def send_node_info(self, dest=None):
+        topic = "NODE_INFO"
+        if dest:
+            topic = dest
+
+        msgDesc = msgs.MessageDescription()
+        msgDesc.msgType = msgs.get_msg_type(msgs.NodeInfoMsg)
+        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
+
+        msg = msgs.NodeInfoMsg()
+        msg.agent_uuid = self.agent.uuid
+        msg.ip = self.agent.ip
+        msg.name = self.agent.name
+        msg.hostname = socket.gethostname()
+        msg.info = self.agent.info
+
+        for uuid, module in self.agent.moduleManager.modules.items():
+            if isinstance(module, modules.CoreModule):
+                continue
+
+            moduleMsg = msg.modules.add()
+            moduleMsg.uuid = module.uuid
+            moduleMsg.name = module.name
+            moduleMsg.type = msgs.Module.MODULE
+
+            if isinstance(module, modules.ControlApplication):
+                moduleMsg.type = msgs.Module.APPLICATION
+            else:
+                moduleMsg.type = msgs.Module.MODULE
+
+            if module.device:
+                moduleMsg.type = msgs.Module.DEVICE
+                deviceDesc = msgs.Device()
+                deviceDesc.name = module.device
+                moduleMsg.device.CopyFrom(deviceDesc)
+
+            for name in module.get_functions():
+                function = moduleMsg.functions.add()
+                function.name = name
+            for name in module.get_in_events():
+                event = moduleMsg.in_events.add()
+                event.name = name
+            for name in module.get_out_events():
+                event = moduleMsg.out_events.add()
+                event.name = name
+
+        msgContainer = [topic, msgDesc, msg]
+
+        self.log.debug("Agent sends node info")
+        self._transportChannel.send(msgContainer)
+
+    def send_node_add_notification(self, dest):
+        topic = dest
+        msgDesc = msgs.MessageDescription()
+        msgDesc.msgType = msgs.get_msg_type(msgs.NodeAddNotification)
+        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
+
+        msg = msgs.NodeAddNotification()
+        msg.agent_uuid = self.agent.uuid
+        msgContainer = [topic, msgDesc, msg]
+        self.log.debug("Agent sends node add notification")
+        self._transportChannel.send(msgContainer)
+
+    def notify_node_exit(self):
+        self.log.debug("Agend sends NodeExitMsg".format())
+        topic = "NODE_EXIT"
+        msgDesc = msgs.MessageDescription()
+        msgDesc.msgType = msgs.get_msg_type(msgs.NodeExitMsg)
+        msgDesc.serializationType = msgs.SerializationType.PROTOBUF
+
+        msg = msgs.NodeExitMsg()
+        msg.agent_uuid = self.agent.uuid
+        msg.reason = "Process terminated"
+
+        msgContainer = [topic, msgDesc, msg]
+        self._transportChannel.send(msgContainer)

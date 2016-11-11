@@ -59,10 +59,10 @@ class Agent(object):
         if self.iface:
             self.ip = get_ip_address(self.iface)
 
-        self.agentType = agent_config.get('type', None)
-
         sub = agent_config.get('sub', None)
         pub = agent_config.get('pub', None)
+
+        self.agentType = agent_config.get('type', None)
 
         if self.agentType != 'local':
             self.transport = TransportChannel(self)
