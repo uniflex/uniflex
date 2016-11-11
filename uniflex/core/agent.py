@@ -47,9 +47,7 @@ class Agent(object):
         if configPath:
             sys.path.append(configPath)
 
-        agent_config = config.get('agent_config', None)
-        if not agent_config:
-            agent_config = config.get('config', None)
+        agent_config = config.get('config', None)
 
         if not agent_config:
             self.log.error("Config file not provided!")
@@ -92,8 +90,8 @@ class Agent(object):
             self.broker.start()
 
         # load control programs
-        controllers = config.get('controllers', {})
-        for controllerName, params in controllers.items():
+        controlApps = config.get('control_applications', {})
+        for controlAppName, params in controlApps.items():
             pyModuleName = params.get('module', None)
             if not pyModuleName:
                 myfile = params.get('file', None)
@@ -103,7 +101,7 @@ class Agent(object):
             kwargs = params.get('kwargs', {})
 
             self.moduleManager.register_module(
-                controllerName, pyModuleName, pyClassName,
+                controlAppName, pyModuleName, pyClassName,
                 None, kwargs)
 
         # load modules
