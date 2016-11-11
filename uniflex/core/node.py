@@ -162,9 +162,6 @@ class Node(object):
     def get_apps(self):
         return self.apps.values()
 
-    def send_event(self, event):
-        self.log.debug()
-
     def send_cmd_event(self, event):
         event.dstNode = self.uuid
         ctx = event.ctx
@@ -182,3 +179,64 @@ class Node(object):
                 return returnValue
 
         return response
+
+    def send_event(self, event):
+        """
+        Send event to remote node in node-broadcast
+        mode, i.e. event is delivered to node and broadcasted
+        to all subscribed Control Applications.
+        Returns True if succeeded; otherwise False
+        """
+        self.log.debug()
+
+    def subscribe_for_events(self, eventType, callback):
+        """
+        Subscribe for events of given type generated in
+        remote node. If event type is not given, subscribe
+        for all events generated in remote node. The callback
+        function will be called on reception of event.
+        Returns True if succeeded; otherwise False
+        """
+        pass
+
+    def unsubscribe_from_events(self, eventType):
+        """
+        Unsubscribe from events of given type generated
+        in remote node. If event type is not given unsubscribe
+        from all events generated in remote node.
+        Returns True if succeeded; otherwise False
+        """
+        pass
+
+    def get_time(self):
+        """
+        Get time of remote node.
+        Returns UNIX time of remote node.
+        """
+        pass
+
+    def is_synchronizing(self):
+        """
+        Check if remote node is synchronizing with some
+        time server.
+        Returns True is remote node runs time synchronization
+        process; False otherwise
+        """
+        pass
+
+    def get_time_synchronization_source(self):
+        """
+        Get time synchronization source of remote node.
+        Note: we need to check if remote node synchronizes
+        with the same source as application’s local
+        node.
+        Returns name of synchronization source
+        """
+        pass
+
+    def get_time_synchronization_accuracy(self):
+        """
+        Get time synchronization accuracy.
+        Returns time synchronization accuracy in milliseconds.
+        """
+        pass
