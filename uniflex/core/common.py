@@ -1,3 +1,4 @@
+import inspect
 import netifaces as ni
 from netifaces import AF_INET
 
@@ -19,6 +20,16 @@ def override():
         # assert(method.__name__ in dir(interface_class))
         return method
     return overrider
+
+
+def is_func_implemented(func):
+    code = inspect.getsourcelines(func)
+    lines = code[0]
+    lastLine = lines[-1]
+    if "NotImplementedError" in lastLine:
+        return False
+    else:
+        return True
 
 
 def get_inheritors(klass):

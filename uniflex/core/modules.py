@@ -4,6 +4,7 @@ import inspect
 from queue import Queue, Empty
 from threading import Thread
 from functools import partial
+from uniflex.core.common import is_func_implemented
 from . import events
 
 __author__ = "Piotr Gawlowicz"
@@ -179,19 +180,28 @@ class UniFlexModule(object):
         self.services = []
         self.firstCallToModule = False
 
-        self.functions = [m for m in dir(self) if _is_method(getattr(self, m))]
+        if not isinstance(self, CoreModule):
+            funcs = [m for m in dir(self) if _is_method(getattr(self, m))]
 
-        filterFunc = set(["set_agent", "set_module_manager",
-                          "send_event", "get_device", "get_attributes",
-                          "get_functions", "get_in_events",
-                          "get_out_events", "get_services",
-                          "_add_node", "_remove_node",
-                          "get_nodes", "get_node",
-                          "get_node_by_uuid",
-                          "get_node_by_hostname",
-                          "__init__"])
+            filterFunc = set(["set_agent", "set_module_manager",
+                              "send_event", "get_device", "get_attributes",
+                              "get_functions", "get_in_events",
+                              "get_out_events", "get_services",
+                              "_add_node", "_remove_node",
+                              "get_nodes", "get_node",
+                              "get_node_by_uuid",
+                              "get_node_by_hostname",
+                              "__init__", "recv_msgs"])
 
-        self.functions = sorted(list(set(self.functions) - filterFunc))
+            self.funcs = sorted(list(set(funcs) - filterFunc))
+
+            # filter not implemented funcs
+            funcs = [getattr(self, f) for f in funcs]
+            funcs = filter(is_func_implemented, funcs)
+            funcs = [f.__name__ for f in funcs]
+            # filter private functions starring with _
+            funcs = filter(lambda x: not x.startswith("_"), funcs)
+            self.functions = funcs
 
         # TODO: move to DeviceModule
         self.device = None
