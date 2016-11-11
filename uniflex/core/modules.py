@@ -193,7 +193,7 @@ class UniFlexModule(object):
                               "get_node_by_hostname",
                               "__init__", "recv_msgs"])
 
-            self.funcs = sorted(list(set(funcs) - filterFunc))
+            funcs = sorted(list(set(funcs) - filterFunc))
 
             # filter not implemented funcs
             funcs = [getattr(self, f) for f in funcs]
