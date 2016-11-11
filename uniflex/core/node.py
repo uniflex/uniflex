@@ -97,9 +97,6 @@ class Node(object):
             moduleProxy.uuid = module.uuid
             moduleProxy.type = str(module.name)
 
-            for attr in module.attributes:
-                moduleProxy.attributes.append(str(attr.name))
-
             for func in module.functions:
                 moduleProxy.functions.append(str(func.name))
 
@@ -108,9 +105,6 @@ class Node(object):
 
             for event in module.out_events:
                 moduleProxy.out_events.append(str(event.name))
-
-            for service in module.services:
-                moduleProxy.services.append(str(service.name))
 
         return node
 
@@ -133,11 +127,9 @@ class Node(object):
         moduleProxy.uuid = module.uuid
         moduleProxy.name = module.name
 
-        moduleProxy.attributes = module.attributes
         moduleProxy.functions = module.functions
         moduleProxy.in_events = module.in_events
         moduleProxy.out_events = module.out_events
-        moduleProxy.services = module.services
 
         moduleProxy._currentNode = self
 

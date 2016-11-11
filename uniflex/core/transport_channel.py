@@ -196,9 +196,6 @@ class TransportChannel(modules.CoreModule):
                 deviceDesc.name = module.device
                 moduleMsg.device.CopyFrom(deviceDesc)
 
-            for name in module.get_attributes():
-                attribute = moduleMsg.attributes.add()
-                attribute.name = name
             for name in module.get_functions():
                 function = moduleMsg.functions.add()
                 function.name = name
@@ -208,9 +205,7 @@ class TransportChannel(modules.CoreModule):
             for name in module.get_out_events():
                 event = moduleMsg.out_events.add()
                 event.name = name
-            for name in module.get_services():
-                service = moduleMsg.services.add()
-                service.name = name
+
         msgContainer = [topic, msgDesc, msg]
 
         self.log.debug("Agent sends node info")

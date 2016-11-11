@@ -4,11 +4,6 @@ __version__ = "0.1.0"
 __email__ = "gawlowicz@tkn.tu-berlin.de"
 
 
-class AttributeBase(object):
-    # Nothing yet
-    pass
-
-
 class FunctionBase(object):
     # Nothing yet
     pass
@@ -23,12 +18,6 @@ class EventBase(object):
         self.srcModule = None
         self.node = None
         self.device = None
-
-
-class ServiceBase(object):
-    # service may be parametrized, it possible it may be
-    # started multiple times with different parameters
-    pass
 
 
 class AgentStartEvent(EventBase):

@@ -74,11 +74,6 @@ class CommandExecutor(object):
         retValue = None
 
         runInThread = False
-        if ctx._type == "event_enable":
-            runInThread = True
-        elif ctx._type == "service_start":
-            runInThread = True
-
         self.log.debug("Get module with UUID: {}".format(event.dstModule))
         module = self.moduleManager.get_module_by_uuid(event.dstModule)
 

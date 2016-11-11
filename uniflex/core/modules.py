@@ -73,54 +73,6 @@ def after_call(func):
     return _set_ev_cls_dec
 
 
-def on_function(func):
-    def _set_ev_cls_dec(handler):
-        if '_mask_func_' not in dir(handler):
-            handler._mask_func_ = None
-        handler._mask_func_ = func.__name__
-        return handler
-    return _set_ev_cls_dec
-
-
-bind_function = on_function
-
-
-def event_enable(event):
-    def _set_ev_cls_dec(handler):
-        if '_event_enable_' not in dir(handler):
-            handler._event_enable_ = None
-        handler._event_enable_ = event.__name__
-        return handler
-    return _set_ev_cls_dec
-
-
-def event_disable(event):
-    def _set_ev_cls_dec(handler):
-        if '_event_disable_' not in dir(handler):
-            handler._event_disable_ = None
-        handler._event_disable_ = event.__name__
-        return handler
-    return _set_ev_cls_dec
-
-
-def service_start(service):
-    def _set_ev_cls_dec(handler):
-        if '_service_start_' not in dir(handler):
-            handler._service_start_ = None
-        handler._service_start_ = service.__name__
-        return handler
-    return _set_ev_cls_dec
-
-
-def service_stop(service):
-    def _set_ev_cls_dec(handler):
-        if '_service_stop_' not in dir(handler):
-            handler._service_stop_ = None
-        handler._service_stop_ = service.__name__
-        return handler
-    return _set_ev_cls_dec
-
-
 class ModuleWorker(Thread):
     def __init__(self, module):
         super().__init__()
@@ -173,20 +125,18 @@ class UniFlexModule(object):
         self.callIdGen = 0
         self.callbacks = {}
 
-        self.attributes = []
         self.functions = []
         self.in_events = []
         self.out_events = []
-        self.services = []
         self.firstCallToModule = False
 
         if not isinstance(self, CoreModule):
             funcs = [m for m in dir(self) if _is_method(getattr(self, m))]
 
             filterFunc = set(["set_agent", "set_module_manager",
-                              "send_event", "get_device", "get_attributes",
+                              "send_event", "get_device",
                               "get_functions", "get_in_events",
-                              "get_out_events", "get_services",
+                              "get_out_events",
                               "_add_node", "_remove_node",
                               "get_nodes", "get_node",
                               "get_node_by_uuid",
@@ -224,9 +174,6 @@ class UniFlexModule(object):
     def get_device(self):
         return self.device
 
-    def get_attributes(self):
-        return self.attributes
-
     def get_functions(self):
         return self.functions
 
@@ -235,9 +182,6 @@ class UniFlexModule(object):
 
     def get_out_events(self):
         return self.out_events
-
-    def get_services(self):
-        return self.services
 
 
 class CoreModule(UniFlexModule):

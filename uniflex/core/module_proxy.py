@@ -46,11 +46,9 @@ class ModuleProxy(object):
         self._currentNode = None
 
         # containers for unit description
-        self.attributes = []
         self.functions = []
         self.in_events = []
         self.out_events = []
-        self.services = []
 
     def __call__(self, method, *args, **kwargs):
         # some magis is here :)
@@ -67,9 +65,6 @@ class ModuleProxy(object):
                   "    UUID: {} \n"
                   .format(self.type, self.name, self.uuid))
 
-        string = string + "    Attributes:\n"
-        for k in self.attributes:
-            string = string + "      {}\n".format(k)
         string = string + "    Functions:\n"
         for k in self.functions:
             string = string + "      {}\n".format(k)
@@ -78,9 +73,6 @@ class ModuleProxy(object):
             string = string + "      {}\n".format(k)
         string = string + "    Generates Events:\n"
         for k in self.out_events:
-            string = string + "      {}\n".format(k)
-        string = string + "    Services:\n"
-        for k in self.services:
             string = string + "      {}\n".format(k)
         return string
 
@@ -164,60 +156,6 @@ class ModuleProxy(object):
         ctxCopy = copy.copy(self._callingCtx)
         self._clear_call_context()
         return self._send_cmd_event(ctxCopy)
-
-    def enable_event(self, event, *args, **kwargs):
-        self._callingCtx._type = "event_enable"
-        self._callingCtx._name = self.get_name_string(event)
-        self._callingCtx._args = args
-        self._callingCtx._kwargs = kwargs
-        self._callingCtx._blocking = False
-        self._callingCtx._callId = self.generate_call_id()
-
-        ctxCopy = copy.copy(self._callingCtx)
-        self._clear_call_context()
-        return self._send_cmd_event(ctxCopy)
-
-    def disable_event(self, event):
-        self._callingCtx._type = "event_disable"
-        self._callingCtx._name = self.get_name_string(event)
-        self._callingCtx._args = []
-        self._callingCtx._kwargs = {}
-        self._callingCtx._blocking = False
-        self._callingCtx._callId = self.generate_call_id()
-
-        ctxCopy = copy.copy(self._callingCtx)
-        self._clear_call_context()
-        return self._send_cmd_event(ctxCopy)
-
-    def is_event_enabled(self, event):
-        pass
-
-    def start_service(self, service, *args, **kwargs):
-        self._callingCtx._type = "service_start"
-        self._callingCtx._name = self.get_name_string(service)
-        self._callingCtx._args = args
-        self._callingCtx._kwargs = kwargs
-        self._callingCtx._blocking = False
-        self._callingCtx._callId = self.generate_call_id()
-
-        ctxCopy = copy.copy(self._callingCtx)
-        self._clear_call_context()
-        return self._send_cmd_event(ctxCopy)
-
-    def stop_service(self, service):
-        self._callingCtx._type = "service_stop"
-        self._callingCtx._name = self.get_name_string(service)
-        self._callingCtx._args = []
-        self._callingCtx._kwargs = {}
-        self._callingCtx._blocking = False
-        self._callingCtx._callId = self.generate_call_id()
-
-        ctxCopy = copy.copy(self._callingCtx)
-        self._clear_call_context()
-        return self._send_cmd_event(ctxCopy)
-
-    def is_service_enabled(self, service):
-        pass
 
     def is_func_supported(self, ftype, fName):
         self.log.info("Checking call: {}.{} for device {} in node {}"
