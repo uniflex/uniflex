@@ -1,4 +1,5 @@
 import inspect
+import threading
 import netifaces as ni
 from netifaces import AF_INET
 
@@ -65,3 +66,30 @@ def get_ip_address(ifname):
     except Exception as e:
         print("Failed to get IP address of iface: {} {}".format(ifname, e))
         raise e
+
+
+class UniFlexThread():
+    """docstring for UniFlexThread"""
+
+    def __init__(self, module):
+        super().__init__()
+        self.module = module
+        self.running = False
+
+    def start(self):
+        self.running = True
+        self.thread = threading.Thread(target=self.task)
+        self.thread.setDaemon(True)
+        self.thread.start()
+
+    def task(self):
+        return
+
+    def stop(self):
+        self.running = False
+
+    def is_running(self):
+        return self.running
+
+    def is_stopped(self):
+        return not self.running
