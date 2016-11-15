@@ -1,7 +1,12 @@
-UniFlex Framework
+## UniFlex Framework
 ============================
 
 This is a prototypic implementation of a UniFlex framework.
+
+## Installation:
+To install UniFlex framework with all available modules, please through all steps in [manifest](https://github.com/uniflex/manifests) repository.
+
+
 
 ## How to reference to UniFlex ?
 Just use the following bibtex :
