@@ -102,7 +102,7 @@ class NodeManager(object):
         event = events.NewNodeEvent()
         event.node = node
         self._moduleManager.send_event(event)
-        self.log.info("New node event sent")
+        self.log.debug("New node event sent")
 
     def remove_node_hello_timer(self, node):
         reason = "HelloTimeout"
