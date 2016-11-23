@@ -8,6 +8,11 @@ class FunctionBase(object):
     # Nothing yet
     pass
 
+class ParameterBase(object):
+    """ base class for all data object parameters """
+    # Nothing yet
+    pass
+
 
 class EventBase(object):
     """ event cannot be parametrized, user may only start it once"""
