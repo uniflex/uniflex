@@ -197,6 +197,18 @@ class ModuleManager(object):
     def serve_event_msg(self, event):
         srcNodeUuid = event.srcNode
         srcModuleUuid = event.srcModule
+
+        # quick fix for receiving msg from node-red
+        # TODO: improve it!!
+        if "node-red" in srcNodeUuid:
+            event.srcNode = srcNodeUuid
+            event.node = srcNodeUuid
+            event.srcModule = srcNodeUuid
+            event.device = srcNodeUuid
+            self.send_event_locally(event)
+            return
+        # fix ends here
+
         event.srcNode = self._nodeManager.get_node_by_uuid(event.srcNode)
         # alias
         event.node = event.srcNode
