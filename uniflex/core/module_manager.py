@@ -186,7 +186,8 @@ class ModuleManager(object):
                 self.synchronousCalls[event.ctx._callId] = Queue()
             elif event.ctx._callback:
                 # save reference to callback
-                self.callCallbacks[event.ctx._callId] = event.ctx._callback
+                module = event.ctx._callback.__self__
+                self.callCallbacks[event.ctx._callId] = [module, event.ctx._callback]
                 event.ctx._callback = None
 
             self._transportChannel.send_event_outside(event, dstNode)
@@ -243,7 +244,8 @@ class ModuleManager(object):
                 queue.put(event.msg)
             elif event.ctx._callId in self.callCallbacks:
                 self.log.debug("received cmd: {}".format(event.ctx._name))
-                callback = self.callCallbacks[event.ctx._callId]
-                callback(event)
+                [module, callback] = self.callCallbacks[event.ctx._callId]
+                module.worker.add_task(callback, event)
+
         else:
             self.send_event_locally(event)
