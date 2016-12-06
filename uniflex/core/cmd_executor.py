@@ -154,12 +154,7 @@ class CommandExecutor(object):
     def serve_ctx_command_event(self, event, local=False):
         ctx = event.ctx
 
-        if not ctx._exec_time or ctx._exec_time == 0:
-            # execute now
-            self.log.debug("Serves Cmd Event: Type: {} Func: {}".format(
-                           ctx._type, ctx._name))
-            self._serve_ctx_command_event(event, local)
-        else:
+        if ctx._exec_time and ctx._exec_time != 0:
             # schedule in future
             if isinstance(ctx._exec_time, str):
                 execTime = datetime.datetime.strptime(
@@ -173,7 +168,27 @@ class CommandExecutor(object):
 
             self.log.debug("Schedule task for Cmd Event: {}:{} at {}"
                            .format(ctx._type, ctx._name, execTime))
-            self.jobScheduler.add_job(self._serve_ctx_command_event,
-                                      'date', run_date=execTime,
-                                      kwargs={"event": event,
-                                              "local": local})
+
+            if ctx._interval and ctx._repetitionNum:
+                endDate = execTime + ctx._interval * (ctx._repetitionNum - 1)
+                if isinstance(ctx._interval, datetime.timedelta):
+                    interval = ctx._interval.seconds
+                else:
+                    interval = ctx._interval
+                self.jobScheduler.add_job(self._serve_ctx_command_event,
+                                          'interval', seconds=interval,
+                                          start_date=execTime,
+                                          end_date=endDate,
+                                          kwargs={"event": event,
+                                                  "local": local})
+
+            else:
+                self.jobScheduler.add_job(self._serve_ctx_command_event,
+                                          'date', run_date=execTime,
+                                          kwargs={"event": event,
+                                                  "local": local})
+        else:
+            # execute now
+            self.log.debug("Serves Cmd Event: Type: {} Func: {}".format(
+                           ctx._type, ctx._name))
+            self._serve_ctx_command_event(event, local)

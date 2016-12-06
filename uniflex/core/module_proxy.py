@@ -20,7 +20,10 @@ class CallingContext(object):
         self._kwargs = None
         self._callId = None
         self._blocking = True
+        self._delay = None
         self._exec_time = None
+        self._interval = None
+        self._repetitionNum = None
         self._timeout = None
         self._callback = None
 
@@ -80,7 +83,7 @@ class ModuleProxy(object):
         self._callingCtx._blocking = value
         return self
 
-    def exec_time(self, exec_time):
+    def exec_time(self, exec_time, interval=None, repetitionNum=None):
         """
         Schedule execution of operation in remote device
         module. It will result in non-blocking call. Use
@@ -93,6 +96,9 @@ class ModuleProxy(object):
         """
         self._callingCtx._exec_time = exec_time
         self._callingCtx._blocking = False
+        if interval and repetitionNum:
+            self._callingCtx._interval = interval
+            self._callingCtx._repetitionNum = repetitionNum
         return self
 
     def delay(self, delay):
@@ -106,6 +112,7 @@ class ModuleProxy(object):
         device.delay(5s).set_channel(11).
         """
         exec_time = datetime.datetime.now() + datetime.timedelta(seconds=delay)
+        self._callingCtx._delay = datetime.timedelta(seconds=delay)
         self._callingCtx._exec_time = exec_time
         self._callingCtx._blocking = False
         return self
@@ -137,7 +144,10 @@ class ModuleProxy(object):
         self._callingCtx._kwargs = None
         self._callingCtx._callId = None
         self._callingCtx._blocking = True
+        self._callingCtx._delay = None
         self._callingCtx._exec_time = None
+        self._callingCtx._interval = None
+        self._callingCtx._repetitionNum = None
         self._callingCtx._timeout = None
         self._callingCtx._callback = None
 
