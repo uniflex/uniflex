@@ -134,20 +134,20 @@ class ModuleManager(object):
     def send_event_locally(self, event):
         self.eventQueue.put(event)
 
-    def send_event_outside(self, event):
+    def send_event_outside(self, event, dstNode=None):
         if self.agent.transport:
             # do not change original event that was sent to event queue
             eventCopy = copy.copy(event)
-            self.agent.transport.send_event_outside(eventCopy)
+            self.agent.transport.send_event_outside(eventCopy, dstNode)
 
-    def send_event(self, event):
+    def send_event(self, event, dstNode=None):
         self.eventQueue.put(event)
         # quick hack to sent events also through transport channel
         # TODO: improve it
         if self.agent.transport:
             # do not change original event that was sent to event queue
             eventCopy = copy.copy(event)
-            self.agent.transport.send_event_outside(eventCopy)
+            self.agent.transport.send_event_outside(eventCopy, dstNode)
 
     def serve_event_queue(self):
         while True:

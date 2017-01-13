@@ -166,7 +166,7 @@ class UniFlexModule(object):
     def get_out_events(self):
         return self.out_events
 
-    def send_event(self, event, mode="GLOBAL"):
+    def send_event(self, event, dstNode=None):
         """
         Sent event using one of two modes: nodebroadcast
         and global-broadcast.
@@ -178,7 +178,7 @@ class UniFlexModule(object):
         # stamp event with node
         if not event.srcNode:
             event.srcNode = self.agent.nodeManager.get_local_node()
-        self.moduleManager.send_event(event)
+        self.moduleManager.send_event(event, dstNode)
 
 
 class CoreModule(UniFlexModule):
