@@ -1,0 +1,24 @@
+{# Switch to icon instead of text in `sm` view size for BS3 only. #}
+<div>
+<h4>Topics</h4>
+<ul class="nav nav-list">
+{%- if prev %}
+  <li>
+    <a href="{{ prev.link|e }}" title="{{ _('Previous Chapter: ') + prev.title|striptags }}">
+      {%- if theme_bootstrap_version == "2" -%}<span class="icon-chevron-left visible-tablet"></span>{%- endif -%}
+      {%- if theme_bootstrap_version == "3" -%}<span class="glyphicon glyphicon-chevron-left visible"></span>{%- endif -%}
+      <span class="hidden-sm hidden-tablet">{{ prev.title|striptags }}</span>
+    </a>
+  </li>
+{%- endif %}
+{%- if next %}
+  <li>
+    <a href="{{ next.link|e }}" title="{{ _('Next Chapter: ') + next.title|striptags }}">
+      {%- if theme_bootstrap_version == "2" -%}<span class="icon-chevron-right visible-tablet"></span>{%- endif -%}
+      {%- if theme_bootstrap_version == "3" -%}<span class="glyphicon glyphicon-chevron-right visible"></span>{%- endif -%}
+      <span class="hidden-sm hidden-tablet">{{ next.title|striptags }}</span>
+    </a>
+  </li>
+{%- endif %}
+</ul>
+</div>
