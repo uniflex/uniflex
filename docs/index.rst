@@ -24,3 +24,14 @@ We evaluated the framework in a number of use-cases, what proved its usability.
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+How to reference to UniFlex?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Just use the following :download:`bibtex <about/Gawlowicz2016_uniflex.bib>`:
+
+.. literalinclude:: about/Gawlowicz2016_uniflex.bib
+   :language: bibtex
+
+.. include:: about/acknowledgment.inc
