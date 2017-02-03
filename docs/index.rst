@@ -17,6 +17,7 @@ We evaluated the framework in a number of use-cases, what proved its usability.
 
    installation
    examples
+   api/modules
 
 .. rubric:: Indices and tables
 
