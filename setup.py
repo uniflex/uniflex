@@ -22,6 +22,6 @@ setup(
     keywords='wireless control',
     install_requires=['apscheduler', 'pyzmq', 'dill', 'protobuf', 'decorator'],
     extras_require={
-        'dev': ['check-manifest', 'sphinx'],
+        'dev': ['check-manifest', 'sphinx', 'sphinx_bootstrap_theme'],
     },
 )
