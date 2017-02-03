@@ -21,4 +21,7 @@ setup(
     long_description='Implementation of UniFlex Framework',
     keywords='wireless control',
     install_requires=['apscheduler', 'pyzmq', 'dill', 'protobuf', 'decorator'],
+    extras_require={
+        'dev': ['check-manifest', 'sphinx'],
+    },
 )
