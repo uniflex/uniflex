@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>A Framework for Simplifying Wireless Network Control &#8212; UniFlex f96ea62 documentation</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.6/readable/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'f96ea62',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#"><span><img src="_static/logo.png"></span>
+          UniFlex</a>
+        <span class="navbar-text navbar-version pull-left"><b>f96ea62</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="https://www.twist.tu-berlin.de/">TWIST Testbed</a></li>
+                <li><a href="http://www.tkn.tu-berlin.de/">TKN TU-Berlin</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Documentation <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Running examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">uniflex</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12 content">
+      
+  <div class="section" id="a-framework-for-simplifying-wireless-network-control">
+<h1>A Framework for Simplifying Wireless Network Control<a class="headerlink" href="#a-framework-for-simplifying-wireless-network-control" title="Permalink to this headline">¶</a></h1>
+<p>Classical control and management plane for computer networks is addressing individual parameters of protocol layers within an individual wireless network device.
+We argue that this is not sufficient in phase of increasing deployment of highly re-configurable systems, as well as heterogeneous wireless systems co-existing in the same radio spectrum which demand harmonized, frequently even coordinated adaptation of multiple parameters in different protocol layers (cross-layer) in multiple network devices (cross-node).
+We propose UniFlex, a framework enabling unified and flexible radio and network control.
+It provides an API enabling coordinated cross-layer control and management operation over multiple wireless network nodes.
+The controller logic may be implemented either in a centralized or distributed manner.
+This allows to place time-sensitive control functions close to the controlled device (i.e., local control application), off-load more resource hungry network application to compute servers and make them work together to control entire network.
+The UniFlex framework was prototypically implemented and provided to the research community as open-source.
+We evaluated the framework in a number of use-cases, what proved its usability.</p>
+<p class="rubric">Contents</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#users">Users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#developers">Developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#id1">Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Running examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">uniflex</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/uniflex.html">uniflex package</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p class="rubric">Indices and tables</p>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+<div class="section" id="how-to-reference-to-uniflex">
+<h2>How to reference to UniFlex?<a class="headerlink" href="#how-to-reference-to-uniflex" title="Permalink to this headline">¶</a></h2>
+<p>Just use the following <a class="reference download internal" href="_downloads/Gawlowicz2016_uniflex.bib" download=""><code class="xref download docutils literal"><span class="pre">bibtex</span></code></a>:</p>
+<div class="highlight-bibtex"><div class="highlight"><pre><span></span><span class="nc">@techreport</span><span class="p">{</span><span class="nl">Gawlowicz2016_uniflex</span><span class="p">,</span>
+    <span class="na">Title</span> <span class="p">=</span> <span class="s">{{UniFlex: Accelerating Networking Research and Experimentation through Software-Defined Wireless Networking}}</span><span class="p">,</span>
+    <span class="na">Author</span> <span class="p">=</span> <span class="s">{Gawłowicz, Piotr and Zubow, Anatolij and Chwalisz, Mikolaj and Wolisz, Adam}</span><span class="p">,</span>
+    <span class="na">Year</span> <span class="p">=</span> <span class="s">{2016}</span><span class="p">,</span>
+    <span class="na">Number</span> <span class="p">=</span> <span class="s">{TKN-16-003}</span><span class="p">,</span>
+    <span class="na">Month</span> <span class="p">=</span> <span class="s">{November}</span><span class="p">,</span>
+    <span class="na">Note</span> <span class="p">=</span> <span class="s">{This TR updates TR TKN-16-003.}</span><span class="p">,</span>
+    <span class="na">Institution</span> <span class="p">=</span> <span class="s">{Telecommunication Networks Group, Technische Universit\&quot;at Berlin}</span><span class="p">,</span>
+    <span class="na">Url</span> <span class="p">=</span> <span class="s">{https://arxiv.org/abs/1611.02546}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="acknowledgment">
+<h2>Acknowledgment<a class="headerlink" href="#acknowledgment" title="Permalink to this headline">¶</a></h2>
+<p>The research leading to these results has received funding from the European
+Horizon 2020 Programme under grant agreement n645274 (WiSHFUL project).</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/index.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2017, Technische Universität Berlin, Telecommunication Networks Group.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.2.<br/>
+    </p>
+  </div>
+</footer>
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id="
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','');</script>
+<!-- End Google Tag Manager -->
+
+  </body>
+</html>

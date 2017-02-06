@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation &#8212; UniFlex f96ea62 documentation</title>
+    
+    <link rel="stylesheet" href="_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootswatch-3.3.6/readable/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     'f96ea62',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Running examples" href="examples.html" />
+    <link rel="prev" title="A Framework for Simplifying Wireless Network Control" href="index.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html"><span><img src="_static/logo.png"></span>
+          UniFlex</a>
+        <span class="navbar-text navbar-version pull-left"><b>f96ea62</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="https://www.twist.tu-berlin.de/">TWIST Testbed</a></li>
+                <li><a href="http://www.tkn.tu-berlin.de/">TKN TU-Berlin</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="index.html">Documentation <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Running examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">uniflex</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><div>
+<h4>Table of Contents</h4>
+<ul>
+<li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#users">Users</a></li>
+<li><a class="reference internal" href="#developers">Developers</a></li>
+<li><a class="reference internal" href="#id1">Installation</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+<div>
+<h4>Topics</h4>
+<ul class="nav nav-list">
+  <li>
+    <a href="index.html" title="Previous Chapter: A Framework for Simplifying Wireless Network Control"><span class="glyphicon glyphicon-chevron-left visible"></span><span class="hidden-sm hidden-tablet">A Framework for Simplifying Wireless Network Control</span>
+    </a>
+  </li>
+  <li>
+    <a href="examples.html" title="Next Chapter: Running examples"><span class="glyphicon glyphicon-chevron-right visible"></span><span class="hidden-sm hidden-tablet">Running examples</span>
+    </a>
+  </li>
+</ul>
+</div>
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="users">
+<h2>Users<a class="headerlink" href="#users" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">Install requirements:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">wget</span> <span class="n">git</span> <span class="n">python</span> <span class="n">python</span><span class="o">-</span><span class="n">virtualenv</span> \
+    <span class="n">python</span><span class="o">-</span><span class="n">dev</span> <span class="n">python3</span><span class="o">-</span><span class="n">dev</span> <span class="n">python3</span><span class="o">-</span><span class="n">pip</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Configure your git credentials:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">config</span> <span class="o">--</span><span class="k">global</span> <span class="n">user</span><span class="o">.</span><span class="n">name</span> <span class="s2">&quot;Your Name&quot;</span>
+<span class="n">git</span> <span class="n">config</span> <span class="o">--</span><span class="k">global</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="s2">&quot;you@example.com&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Download git-repo:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">wget</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">storage</span><span class="o">.</span><span class="n">googleapis</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">git</span><span class="o">-</span><span class="n">repo</span><span class="o">-</span><span class="n">downloads</span><span class="o">/</span><span class="n">repo</span>
+<span class="n">chmod</span> <span class="n">a</span><span class="o">+</span><span class="n">x</span> <span class="o">./</span><span class="n">repo</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Get manifest files:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python2</span> <span class="o">./</span><span class="n">repo</span> <span class="n">init</span> <span class="o">-</span><span class="n">u</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">uniflex</span><span class="o">/</span><span class="n">manifests</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Configure user-only manifest file:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python2</span> <span class="o">./</span><span class="n">repo</span> <span class="n">init</span> <span class="o">-</span><span class="n">m</span> <span class="n">user</span><span class="o">.</span><span class="n">xml</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Get all repositories:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># to get all repositories</span>
+<span class="n">python2</span> <span class="o">./</span><span class="n">repo</span> <span class="n">sync</span>
+<span class="c1"># set master branch for all repos</span>
+<span class="n">python2</span> <span class="o">./</span><span class="n">repo</span> <span class="n">forall</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;git checkout master&#39;</span>
+<span class="c1"># to check status of all repositories</span>
+<span class="n">python2</span> <span class="o">./</span><span class="n">repo</span> <span class="n">status</span>
+<span class="c1"># to pull all repositories at once:</span>
+<span class="n">python2</span> <span class="o">./</span><span class="n">repo</span> <span class="n">forall</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;git pull --rebase&#39;</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="developers">
+<h2>Developers<a class="headerlink" href="#developers" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">Create an account at our gitlab -&gt; Go to: <a class="reference external" href="https://github.com/">https://github.com/</a></p>
+</li>
+<li><p class="first">Upload your public key into you account settings.</p>
+</li>
+<li><p class="first">Install requirements:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">wget</span> <span class="n">git</span> <span class="n">python</span> <span class="n">python</span><span class="o">-</span><span class="n">virtualenv</span> \
+    <span class="n">python</span><span class="o">-</span><span class="n">dev</span> <span class="n">python3</span><span class="o">-</span><span class="n">dev</span> <span class="n">python3</span><span class="o">-</span><span class="n">pip</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Configure your git credentials:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">config</span> <span class="o">--</span><span class="k">global</span> <span class="n">user</span><span class="o">.</span><span class="n">name</span> <span class="s2">&quot;Your Name&quot;</span>
+<span class="n">git</span> <span class="n">config</span> <span class="o">--</span><span class="k">global</span> <span class="n">user</span><span class="o">.</span><span class="n">email</span> <span class="s2">&quot;you@example.com&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Download git-repo:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">wget</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">storage</span><span class="o">.</span><span class="n">googleapis</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">git</span><span class="o">-</span><span class="n">repo</span><span class="o">-</span><span class="n">downloads</span><span class="o">/</span><span class="n">repo</span>
+<span class="n">chmod</span> <span class="n">a</span><span class="o">+</span><span class="n">x</span> <span class="o">./</span><span class="n">repo</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<ol class="arabic" start="5">
+<li><p class="first">Get manifest files:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">python2</span> <span class="o">./</span><span class="n">repo</span> <span class="n">init</span> <span class="o">-</span><span class="n">u</span> <span class="n">ssh</span><span class="p">:</span><span class="o">//</span><span class="n">git</span><span class="nd">@github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">uniflex</span><span class="o">/</span><span class="n">manifests</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Get all repositories:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># to get all repositories</span>
+<span class="n">python2</span> <span class="o">./</span><span class="n">repo</span> <span class="n">sync</span>
+<span class="c1"># set master branch for all repos</span>
+<span class="n">python2</span> <span class="o">./</span><span class="n">repo</span> <span class="n">forall</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;git checkout master&#39;</span>
+<span class="c1"># to check status of all repositories</span>
+<span class="n">python2</span> <span class="o">./</span><span class="n">repo</span> <span class="n">status</span>
+<span class="c1"># to pull all repositories at once:</span>
+<span class="n">python2</span> <span class="o">./</span><span class="n">repo</span> <span class="n">forall</span> <span class="o">-</span><span class="n">c</span> <span class="s1">&#39;git pull --rebase&#39;</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="id1">
+<h2>Installation<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">Create virtual environment:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">virtualenv</span> <span class="o">-</span><span class="n">p</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">python3</span> <span class="o">./</span><span class="n">dev</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Activate virtual environment:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">source</span> <span class="o">./</span><span class="n">dev</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">activate</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Install all dependencies (if all needed):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip3</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="o">-</span><span class="n">r</span> <span class="o">./.</span><span class="n">repo</span><span class="o">/</span><span class="n">manifests</span><span class="o">/</span><span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Deactivate virtual environment (if you need to exit):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">deactivate</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="_sources/installation.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2017, Technische Universität Berlin, Telecommunication Networks Group.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.2.<br/>
+    </p>
+  </div>
+</footer>
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id="
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','');</script>
+<!-- End Google Tag Manager -->
+
+  </body>
+</html>

@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>uniflex.core package &#8212; UniFlex f96ea62 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootswatch-3.3.6/readable/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     'f96ea62',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../_static/bootstrap-sphinx.js"></script>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="uniflex.msgs package" href="uniflex.msgs.html" />
+    <link rel="prev" title="uniflex package" href="uniflex.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../index.html"><span><img src="../_static/logo.png"></span>
+          UniFlex</a>
+        <span class="navbar-text navbar-version pull-left"><b>f96ea62</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+                <li><a href="https://www.twist.tu-berlin.de/">TWIST Testbed</a></li>
+                <li><a href="http://www.tkn.tu-berlin.de/">TKN TU-Berlin</a></li>
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../index.html">Documentation <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Running examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">uniflex</a></li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+            
+            
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+      <div class="col-md-3">
+        <div id="sidebar" class="bs-sidenav" role="complementary"><div>
+<h4>Table of Contents</h4>
+<ul>
+<li><a class="reference internal" href="#">uniflex.core package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-uniflex.core.agent">uniflex.core.agent module</a></li>
+<li><a class="reference internal" href="#module-uniflex.core.broker">uniflex.core.broker module</a></li>
+<li><a class="reference internal" href="#module-uniflex.core.cmd_executor">uniflex.core.cmd_executor module</a></li>
+<li><a class="reference internal" href="#module-uniflex.core.common">uniflex.core.common module</a></li>
+<li><a class="reference internal" href="#module-uniflex.core.events">uniflex.core.events module</a></li>
+<li><a class="reference internal" href="#module-uniflex.core.exceptions">uniflex.core.exceptions module</a></li>
+<li><a class="reference internal" href="#module-uniflex.core.module_manager">uniflex.core.module_manager module</a></li>
+<li><a class="reference internal" href="#module-uniflex.core.module_proxy">uniflex.core.module_proxy module</a></li>
+<li><a class="reference internal" href="#module-uniflex.core.modules">uniflex.core.modules module</a></li>
+<li><a class="reference internal" href="#module-uniflex.core.node">uniflex.core.node module</a></li>
+<li><a class="reference internal" href="#module-uniflex.core.node_manager">uniflex.core.node_manager module</a></li>
+<li><a class="reference internal" href="#module-uniflex.core.timer">uniflex.core.timer module</a></li>
+<li><a class="reference internal" href="#module-uniflex.core.transport_channel">uniflex.core.transport_channel module</a></li>
+<li><a class="reference internal" href="#module-uniflex.core">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+<div>
+<h4>Topics</h4>
+<ul class="nav nav-list">
+  <li>
+    <a href="uniflex.html" title="Previous Chapter: uniflex package"><span class="glyphicon glyphicon-chevron-left visible"></span><span class="hidden-sm hidden-tablet">uniflex package</span>
+    </a>
+  </li>
+  <li>
+    <a href="uniflex.msgs.html" title="Next Chapter: uniflex.msgs package"><span class="glyphicon glyphicon-chevron-right visible"></span><span class="hidden-sm hidden-tablet">uniflex.msgs package</span>
+    </a>
+  </li>
+</ul>
+</div>
+        </div>
+      </div>
+    <div class="col-md-9 content">
+      
+  <div class="section" id="uniflex-core-package">
+<h1>uniflex.core package<a class="headerlink" href="#uniflex-core-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-uniflex.core.agent">
+<span id="uniflex-core-agent-module"></span><h2>uniflex.core.agent module<a class="headerlink" href="#module-uniflex.core.agent" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="uniflex.core.agent.Agent">
+<em class="property">class </em><code class="descclassname">uniflex.core.agent.</code><code class="descname">Agent</code><a class="headerlink" href="#uniflex.core.agent.Agent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="uniflex.core.agent.Agent.load_config">
+<code class="descname">load_config</code><span class="sig-paren">(</span><em>config</em>, <em>configPath=None</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.agent.Agent.load_config" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.agent.Agent.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.agent.Agent.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.agent.Agent.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.agent.Agent.stop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-uniflex.core.broker">
+<span id="uniflex-core-broker-module"></span><h2>uniflex.core.broker module<a class="headerlink" href="#module-uniflex.core.broker" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="uniflex.core.broker.Broker">
+<em class="property">class </em><code class="descclassname">uniflex.core.broker.</code><code class="descname">Broker</code><span class="sig-paren">(</span><em>xpub='tcp://127.0.0.1:8990'</em>, <em>xsub='tcp://127.0.0.1:8989'</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.broker.Broker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+<p>docstring for Broker</p>
+<dl class="method">
+<dt id="uniflex.core.broker.Broker.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.broker.Broker.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.broker.Broker.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.broker.Broker.stop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-uniflex.core.cmd_executor">
+<span id="uniflex-core-cmd-executor-module"></span><h2>uniflex.core.cmd_executor module<a class="headerlink" href="#module-uniflex.core.cmd_executor" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="uniflex.core.cmd_executor.CommandExecutor">
+<em class="property">class </em><code class="descclassname">uniflex.core.cmd_executor.</code><code class="descname">CommandExecutor</code><span class="sig-paren">(</span><em>agent</em>, <em>moduleManager</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.cmd_executor.CommandExecutor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="uniflex.core.cmd_executor.CommandExecutor.serve_ctx_command_event">
+<code class="descname">serve_ctx_command_event</code><span class="sig-paren">(</span><em>event</em>, <em>local=False</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.cmd_executor.CommandExecutor.serve_ctx_command_event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.cmd_executor.CommandExecutor.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.cmd_executor.CommandExecutor.stop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-uniflex.core.common">
+<span id="uniflex-core-common-module"></span><h2>uniflex.core.common module<a class="headerlink" href="#module-uniflex.core.common" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="uniflex.core.common.UniFlexThread">
+<em class="property">class </em><code class="descclassname">uniflex.core.common.</code><code class="descname">UniFlexThread</code><span class="sig-paren">(</span><em>module</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.common.UniFlexThread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>docstring for UniFlexThread</p>
+<dl class="method">
+<dt id="uniflex.core.common.UniFlexThread.is_running">
+<code class="descname">is_running</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.common.UniFlexThread.is_running" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.common.UniFlexThread.is_stopped">
+<code class="descname">is_stopped</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.common.UniFlexThread.is_stopped" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.common.UniFlexThread.start">
+<code class="descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.common.UniFlexThread.start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.common.UniFlexThread.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.common.UniFlexThread.stop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.common.UniFlexThread.task">
+<code class="descname">task</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.common.UniFlexThread.task" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="uniflex.core.common.get_inheritors">
+<code class="descclassname">uniflex.core.common.</code><code class="descname">get_inheritors</code><span class="sig-paren">(</span><em>klass</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.common.get_inheritors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="uniflex.core.common.get_inheritors_set">
+<code class="descclassname">uniflex.core.common.</code><code class="descname">get_inheritors_set</code><span class="sig-paren">(</span><em>klass</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.common.get_inheritors_set" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="uniflex.core.common.get_ip_address">
+<code class="descclassname">uniflex.core.common.</code><code class="descname">get_ip_address</code><span class="sig-paren">(</span><em>ifname</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.common.get_ip_address" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="uniflex.core.common.is_func_implemented">
+<code class="descclassname">uniflex.core.common.</code><code class="descname">is_func_implemented</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.common.is_func_implemented" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="uniflex.core.common.override">
+<code class="descclassname">uniflex.core.common.</code><code class="descname">override</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.common.override" title="Permalink to this definition">¶</a></dt>
+<dd><p>with this decorator you make sure you are
+overriding a method form base class</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-uniflex.core.events">
+<span id="uniflex-core-events-module"></span><h2>uniflex.core.events module<a class="headerlink" href="#module-uniflex.core.events" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="uniflex.core.events.AgentExitEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">AgentExitEvent</code><a class="headerlink" href="#uniflex.core.events.AgentExitEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.EventBase" title="uniflex.core.events.EventBase"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.EventBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.AgentStartEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">AgentStartEvent</code><a class="headerlink" href="#uniflex.core.events.AgentStartEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.EventBase" title="uniflex.core.events.EventBase"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.EventBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.BrokerDiscoveredEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">BrokerDiscoveredEvent</code><span class="sig-paren">(</span><em>dlink</em>, <em>ulink</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.events.BrokerDiscoveredEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.EventBase" title="uniflex.core.events.EventBase"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.EventBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.CommandEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">CommandEvent</code><span class="sig-paren">(</span><em>ctx</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.events.CommandEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.EventBase" title="uniflex.core.events.EventBase"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.EventBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.ConnectionEstablishedEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">ConnectionEstablishedEvent</code><a class="headerlink" href="#uniflex.core.events.ConnectionEstablishedEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.EventBase" title="uniflex.core.events.EventBase"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.EventBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.ConnectionLostEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">ConnectionLostEvent</code><a class="headerlink" href="#uniflex.core.events.ConnectionLostEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.EventBase" title="uniflex.core.events.EventBase"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.EventBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.EventBase">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">EventBase</code><a class="headerlink" href="#uniflex.core.events.EventBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>event cannot be parametrized, user may only start it once</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.ExceptionEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">ExceptionEvent</code><span class="sig-paren">(</span><em>dest</em>, <em>cmdDesc</em>, <em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.events.ExceptionEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.EventBase" title="uniflex.core.events.EventBase"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.EventBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.FunctionBase">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">FunctionBase</code><a class="headerlink" href="#uniflex.core.events.FunctionBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.HelloMsgEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">HelloMsgEvent</code><a class="headerlink" href="#uniflex.core.events.HelloMsgEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.EventBase" title="uniflex.core.events.EventBase"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.EventBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.HelloTimeoutEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">HelloTimeoutEvent</code><a class="headerlink" href="#uniflex.core.events.HelloTimeoutEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.EventBase" title="uniflex.core.events.EventBase"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.EventBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.NewNodeEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">NewNodeEvent</code><a class="headerlink" href="#uniflex.core.events.NewNodeEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.EventBase" title="uniflex.core.events.EventBase"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.EventBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.NodeExitEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">NodeExitEvent</code><span class="sig-paren">(</span><em>reason</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.events.NodeExitEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.EventBase" title="uniflex.core.events.EventBase"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.EventBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.NodeLostEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">NodeLostEvent</code><span class="sig-paren">(</span><em>reason</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.events.NodeLostEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.EventBase" title="uniflex.core.events.EventBase"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.EventBase</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.ParameterBase">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">ParameterBase</code><a class="headerlink" href="#uniflex.core.events.ParameterBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>base class for all data object parameters</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.ReturnValueEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">ReturnValueEvent</code><span class="sig-paren">(</span><em>ctx</em>, <em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.events.ReturnValueEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.EventBase" title="uniflex.core.events.EventBase"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.EventBase</span></code></a></p>
+<dl class="method">
+<dt id="uniflex.core.events.ReturnValueEvent.to_string">
+<code class="descname">to_string</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.events.ReturnValueEvent.to_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.events.TimeEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.events.</code><code class="descname">TimeEvent</code><a class="headerlink" href="#uniflex.core.events.TimeEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.EventBase" title="uniflex.core.events.EventBase"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.EventBase</span></code></a></p>
+<p>docstring for TimeEvent</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-uniflex.core.exceptions">
+<span id="uniflex-core-exceptions-module"></span><h2>uniflex.core.exceptions module<a class="headerlink" href="#module-uniflex.core.exceptions" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="uniflex.core.exceptions.AgentNotAvailable">
+<em class="property">exception </em><code class="descclassname">uniflex.core.exceptions.</code><code class="descname">AgentNotAvailable</code><span class="sig-paren">(</span><em>msg=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.exceptions.AgentNotAvailable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.exceptions.UniFlexException" title="uniflex.core.exceptions.UniFlexException"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.exceptions.UniFlexException</span></code></a></p>
+<dl class="attribute">
+<dt id="uniflex.core.exceptions.AgentNotAvailable.message">
+<code class="descname">message</code><em class="property"> = 'agent %(id)s not available'</em><a class="headerlink" href="#uniflex.core.exceptions.AgentNotAvailable.message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="uniflex.core.exceptions.FunctionExecutionFailed">
+<code class="descclassname">uniflex.core.exceptions.</code><code class="descname">FunctionExecutionFailed</code><a class="headerlink" href="#uniflex.core.exceptions.FunctionExecutionFailed" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#uniflex.core.exceptions.FunctionExecutionFailedException" title="uniflex.core.exceptions.FunctionExecutionFailedException"><code class="xref py py-class docutils literal"><span class="pre">FunctionExecutionFailedException</span></code></a></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="uniflex.core.exceptions.FunctionExecutionFailedException">
+<em class="property">exception </em><code class="descclassname">uniflex.core.exceptions.</code><code class="descname">FunctionExecutionFailedException</code><span class="sig-paren">(</span><em>msg=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.exceptions.FunctionExecutionFailedException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.exceptions.UniFlexException" title="uniflex.core.exceptions.UniFlexException"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.exceptions.UniFlexException</span></code></a></p>
+<dl class="attribute">
+<dt id="uniflex.core.exceptions.FunctionExecutionFailedException.message">
+<code class="descname">message</code><em class="property"> = 'function %(func_name)s was not correctly executed; error msg: %(err_msg)s'</em><a class="headerlink" href="#uniflex.core.exceptions.FunctionExecutionFailedException.message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="uniflex.core.exceptions.InvalidArgumentException">
+<em class="property">exception </em><code class="descclassname">uniflex.core.exceptions.</code><code class="descname">InvalidArgumentException</code><span class="sig-paren">(</span><em>msg=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.exceptions.InvalidArgumentException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.exceptions.UniFlexException" title="uniflex.core.exceptions.UniFlexException"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.exceptions.UniFlexException</span></code></a></p>
+<dl class="attribute">
+<dt id="uniflex.core.exceptions.InvalidArgumentException.message">
+<code class="descname">message</code><em class="property"> = 'function %(func_name)s called with wrong arguments'</em><a class="headerlink" href="#uniflex.core.exceptions.InvalidArgumentException.message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="uniflex.core.exceptions.SchedulingFunctionCallsInThePastException">
+<em class="property">exception </em><code class="descclassname">uniflex.core.exceptions.</code><code class="descname">SchedulingFunctionCallsInThePastException</code><span class="sig-paren">(</span><em>msg=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.exceptions.SchedulingFunctionCallsInThePastException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.exceptions.UniFlexException" title="uniflex.core.exceptions.UniFlexException"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.exceptions.UniFlexException</span></code></a></p>
+<dl class="attribute">
+<dt id="uniflex.core.exceptions.SchedulingFunctionCallsInThePastException.message">
+<code class="descname">message</code><em class="property"> = 'function %(func_name)s was scheduled in the past for execution'</em><a class="headerlink" href="#uniflex.core.exceptions.SchedulingFunctionCallsInThePastException.message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="uniflex.core.exceptions.UniFlexException">
+<em class="property">exception </em><code class="descclassname">uniflex.core.exceptions.</code><code class="descname">UniFlexException</code><span class="sig-paren">(</span><em>msg=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.exceptions.UniFlexException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+<p>Base class for all exceptions.</p>
+<dl class="attribute">
+<dt id="uniflex.core.exceptions.UniFlexException.message">
+<code class="descname">message</code><em class="property"> = 'An unknown exception'</em><a class="headerlink" href="#uniflex.core.exceptions.UniFlexException.message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="uniflex.core.exceptions.UnsupportedFunctionException">
+<em class="property">exception </em><code class="descclassname">uniflex.core.exceptions.</code><code class="descname">UnsupportedFunctionException</code><span class="sig-paren">(</span><em>msg=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.exceptions.UnsupportedFunctionException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.exceptions.UniFlexException" title="uniflex.core.exceptions.UniFlexException"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.exceptions.UniFlexException</span></code></a></p>
+<dl class="attribute">
+<dt id="uniflex.core.exceptions.UnsupportedFunctionException.message">
+<code class="descname">message</code><em class="property"> = 'function %(func_name)s is not supportedby connector_module %(conn_module)s'</em><a class="headerlink" href="#uniflex.core.exceptions.UnsupportedFunctionException.message" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-uniflex.core.module_manager">
+<span id="uniflex-core-module-manager-module"></span><h2>uniflex.core.module_manager module<a class="headerlink" href="#module-uniflex.core.module_manager" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="uniflex.core.module_manager.ModuleManager">
+<em class="property">class </em><code class="descclassname">uniflex.core.module_manager.</code><code class="descname">ModuleManager</code><span class="sig-paren">(</span><em>agent</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.add_module_obj">
+<code class="descname">add_module_obj</code><span class="sig-paren">(</span><em>moduleName</em>, <em>uniflexModule</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.add_module_obj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.exit">
+<code class="descname">exit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.exit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.get_event_handlers">
+<code class="descname">get_event_handlers</code><span class="sig-paren">(</span><em>ev</em>, <em>state=None</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.get_event_handlers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.get_module_by_uuid">
+<code class="descname">get_module_by_uuid</code><span class="sig-paren">(</span><em>uuid</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.get_module_by_uuid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.my_import">
+<code class="descname">my_import</code><span class="sig-paren">(</span><em>module_name</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.my_import" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.register_event_handlers">
+<code class="descname">register_event_handlers</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.register_event_handlers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.register_module">
+<code class="descname">register_module</code><span class="sig-paren">(</span><em>moduleName</em>, <em>pyModuleName</em>, <em>className</em>, <em>device=None</em>, <em>kwargs={}</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.register_module" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.send_cmd_event">
+<code class="descname">send_cmd_event</code><span class="sig-paren">(</span><em>event</em>, <em>dstNode</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.send_cmd_event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.send_event">
+<code class="descname">send_event</code><span class="sig-paren">(</span><em>event</em>, <em>dstNode=None</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.send_event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.send_event_locally">
+<code class="descname">send_event_locally</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.send_event_locally" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.send_event_outside">
+<code class="descname">send_event_outside</code><span class="sig-paren">(</span><em>event</em>, <em>dstNode=None</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.send_event_outside" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.serve_event_msg">
+<code class="descname">serve_event_msg</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.serve_event_msg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.serve_event_queue">
+<code class="descname">serve_event_queue</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.serve_event_queue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.start">
+<code class="descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.start" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_manager.ModuleManager.subscribe_for_event">
+<code class="descname">subscribe_for_event</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_manager.ModuleManager.subscribe_for_event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-uniflex.core.module_proxy">
+<span id="uniflex-core-module-proxy-module"></span><h2>uniflex.core.module_proxy module<a class="headerlink" href="#module-uniflex.core.module_proxy" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="uniflex.core.module_proxy.ApplicationProxy">
+<em class="property">class </em><code class="descclassname">uniflex.core.module_proxy.</code><code class="descname">ApplicationProxy</code><a class="headerlink" href="#uniflex.core.module_proxy.ApplicationProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.module_proxy.ModuleProxy" title="uniflex.core.module_proxy.ModuleProxy"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.module_proxy.ModuleProxy</span></code></a></p>
+<p>docstring for ApplicationProxy</p>
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ApplicationProxy.is_running">
+<code class="descname">is_running</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ApplicationProxy.is_running" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if remote control application is running.
+Returns True if remote app is running; otherwise
+False</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ApplicationProxy.send_event">
+<code class="descname">send_event</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ApplicationProxy.send_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send event to remote application in unicast mode.
+Node: event will be delivered only if remote application
+subscribe for it.
+Returns True if succeeded; otherwise False</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ApplicationProxy.start">
+<code class="descname">start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ApplicationProxy.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start remote control application.
+Returns True if succeeded; otherwise False</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ApplicationProxy.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ApplicationProxy.stop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop remote control application.
+Returns True if succeeded; otherwise False</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ApplicationProxy.subscribe_for_events">
+<code class="descname">subscribe_for_events</code><span class="sig-paren">(</span><em>eventType</em>, <em>callback</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ApplicationProxy.subscribe_for_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subscribe for events of given type generated
+in remote control application. If event type is not
+given, subscribe for all events generated in remote
+control application. The callback function
+will be called on reception of event.
+Returns True if succeeded; otherwise False</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ApplicationProxy.unsubscribe_from_events">
+<code class="descname">unsubscribe_from_events</code><span class="sig-paren">(</span><em>eventType</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ApplicationProxy.unsubscribe_from_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unsubscribe from events of given type generated
+in remote control application. If event type is not
+given unsubscribe from all events generated in remote
+control application.
+Returns True if succeeded; otherwise False</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.module_proxy.CallingContext">
+<em class="property">class </em><code class="descclassname">uniflex.core.module_proxy.</code><code class="descname">CallingContext</code><a class="headerlink" href="#uniflex.core.module_proxy.CallingContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.module_proxy.DeviceProxy">
+<em class="property">class </em><code class="descclassname">uniflex.core.module_proxy.</code><code class="descname">DeviceProxy</code><a class="headerlink" href="#uniflex.core.module_proxy.DeviceProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.module_proxy.ModuleProxy" title="uniflex.core.module_proxy.ModuleProxy"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.module_proxy.ModuleProxy</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.module_proxy.ModuleProxy">
+<em class="property">class </em><code class="descclassname">uniflex.core.module_proxy.</code><code class="descname">ModuleProxy</code><a class="headerlink" href="#uniflex.core.module_proxy.ModuleProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ModuleProxy.blocking">
+<code class="descname">blocking</code><span class="sig-paren">(</span><em>value=True</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ModuleProxy.blocking" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ModuleProxy.callback">
+<code class="descname">callback</code><span class="sig-paren">(</span><em>callback</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ModuleProxy.callback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute operation of device in non-blocking
+mode and register callback function that will be
+called upon reception of return value from operation.
+If callbackFunction is not defined operation will
+be executed in non-blocking mode.
+Returns the same ModuleProxy object -&gt; function
+chaning.
+Example:
+device.callback(myCallback).set_channel(11).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ModuleProxy.cmd_wrapper">
+<code class="descname">cmd_wrapper</code><span class="sig-paren">(</span><em>ftype</em>, <em>fname</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ModuleProxy.cmd_wrapper" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ModuleProxy.delay">
+<code class="descname">delay</code><span class="sig-paren">(</span><em>delay</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ModuleProxy.delay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delay execution of operation by given amount of
+time. It will result in non-blocking call. Use callback
+function to register callback.
+Returns the same ModuleProxy object -&gt; function
+chaning.
+Example:
+device.delay(5s).set_channel(11).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ModuleProxy.exec_time">
+<code class="descname">exec_time</code><span class="sig-paren">(</span><em>exec_time</em>, <em>interval=None</em>, <em>repetitionNum=None</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ModuleProxy.exec_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Schedule execution of operation in remote device
+module. It will result in non-blocking call. Use
+callback function to register callback. Absolute
+time is UNIX time.
+Returns the same ModuleProxy object -&gt; function
+chaning.
+Example:
+device.exec_time(execTime).set_channel(11).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ModuleProxy.generate_call_id">
+<code class="descname">generate_call_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ModuleProxy.generate_call_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ModuleProxy.get_name_string">
+<code class="descname">get_name_string</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ModuleProxy.get_name_string" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ModuleProxy.is_func_supported">
+<code class="descname">is_func_supported</code><span class="sig-paren">(</span><em>ftype</em>, <em>fName</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ModuleProxy.is_func_supported" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ModuleProxy.send_cmd_event">
+<code class="descname">send_cmd_event</code><span class="sig-paren">(</span><em>ctx</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ModuleProxy.send_cmd_event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ModuleProxy.send_event">
+<code class="descname">send_event</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ModuleProxy.send_event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ModuleProxy.subscribe_for_events">
+<code class="descname">subscribe_for_events</code><span class="sig-paren">(</span><em>eventType</em>, <em>callback</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ModuleProxy.subscribe_for_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subscribe for events of given type generated in
+remote device module. If event type is not given,
+subscribe for all events generated in remote device
+module. The callback function will be called
+on reception of event.
+Returns True if succeeded; otherwise False</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ModuleProxy.timeout">
+<code class="descname">timeout</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ModuleProxy.timeout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.module_proxy.ModuleProxy.unsubscribe_from_events">
+<code class="descname">unsubscribe_from_events</code><span class="sig-paren">(</span><em>eventType</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.module_proxy.ModuleProxy.unsubscribe_from_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unsubscribe from events of given type generated
+in remote device module. If event type is not
+given unsubscribe from all events generated in remote
+device module.
+Returns True if succeeded; otherwise False</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.module_proxy.ProtocolProxy">
+<em class="property">class </em><code class="descclassname">uniflex.core.module_proxy.</code><code class="descname">ProtocolProxy</code><a class="headerlink" href="#uniflex.core.module_proxy.ProtocolProxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.module_proxy.ModuleProxy" title="uniflex.core.module_proxy.ModuleProxy"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.module_proxy.ModuleProxy</span></code></a></p>
+<p>docstring for ProtocolProxy</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-uniflex.core.modules">
+<span id="uniflex-core-modules-module"></span><h2>uniflex.core.modules module<a class="headerlink" href="#module-uniflex.core.modules" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="uniflex.core.modules.ApplicationModule">
+<em class="property">class </em><code class="descclassname">uniflex.core.modules.</code><code class="descname">ApplicationModule</code><a class="headerlink" href="#uniflex.core.modules.ApplicationModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.modules.UniFlexModule" title="uniflex.core.modules.UniFlexModule"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.modules.UniFlexModule</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.modules.ControlApplication">
+<em class="property">class </em><code class="descclassname">uniflex.core.modules.</code><code class="descname">ControlApplication</code><a class="headerlink" href="#uniflex.core.modules.ControlApplication" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.modules.UniFlexModule" title="uniflex.core.modules.UniFlexModule"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.modules.UniFlexModule</span></code></a></p>
+<dl class="method">
+<dt id="uniflex.core.modules.ControlApplication.get_local_node">
+<code class="descname">get_local_node</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.ControlApplication.get_local_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get NodeProxy object for local node , i.e. the one
+that runs Application.
+Returns NodeProxy object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.modules.ControlApplication.get_node">
+<code class="descname">get_node</code><span class="sig-paren">(</span><em>idx</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.ControlApplication.get_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.modules.ControlApplication.get_node_by_hostname">
+<code class="descname">get_node_by_hostname</code><span class="sig-paren">(</span><em>hostname</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.ControlApplication.get_node_by_hostname" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.modules.ControlApplication.get_node_by_uuid">
+<code class="descname">get_node_by_uuid</code><span class="sig-paren">(</span><em>uuid</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.ControlApplication.get_node_by_uuid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.modules.ControlApplication.get_nodes">
+<code class="descname">get_nodes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.ControlApplication.get_nodes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.modules.ControlApplication.subscribe_for_events">
+<code class="descname">subscribe_for_events</code><span class="sig-paren">(</span><em>eventType</em>, <em>callback</em>, <em>mode</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.ControlApplication.subscribe_for_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subscribe for events of specific type using one of
+two modes:
+- node-broadcast — subscribe for events of specific
+type generated on local node
+- global-broadcast – subscribe for events of specific
+type generated at any node in network
+The callback function will be called on reception
+of event.
+Note: If event type is not specified, application
+subscribes for events of all types.
+Returns True if succeeded; otherwise False</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.modules.ControlApplication.unsubscribe_from_events">
+<code class="descname">unsubscribe_from_events</code><span class="sig-paren">(</span><em>eventType</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.ControlApplication.unsubscribe_from_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unsubscribe from event from specific type. If
+event type is not given, unsubscribe from all
+event types.
+Returns True if succeeded; otherwise False</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.modules.CoreModule">
+<em class="property">class </em><code class="descclassname">uniflex.core.modules.</code><code class="descname">CoreModule</code><a class="headerlink" href="#uniflex.core.modules.CoreModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.modules.UniFlexModule" title="uniflex.core.modules.UniFlexModule"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.modules.UniFlexModule</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.modules.DeviceModule">
+<em class="property">class </em><code class="descclassname">uniflex.core.modules.</code><code class="descname">DeviceModule</code><a class="headerlink" href="#uniflex.core.modules.DeviceModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.modules.UniFlexModule" title="uniflex.core.modules.UniFlexModule"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.modules.UniFlexModule</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.modules.ModuleWorker">
+<em class="property">class </em><code class="descclassname">uniflex.core.modules.</code><code class="descname">ModuleWorker</code><span class="sig-paren">(</span><em>module</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.ModuleWorker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/threading.html#threading.Thread" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">threading.Thread</span></code></a></p>
+<dl class="method">
+<dt id="uniflex.core.modules.ModuleWorker.add_task">
+<code class="descname">add_task</code><span class="sig-paren">(</span><em>func</em>, <em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.ModuleWorker.add_task" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.modules.ModuleWorker.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.ModuleWorker.run" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.modules.ModuleWorker.stop">
+<code class="descname">stop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.ModuleWorker.stop" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.modules.ProtocolModule">
+<em class="property">class </em><code class="descclassname">uniflex.core.modules.</code><code class="descname">ProtocolModule</code><a class="headerlink" href="#uniflex.core.modules.ProtocolModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.modules.UniFlexModule" title="uniflex.core.modules.UniFlexModule"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.modules.UniFlexModule</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.modules.UniFlexModule">
+<em class="property">class </em><code class="descclassname">uniflex.core.modules.</code><code class="descname">UniFlexModule</code><a class="headerlink" href="#uniflex.core.modules.UniFlexModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="uniflex.core.modules.UniFlexModule.get_device">
+<code class="descname">get_device</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.UniFlexModule.get_device" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.modules.UniFlexModule.get_functions">
+<code class="descname">get_functions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.UniFlexModule.get_functions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.modules.UniFlexModule.get_in_events">
+<code class="descname">get_in_events</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.UniFlexModule.get_in_events" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.modules.UniFlexModule.get_out_events">
+<code class="descname">get_out_events</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.UniFlexModule.get_out_events" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.modules.UniFlexModule.send_event">
+<code class="descname">send_event</code><span class="sig-paren">(</span><em>event</em>, <em>dstNode=None</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.UniFlexModule.send_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sent event using one of two modes: nodebroadcast
+and global-broadcast.
+Returns True if succeeded; otherwise False</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.modules.UniFlexModule.set_agent">
+<code class="descname">set_agent</code><span class="sig-paren">(</span><em>agent</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.UniFlexModule.set_agent" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.modules.UniFlexModule.set_module_manager">
+<code class="descname">set_module_manager</code><span class="sig-paren">(</span><em>mm</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.UniFlexModule.set_module_manager" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="uniflex.core.modules.after_call">
+<code class="descclassname">uniflex.core.modules.</code><code class="descname">after_call</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.after_call" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="uniflex.core.modules.before_call">
+<code class="descclassname">uniflex.core.modules.</code><code class="descname">before_call</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.before_call" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="uniflex.core.modules.on_event">
+<code class="descclassname">uniflex.core.modules.</code><code class="descname">on_event</code><span class="sig-paren">(</span><em>ev_cls</em>, <em>dispatchers=None</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.on_event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="uniflex.core.modules.on_first_call_to_module">
+<code class="descclassname">uniflex.core.modules.</code><code class="descname">on_first_call_to_module</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.modules.on_first_call_to_module" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-uniflex.core.node">
+<span id="uniflex-core-node-module"></span><h2>uniflex.core.node module<a class="headerlink" href="#module-uniflex.core.node" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="uniflex.core.node.Node">
+<em class="property">class </em><code class="descclassname">uniflex.core.node.</code><code class="descname">Node</code><span class="sig-paren">(</span><em>uuid</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="uniflex.core.node.Node.add_module_proxy">
+<code class="descname">add_module_proxy</code><span class="sig-paren">(</span><em>module</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.add_module_proxy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="uniflex.core.node.Node.create_node_from_msg">
+<em class="property">static </em><code class="descname">create_node_from_msg</code><span class="sig-paren">(</span><em>msg</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.create_node_from_msg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.get_control_application">
+<code class="descname">get_control_application</code><span class="sig-paren">(</span><em>uuid</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.get_control_application" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get Control Application proxy object by its UUID.
+Returns ControlApplicationProxy object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.get_control_applications">
+<code class="descname">get_control_applications</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.get_control_applications" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div>Get proxy objects for all control</div></blockquote>
+<p>applications installed in remote node.
+Returns list of ControlApplicationProxy objects.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.get_device">
+<code class="descname">get_device</code><span class="sig-paren">(</span><em>devId</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.get_device" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.get_device_by_name">
+<code class="descname">get_device_by_name</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.get_device_by_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.get_device_by_uuid">
+<code class="descname">get_device_by_uuid</code><span class="sig-paren">(</span><em>uuid</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.get_device_by_uuid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get Device Module proxy object by its UUID.
+Returns DeviceModuleProxy object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.get_devices">
+<code class="descname">get_devices</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.get_devices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get proxy objects for all device modules installed
+in remote node.
+Returns list of Device Module Proxy objects</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.get_module_by_uuid">
+<code class="descname">get_module_by_uuid</code><span class="sig-paren">(</span><em>uuid</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.get_module_by_uuid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get Module proxy object by its UUID.
+Returns ModuleProxy object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.get_modules">
+<code class="descname">get_modules</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.get_modules" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get proxy objects for all modules installed
+in remote node.
+Returns list of Module Proxy objects</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.get_protocol">
+<code class="descname">get_protocol</code><span class="sig-paren">(</span><em>uuid</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.get_protocol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get Protocol Module proxy object by its UUID.
+Returns ProtocolModuleProxy object.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.get_protocols">
+<code class="descname">get_protocols</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.get_protocols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get proxy objects for all protocol modules installed
+in remote node.
+Returns list of Protocol Module Proxy objects.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.get_time">
+<code class="descname">get_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.get_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get time of remote node.
+Returns UNIX time of remote node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.get_time_synchronization_accuracy">
+<code class="descname">get_time_synchronization_accuracy</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.get_time_synchronization_accuracy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get time synchronization accuracy.
+Returns time synchronization accuracy in milliseconds.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.get_time_synchronization_source">
+<code class="descname">get_time_synchronization_source</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.get_time_synchronization_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get time synchronization source of remote node.
+Note: we need to check if remote node synchronizes
+with the same source as application’s local
+node.
+Returns name of synchronization source</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.is_synchronizing">
+<code class="descname">is_synchronizing</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.is_synchronizing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if remote node is synchronizing with some
+time server.
+Returns True is remote node runs time synchronization
+process; False otherwise</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.send_cmd_event">
+<code class="descname">send_cmd_event</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.send_cmd_event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.send_event">
+<code class="descname">send_event</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.send_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send event to remote node in node-broadcast
+mode, i.e. event is delivered to node and broadcasted
+to all subscribed Control Applications.
+Returns True if succeeded; otherwise False</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.subscribe_for_events">
+<code class="descname">subscribe_for_events</code><span class="sig-paren">(</span><em>eventType</em>, <em>callback</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.subscribe_for_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subscribe for events of given type generated in
+remote node. If event type is not given, subscribe
+for all events generated in remote node. The callback
+function will be called on reception of event.
+Returns True if succeeded; otherwise False</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node.Node.unsubscribe_from_events">
+<code class="descname">unsubscribe_from_events</code><span class="sig-paren">(</span><em>eventType</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node.Node.unsubscribe_from_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unsubscribe from events of given type generated
+in remote node. If event type is not given unsubscribe
+from all events generated in remote node.
+Returns True if succeeded; otherwise False</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-uniflex.core.node_manager">
+<span id="uniflex-core-node-manager-module"></span><h2>uniflex.core.node_manager module<a class="headerlink" href="#module-uniflex.core.node_manager" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="uniflex.core.node_manager.NodeManager">
+<em class="property">class </em><code class="descclassname">uniflex.core.node_manager.</code><code class="descname">NodeManager</code><span class="sig-paren">(</span><em>agent</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.create_local_node">
+<code class="descname">create_local_node</code><span class="sig-paren">(</span><em>agent</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.create_local_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.get_local_node">
+<code class="descname">get_local_node</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.get_local_node" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.get_node_by_uuid">
+<code class="descname">get_node_by_uuid</code><span class="sig-paren">(</span><em>uuid</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.get_node_by_uuid" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.notify_new_node_event">
+<code class="descname">notify_new_node_event</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.notify_new_node_event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.notify_node_exit">
+<code class="descname">notify_node_exit</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.notify_node_exit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.remove_node_hello_timer">
+<code class="descname">remove_node_hello_timer</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.remove_node_hello_timer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.send_event_cmd">
+<code class="descname">send_event_cmd</code><span class="sig-paren">(</span><em>event</em>, <em>dstNode</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.send_event_cmd" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.send_hello_msg">
+<code class="descname">send_hello_msg</code><span class="sig-paren">(</span><em>timeout=10</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.send_hello_msg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.send_node_add_notification">
+<code class="descname">send_node_add_notification</code><span class="sig-paren">(</span><em>dest</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.send_node_add_notification" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.send_node_info">
+<code class="descname">send_node_info</code><span class="sig-paren">(</span><em>dest=None</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.send_node_info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.send_node_info_request">
+<code class="descname">send_node_info_request</code><span class="sig-paren">(</span><em>dest=None</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.send_node_info_request" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.serve_hello_msg">
+<code class="descname">serve_hello_msg</code><span class="sig-paren">(</span><em>msgContainer</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.serve_hello_msg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.serve_node_add_notification">
+<code class="descname">serve_node_add_notification</code><span class="sig-paren">(</span><em>msgContainer</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.serve_node_add_notification" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.serve_node_exit_msg">
+<code class="descname">serve_node_exit_msg</code><span class="sig-paren">(</span><em>msgContainer</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.serve_node_exit_msg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.node_manager.NodeManager.serve_node_info_msg">
+<code class="descname">serve_node_info_msg</code><span class="sig-paren">(</span><em>msgContainer</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.node_manager.NodeManager.serve_node_info_msg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-uniflex.core.timer">
+<span id="uniflex-core-timer-module"></span><h2>uniflex.core.timer module<a class="headerlink" href="#module-uniflex.core.timer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="uniflex.core.timer.Timer">
+<em class="property">class </em><code class="descclassname">uniflex.core.timer.</code><code class="descname">Timer</code><span class="sig-paren">(</span><em>handler_</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.timer.Timer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/2/library/functions.html#object" title="(in Python v2.7)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="uniflex.core.timer.Timer.cancel">
+<code class="descname">cancel</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.timer.Timer.cancel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.timer.Timer.is_running">
+<code class="descname">is_running</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.timer.Timer.is_running" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.timer.Timer.start">
+<code class="descname">start</code><span class="sig-paren">(</span><em>interval</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.timer.Timer.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>interval is in seconds</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.timer.TimerEventSender">
+<em class="property">class </em><code class="descclassname">uniflex.core.timer.</code><code class="descname">TimerEventSender</code><span class="sig-paren">(</span><em>app</em>, <em>ev_cls</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.timer.TimerEventSender" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.timer.Timer" title="uniflex.core.timer.Timer"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.timer.Timer</span></code></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-uniflex.core.transport_channel">
+<span id="uniflex-core-transport-channel-module"></span><h2>uniflex.core.transport_channel module<a class="headerlink" href="#module-uniflex.core.transport_channel" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="uniflex.core.transport_channel.HelloMsgTimeoutEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.transport_channel.</code><code class="descname">HelloMsgTimeoutEvent</code><a class="headerlink" href="#uniflex.core.transport_channel.HelloMsgTimeoutEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.TimeEvent" title="uniflex.core.events.TimeEvent"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.TimeEvent</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.transport_channel.SendHelloMsgTimeEvent">
+<em class="property">class </em><code class="descclassname">uniflex.core.transport_channel.</code><code class="descname">SendHelloMsgTimeEvent</code><a class="headerlink" href="#uniflex.core.transport_channel.SendHelloMsgTimeEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.events.TimeEvent" title="uniflex.core.events.TimeEvent"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.events.TimeEvent</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="uniflex.core.transport_channel.TransportChannel">
+<em class="property">class </em><code class="descclassname">uniflex.core.transport_channel.</code><code class="descname">TransportChannel</code><span class="sig-paren">(</span><em>agent</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#uniflex.core.modules.CoreModule" title="uniflex.core.modules.CoreModule"><code class="xref py py-class docutils literal"><span class="pre">uniflex.core.modules.CoreModule</span></code></a></p>
+<dl class="method">
+<dt id="uniflex.core.transport_channel.TransportChannel.connect">
+<code class="descname">connect</code><span class="sig-paren">(</span><em>xpub_url</em>, <em>xsub_url</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel.connect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.transport_channel.TransportChannel.connect_to_broker">
+<code class="descname">connect_to_broker</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel.connect_to_broker" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.transport_channel.TransportChannel.connection_with_broker_lost">
+<code class="descname">connection_with_broker_lost</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel.connection_with_broker_lost" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.transport_channel.TransportChannel.disconnect">
+<code class="descname">disconnect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel.disconnect" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.transport_channel.TransportChannel.process_msgs">
+<code class="descname">process_msgs</code><span class="sig-paren">(</span><em>msgContainer</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel.process_msgs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.transport_channel.TransportChannel.recv_msgs">
+<code class="descname">recv_msgs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel.recv_msgs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.transport_channel.TransportChannel.send">
+<code class="descname">send</code><span class="sig-paren">(</span><em>msgContainer</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel.send" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.transport_channel.TransportChannel.send_event_outside">
+<code class="descname">send_event_outside</code><span class="sig-paren">(</span><em>event</em>, <em>dstNode=None</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel.send_event_outside" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.transport_channel.TransportChannel.send_hello_msg">
+<code class="descname">send_hello_msg</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel.send_hello_msg" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.transport_channel.TransportChannel.set_downlink">
+<code class="descname">set_downlink</code><span class="sig-paren">(</span><em>xpub_url</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel.set_downlink" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.transport_channel.TransportChannel.set_uplink">
+<code class="descname">set_uplink</code><span class="sig-paren">(</span><em>xsub_url</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel.set_uplink" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.transport_channel.TransportChannel.start_module">
+<code class="descname">start_module</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel.start_module" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.transport_channel.TransportChannel.stop_module">
+<code class="descname">stop_module</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel.stop_module" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="uniflex.core.transport_channel.TransportChannel.subscribe_to">
+<code class="descname">subscribe_to</code><span class="sig-paren">(</span><em>topic</em><span class="sig-paren">)</span><a class="headerlink" href="#uniflex.core.transport_channel.TransportChannel.subscribe_to" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-uniflex.core">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-uniflex.core" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+        <br/>
+        
+<div id="sourcelink">
+  <a href="../_sources/api/uniflex.core.rst.txt"
+     rel="nofollow">Source</a>
+</div>
+      
+    </p>
+    <p>
+        &copy; Copyright 2017, Technische Universität Berlin, Telecommunication Networks Group.<br/>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.2.<br/>
+    </p>
+  </div>
+</footer>
+<!-- Google Tag Manager -->
+<noscript><iframe src="//www.googletagmanager.com/ns.html?id="
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','');</script>
+<!-- End Google Tag Manager -->
+
+  </body>
+</html>
