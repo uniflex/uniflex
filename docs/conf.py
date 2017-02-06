@@ -175,6 +175,10 @@ html_sidebars = {
     'index': []
 }
 
+html_context = {
+    "google_tagmanager_id": "GTM-MZW7ND5"
+}
+
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
