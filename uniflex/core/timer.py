@@ -24,7 +24,7 @@ class Timer(object):
         self._thread.start()
 
     def cancel(self):
-        if not self._thread.is_alive():
+        if (not self._thread) or (not self._thread.is_alive()):
             return
         self._event.set()
         # self._thread.join()
