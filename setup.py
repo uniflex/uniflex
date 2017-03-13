@@ -20,8 +20,6 @@ setup(
     description='UniFlex Framework',
     long_description='Implementation of UniFlex Framework',
     keywords='wireless control',
-    install_requires=['apscheduler', 'pyzmq', 'dill', 'protobuf', 'decorator', 'pyyaml', 'netifaces', 'docopt'],
-    extras_require={
-        'dev': ['check-manifest', 'sphinx', 'sphinx_bootstrap_theme'],
-    },
+    install_requires=['apscheduler', 'pyzmq', 'dill', 'protobuf', 'decorator', 'pyyaml', 'netifaces', 'docopt', 'tzlocal'],
+    extras_require={},
 )
