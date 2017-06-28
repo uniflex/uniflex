@@ -66,5 +66,6 @@ if __name__ == "__main__":
         broker.run()
     except (KeyboardInterrupt, SystemExit):
         log.debug("Broker exits")
+        broker.stop()
     finally:
         log.debug("Exit")
