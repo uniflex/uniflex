@@ -23,6 +23,7 @@ Other options:
 """
 
 import logging
+from docopt import docopt
 from uniflex.core.broker import Broker
 
 __author__ = "Piotr Gawlowicz, Mikolaj Chwalisz"
@@ -33,16 +34,6 @@ __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 log = logging.getLogger('uniflex-broker')
 
 if __name__ == "__main__":
-    try:
-        from docopt import docopt
-    except:
-        print("""
-        Please install docopt using:
-            pip install docopt==0.6.1
-        For more refer to:
-        https://github.com/docopt/docopt
-        """)
-        raise
 
     args = docopt(__doc__, version=__version__)
 
@@ -65,7 +56,8 @@ if __name__ == "__main__":
         logfile = args['--logfile']
 
     logging.basicConfig(filename=logfile, level=log_level,
-                        format='%(asctime)s - %(name)s.%(funcName)s() - %(levelname)s - %(message)s')
+                        format='%(asctime)s - %(name)s.%(funcName)s() '
+                        + '- %(levelname)s - %(message)s')
     log.info(args)
     broker = Broker(xpub, xsub)
 
