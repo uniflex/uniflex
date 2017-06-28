@@ -73,7 +73,7 @@ if __name__ == "__main__":
         log.info("Start Broker with XPUB: {}, XSUB: {}".format(xpub, xsub))
         broker.start()
         broker.join()
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, SystemExit):
         log.debug("Broker exits")
         broker.stop()
     finally:
