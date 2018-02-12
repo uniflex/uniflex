@@ -1,5 +1,6 @@
 import sys
 import zmq
+import zmq.auth
 import logging
 import threading
 import json
@@ -84,6 +85,15 @@ class TransportChannel(modules.CoreModule):
     def set_uplink(self, xsub_url):
         self.log.debug("Set Uplink: {}".format(xsub_url))
         self.xsub_url = xsub_url
+
+    def set_certificates(self, client, server):
+        self.log.debug("Set Certificates: {}, {}".format(client, server))
+        client_public, client_secret = zmq.auth.load_certificate(client)
+        server_public, _ = zmq.auth.load_certificate(server)
+        for sock in [self.pub, self.sub]:
+            sock.curve_secretkey = client_secret
+            sock.curve_publickey = client_public
+            sock.curve_serverkey = server_public
 
     def subscribe_to(self, topic):
         self.log.debug("Agent subscribes to topic: {}".format(topic))
