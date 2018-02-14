@@ -8,9 +8,11 @@ Usage:
    uniflex-broker [options] [-q | -v]
 
 Options:
-   --logfile name      Name of the logfile
-   --xpub pub_url      Publisher URL
-   --xsub sub_url      Subscriber URL
+   --logfile name       Name of the logfile
+   --xpub pub_url       Publisher URL
+   --xsub sub_url       Subscriber URL
+   --cert-server cert   Private server certificate
+   --cert-clients path  Public certificates for clients
 
 Example:
    uniflex-broker --xpub tcp://127.0.0.1:8990 --xsub tcp://127.0.0.1:8989
@@ -34,7 +36,6 @@ __email__ = "{gawlowicz, chwalisz}@tkn.tu-berlin.de"
 log = logging.getLogger('uniflex-broker')
 
 if __name__ == "__main__":
-
     args = docopt(__doc__, version=__version__)
 
     log_level = logging.INFO  # default
@@ -59,7 +60,10 @@ if __name__ == "__main__":
                         format='%(asctime)s - %(name)s.%(funcName)s() '
                         + '- %(levelname)s - %(message)s')
     log.info(args)
-    broker = Broker(xpub, xsub)
+    broker = Broker(
+        xpub, xsub,
+        server_key=args['--cert-server'],
+        client_keys=args['--cert-clients'])
 
     try:
         log.info("Start Broker with XPUB: {}, XSUB: {}".format(xpub, xsub))
