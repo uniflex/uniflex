@@ -57,7 +57,8 @@ if __name__ == "__main__":
         logfile = args['--logfile']
 
     logging.basicConfig(filename=logfile, level=log_level,
-                        format='%(asctime)s - %(name)s.%(funcName)s() - %(levelname)s - %(message)s')
+                        format='%(asctime)s - %(name)s.%(funcName)s() '
+                        + '- %(levelname)s - %(message)s')
     log.info(args)
     broker = Broker(
         xpub, xsub,
@@ -66,9 +67,8 @@ if __name__ == "__main__":
 
     try:
         log.info("Start Broker with XPUB: {}, XSUB: {}".format(xpub, xsub))
-        broker.start()
-        broker.join()
-    except KeyboardInterrupt:
+        broker.run()
+    except (KeyboardInterrupt, SystemExit):
         log.debug("Broker exits")
         broker.stop()
     finally:
