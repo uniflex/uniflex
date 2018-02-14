@@ -71,6 +71,11 @@ class Agent(object):
             self.transport.set_downlink(sub)
             self.transport.set_uplink(pub)
 
+            client_key = agent_config.get('client_key', None)
+            server_key = agent_config.get('server_key', None)
+            if (client_key is not None) and (server_key is not None):
+                self.transport.set_certificates(client_key, server_key)
+
             self.transport._nodeManager = self.nodeManager
             self.transport._moduleManager = self.moduleManager
             self.nodeManager._transportChannel = self.transport
@@ -84,7 +89,9 @@ class Agent(object):
             xsub = broker_config["xsub"]
             self.log.info("Start Broker with XPUB: {}, XSUB: {}"
                           .format(xpub, xsub))
-            self.broker = Broker(xpub, xsub)
+            server_key = broker_config.get('server_key')
+            client_keys = broker_config.get('client_keys')
+            self.broker = Broker(xpub, xsub, server_key, client_keys)
             # TODO: start broker in separate process
             self.broker.setDaemon(True)
             self.broker.start()
